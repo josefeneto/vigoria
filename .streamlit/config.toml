@@ -1,0 +1,13 @@
+[theme]
+base = "light"
+primaryColor = "#1F5C63"            # petróleo
+backgroundColor = "#F7F3EC"         # branco-osso
+secondaryBackgroundColor = "#ECE5D8"
+textColor = "#2E3338"               # grafite
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
