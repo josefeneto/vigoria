@@ -4,7 +4,7 @@
 
 ## Fase atual
 
-**Fase 0 — Preparação do ambiente.** Kit inicial copiado para o repositório (CLAUDE.md, regras, documentação de domínio e de referência). Ainda sem código.
+**Fase 0 — Preparação do ambiente.** Kit no repositório e primeira revisão pelo Claude Code feita; ajustes de coerência aplicados a 25/10. Ainda sem código.
 
 ## Decisões tomadas
 
@@ -17,6 +17,7 @@
 - 25/10/2026 — Regras de domínio fechadas: gravidez fora do âmbito; teto «Média» com condições crónicas; proteína 1,0–1,2 g/kg em todas as idades; perda de peso máxima 0,4 / 0,5 / 0,6 %/semana (61+ / 45–60 / 18–44); programa sempre de 16 semanas, sem meses; Fase 4 do Vol. 2 resolvida com variantes-base (REGRAS_DOMINIO §6); prazos dos lembretes confirmados.
 - 25/10/2026 — Volume 2 em Word revisto segundo REGRAS_DOMINIO §6 (variantes-base nas tabelas, avançadas por baixo, Fase 4 «Integração», cardio finalizador sem corrida).
 - 25/10/2026 — Telemóvel opcional: Portugal (+351) por omissão, outros países por lista com indicativos; validado e guardado em E.164; sem SMS/WhatsApp no MVP.
+- 25/10/2026 — Ajustes após a revisão da Fase 0 pelo Claude Code: tabela de condições e limitações (REGRAS §1.1), sem variantes avançadas no MVP, disponibilidade → intensidade, contactos fora do Questionario, máximo de 3 chamadas à LLM clarificado, testes com a LLM real só pelo José.
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 
 ## Decisões pendentes

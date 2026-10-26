@@ -13,13 +13,40 @@
 |---|---|
 | Idade < 18 | Não gera plano. Mensagem: «A Vigoria destina-se a maiores de 18 anos.» |
 | Gravidez declarada (4.C) | Não gera plano. Mensagem: «A Vigoria não é recomendável para situações de gravidez.» Acrescenta uma frase cordial a sugerir que fale com o seu médico ou obstetra sobre atividade física nesta fase. |
-| IMC < 35 e sem condições sinalizadas | Versão-base. Todas as intensidades disponíveis. |
+| IMC < 35 e nenhuma situação desta tabela que leve a modo prudente | Versão-base. Todas as intensidades disponíveis. |
 | IMC ≥ 35 kg/m² | **Modo prudente**: intensidade efetiva máxima «Ligeira», sem exercícios de impacto, aviso destacado de orientação individualizada antes de iniciar. (Critério editorial do Vol. 1: cerca de 40 % acima de 24,9; não é um limite médico universal.) |
-| Doença cardiovascular, hipertensão não controlada, diabetes, doença respiratória relevante, doença renal, osteoporose com risco de fratura, dor persistente ou limitação funcional importante | **Modo prudente**: intensidade efetiva máxima «Média», sem intervalos nem exercícios de impacto, aviso destacado de orientação individualizada antes de iniciar (Vol. 1). |
-| Hipertensão controlada com medicação | Versão-base, mas qualquer intensificação (intervalos, ritmo vigoroso) exige nota de validação médica prévia. |
-| Medicação que altera a resposta cardíaca (ex.: betabloqueantes) | Intensidade por escala de esforço percebido e teste da fala; o plano **não** usa a frequência cardíaca como referência. |
+| Qualquer situação marcada «prudente» na tabela 1.1 | **Modo prudente**: intensidade efetiva máxima «Média», sem intervalos nem exercícios de impacto, aviso destacado de orientação individualizada antes de iniciar (Vol. 1). |
+| Medicação que altera a resposta cardíaca: resposta «sim» **ou «não sei»** | Intensidade por escala de esforço percebido e teste da fala; o plano **não** usa a frequência cardíaca como referência. |
 
 Se se aplicarem várias linhas, vale a mais restritiva.
+
+### 1.1 Condições e limitações do questionário
+
+Cada opção do questionário (passo 2) tem uma consequência definida. Nenhuma opção fica sem regra.
+
+| Opção no questionário | Modo | Consequências adicionais |
+|---|---|---|
+| Hipertensão controlada | base | Qualquer intensificação (intervalos, ritmo vigoroso) com nota de validação médica prévia |
+| Hipertensão não controlada | prudente | Aviso reforçado: falar com o médico antes de iniciar |
+| Diabetes, controlada | prudente | Nota sobre hipoglicemia: não treinar em jejum prolongado, ter algo açucarado à mão se usar insulina ou medicação que baixe o açúcar |
+| Diabetes, não controlada | prudente | Igual, mais aviso reforçado: falar com o médico antes de iniciar |
+| Doença cardiovascular | prudente | Validação médica antes de iniciar |
+| Doença respiratória | prudente | Cardio pelo teste da fala; interromper perante falta de ar desproporcionada |
+| Doença renal | prudente | **Sem valores de proteína no plano** (ver secção 2); hidratação também a definir com o médico |
+| Osteoporose **com** fratura anterior por fragilidade ou risco elevado indicado pelo médico (ou «não sei») | prudente | Sem flexão do tronco com carga; bird-dog em vez de crunch; equilíbrio sempre com apoio |
+| Osteoporose **sem** fratura nem risco elevado indicado | base | Sem flexão do tronco com carga; bird-dog em vez de crunch; sem impacto |
+| Doença inflamatória intestinal, controlada | base | Alterações alimentares (fibra, leguminosas, hortícolas crus, lacticínios) só com a ressalva de respeitar o plano alimentar indicado pelo médico ou nutricionista |
+| Doença inflamatória intestinal, em crise ou não controlada | prudente | Igual, mais aviso para adiar mudanças alimentares até estabilizar |
+| Dor articular persistente | prudente | Variante-base com regressão nos exercícios que carregam a articulação indicada |
+| Prótese articular ou cirurgia nos últimos 6 meses | prudente | Validação pelo cirurgião ou fisioterapeuta antes de iniciar |
+| Gravidez | não gera plano | Mensagem da tabela acima |
+| Outra (texto livre) | prudente | O texto vai para a LLM apenas como contexto |
+
+| Limitação (1.H) e gravidade | Modo | Consequências |
+|---|---|---|
+| Ligeira — «incomoda, mas não me impede de fazer o dia a dia» | base | Regressão nos exercícios que envolvem a zona indicada (joelhos, ancas, ombros, coluna) e exclusão dos que a tenham em `contraindicacoes` |
+| Importante — «impede ou limita atividades do dia a dia» | prudente | Igual, mais aviso de orientação individualizada |
+| Equilíbrio (qualquer gravidade) | prudente se importante | Todos os exercícios de equilíbrio e de pé com apoio por perto |
 
 Deteção das condições: a partir de escolhas fechadas no questionário (lista de condições comuns + «outra»), nunca por interpretação livre de texto. O texto livre vai para a LLM apenas como contexto; quando contém algo que o motor não reconhece, aplica-se o modo prudente por defeito.
 
@@ -32,7 +59,8 @@ Deteção das condições: a partir de escolhas fechadas no questionário (lista
 | Cintura de risco | > 94 cm (H) ou > 80 cm (M) ⇒ ativa o módulo de gordura visceral | Prompt v2, 1.F |
 | Hidratação diária | 25 a 35 ml × peso (kg); valor central 30 ml/kg; mostrar o intervalo | Prompt v2, ponto 4 |
 | Proteína diária | 1,0 a 1,2 g × peso (kg), em todas as idades | Prompt v2, ponto 3; decisão de 25/10 |
-| Proteína com doença crónica | até 1,5 g/kg, sempre com nota de acompanhamento clínico | Prompt v2, ponto 3 |
+| Proteína com doença crónica | até 1,5 g/kg, sempre com nota de acompanhamento clínico — **exceto doença renal** | Prompt v2, ponto 3 |
+| Proteína com doença renal | sem valor no plano: «a quantidade de proteína deve ser definida pelo seu médico ou nutricionista» | Segurança (25/10) |
 | Proteína por refeição principal | 25 a 30 g | Prompt v2 (metodologia) |
 | Ganho de massa muscular | máximo 0,5 kg por cada 4 semanas (cerca de 2 kg nas 16 semanas), em qualquer intensidade | Prompt v2, 5.C |
 | Ritmo máximo de perda de peso | **0,4 %** do peso atual por semana a partir dos 61 anos; **0,5 %**/semana entre os 45 e os 60; **0,6 %**/semana entre os 18 e os 44 | Decisão de 25/10 |
@@ -50,6 +78,17 @@ Exemplo (persona de teste, 68 anos, 94 kg → 85 kg): ritmo máximo 0,4 % × 94 
 | **Alta** | pão eliminado ou mínimo ao pequeno-almoço; sem doces; só água | eliminar | diário, progressão de carga/volume a cada 2 semanas |
 
 **Intensidade efetiva** = a menor entre: a pedida (5.E), o máximo permitido pela secção 1 e a compatível com a disponibilidade declarada (1.J). Se for reduzida, o plano explica porquê numa frase.
+
+**Intensidade compatível com a disponibilidade (1.J):**
+
+| Disponibilidade | Intensidade máxima |
+|---|---|
+| 6 ou 7 dias e pelo menos 30 min/dia | Alta |
+| 4 ou 5 dias e pelo menos 30 min/dia | Média |
+| 3 dias, ou menos de 30 min/dia | Ligeira |
+| 1 ou 2 dias (qualquer duração) | Ligeira, com aviso honesto: está abaixo do mínimo recomendado (força em pelo menos 2 dias e atividade aeróbia regular); o plano junta caminhada diária fora das sessões e sugere acrescentar um dia logo que possível |
+
+Com 15 ou 20 min/dia, as sessões concentram-se no essencial (aquecimento curto, 4 a 5 exercícios de força, retorno à calma) e a caminhada diária completa o resto.
 
 ## 4. Módulo de gordura visceral
 
@@ -88,8 +127,8 @@ A Fase 4 do Vol. 2 («Integração e Desafio de Alta Intensidade») prescreve sa
 ### 6.3 A resolução
 
 1. **Prevalece o Vol. 1.** A Fase 4 chama-se «Integração» e mantém o foco do Vol. 1: consolidar hábitos e preparar a manutenção.
-2. **Variante-base por omissão.** Em todas as fases, o plano usa a variante-base da tabela 6.4. A variante avançada (a do Vol. 2) só entra quando se cumprem **todos** os critérios: idade ≤ 60; IMC < 30; sem nenhuma condição da secção 1 nem limitação articular em 1.H; intensidade efetiva Alta; registo de progresso das semanas anteriores sem dor nem sinais de alerta.
-3. **Parâmetros da Fase 4 na versão-base:** 3 séries (em vez de 4), descanso de 45 a 60 s (em vez de 30 a 45 s), esforço até 6. Na versão avançada: os valores do Vol. 2, com esforço até 7.
+2. **Variante-base sempre, no MVP.** Em todas as fases, o plano usa a variante-base da tabela 6.4. **No MVP, as variantes avançadas nunca entram no plano**, porque o plano é gerado uma vez no início e não há ainda reajuste com base no progresso. Ficam na biblioteca (marcadas `nivel: avancado`) para uma versão futura, em que só poderão entrar quando se cumprirem **todos** os critérios: idade ≤ 60; IMC < 30; sem nenhuma situação de modo prudente nem limitação em 1.H; intensidade efetiva Alta; registo de progresso das semanas anteriores sem dor nem sinais de alerta.
+3. **Parâmetros da Fase 4 na versão-base:** 3 séries (em vez de 4), descanso de 45 a 60 s (em vez de 30 a 45 s), esforço até 6. Na versão avançada (futura): os valores do Vol. 2, com esforço até 7.
 4. **Cardio finalizador** (Vol. 2, estrutura da sessão): na versão-base, «corrida estática» passa a **marcha rápida no lugar**, alternando 30 s mais vivos com 30 s calmos.
 5. **Osteoporose:** sem flexão do tronco com carga (abdominal crunch) em nenhuma fase; usa-se o bird-dog.
 
@@ -126,7 +165,7 @@ Estes textos ficam em `conteudo/avisos.yaml` e são inseridos pelo código depoi
 
 ## 8. Lista negra (verificação automática)
 
-Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», «queima gordura», «detox», «desintoxicação», «chá emagrecedor», «termogénico», «seca barriga», «secante», jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada («perder barriga em X dias»), qualquer marca comercial de suplementos, e qualquer exercício de nível avançado num plano que não cumpra os critérios da secção 6.3. Lista mantida em `conteudo/avisos.yaml`, com uma lista paralela de brasileirismos frequentes (tela, usuário, celular, café da manhã, academia, arquivo, salvar, baixar, time, registro).
+Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», «queima gordura», «detox», «desintoxicação», «chá emagrecedor», «termogénico», «seca barriga», «secante», jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada («perder barriga em X dias»), qualquer marca comercial de suplementos, e qualquer exercício de nível avançado (no MVP, sem exceção). Lista mantida em `conteudo/avisos.yaml`, com uma lista paralela de brasileirismos frequentes (tela, usuário, celular, café da manhã, academia, arquivo, salvar, baixar, time, registro).
 
 ## 9. Acompanhamento e lembretes
 
@@ -140,6 +179,7 @@ Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», 
 ## 10. Contactos
 
 - Email: obrigatório, vem da autenticação.
+- Os contactos pertencem ao modelo `Utilizador`, **não** ao `Questionario`: assim, nunca podem seguir para a LLM por engano.
 - Telemóvel: **opcional**, com país por omissão Portugal (+351) e escolha de qualquer outro país; validado como número de telemóvel do país escolhido e guardado em formato E.164. Especificação em `QUESTIONARIO.md`, secção «Contactos».
 - Nenhum envio por SMS ou WhatsApp no MVP; o telemóvel fica preparado para essa funcionalidade futura, que exigirá consentimento próprio no momento em que for ativada.
 
@@ -148,3 +188,4 @@ Não há decisões de domínio pendentes.
 ## Registo de decisões
 
 - 25/10/2026 — Gravidez: não gera plano, com a mensagem da secção 1. Teto «Média» com condições crónicas confirmado. Proteína 1,0–1,2 g/kg em todas as idades. Ritmos máximos de perda de peso 0,4 / 0,5 / 0,6 %/semana. Programa sempre em 16 semanas, sem meses. Incoerência da Fase 4 resolvida (secção 6). Prazos dos lembretes confirmados. Telemóvel opcional, nacional por omissão ou internacional.
+- 25/10/2026 — Revisão de coerência (após análise do Claude Code): tabela 1.1 com a consequência de cada condição e limitação; gravidade das limitações (ligeira/importante); «não sei» na medicação = «sim»; sem proteína numérica com doença renal; intensidade compatível com a disponibilidade definida; variantes avançadas fora do MVP.

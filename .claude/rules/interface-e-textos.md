@@ -11,8 +11,8 @@ paths:
 
 ## Público e acessibilidade
 
-- Público principal com 45–75 anos, muitas vezes no telemóvel. Letra base de pelo menos 17 px, contraste AA, botões grandes, uma decisão por ecrã no questionário.
-- Questionário em passos (uma secção do Prompt Universal por passo), com barra de progresso, botão «Anterior» e respostas guardadas na sessão para não se perderem.
+- Público principal com 45–75 anos, muitas vezes no telemóvel. Letra base de pelo menos 17 px, contraste AA, botões grandes, poucas perguntas por ecrã.
+- Questionário em passos tal como definidos em `docs/dominio/QUESTIONARIO.md` (agrupados por tema, cerca de 6 perguntas por ecrã no máximo), com barra de progresso, botão «Anterior» e respostas guardadas na sessão para não se perderem.
 - Explicar termos técnicos na própria frase («gordura visceral — a gordura que se acumula à volta dos órgãos abdominais»).
 - **Mobile-first**: desenhar primeiro para telemóvel (cerca de 390 px) e só depois alargar para computador. Testar as duas larguras antes de dar um ecrã por terminado.
 - Evitar componentes que dependam de rato (passar o cursor por cima, tabelas largas com deslocamento horizontal). Em telemóvel, tabelas largas passam a cartões.

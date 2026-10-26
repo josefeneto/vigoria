@@ -1,5 +1,5 @@
 {
-  "_nota": "Persona FICTÍCIA para testes. Não corresponde a nenhuma pessoa real. Resultado esperado: modo base (hipertensão controlada), intensidade efetiva Média, módulo de gordura visceral ativo, aviso de objetivo pouco realista (85 kg em 16 semanas excede 0,4 %/semana; alvo realista ≈ 88 kg à semana 16), apenas variantes-base dos exercícios (idade > 60, limitação nos joelhos).",
+  "_nota": "Persona FICTÍCIA para testes. Não corresponde a nenhuma pessoa real. Resultado esperado: modo base (hipertensão controlada; limitação ligeira nos joelhos), intensidade efetiva Média (5 dias × 30 min), esforço percebido em vez de frequência cardíaca (medicação «não sei»), módulo de gordura visceral ativo, aviso de objetivo pouco realista (85 kg em 16 semanas excede 0,4 %/semana; alvo realista ≈ 88 kg à semana 16, 85 kg por volta da semana 24), regressões nos exercícios que carregam os joelhos, apenas variantes-base.",
   "aceita_termos": true,
   "consentimento_saude": true,
   "confirma_maior_idade": true,
@@ -11,15 +11,18 @@
   "cintura_cm": 108,
   "atividade_atual": "ligeiro",
   "condicoes": [
-    "hipertensao_controlada"
+    "hipertensao"
   ],
   "condicoes_controladas": {
-    "hipertensao_controlada": true
+    "hipertensao": true
   },
   "condicoes_outras": "",
   "limitacoes": [
     "joelhos"
   ],
+  "limitacoes_gravidade": {
+    "joelhos": "ligeira"
+  },
   "medicacao_afeta_fc": "nao_sei",
   "medicacao_notas": "",
   "equipamento": [
@@ -54,7 +57,5 @@
   "intensidade_pedida": "media",
   "acompanhamento_ativo": true,
   "frequencia_registo": "semanal",
-  "lembretes_email": true,
-  "telemovel_pais": "PT",
-  "telemovel_numero": ""
+  "lembretes_email": true
 }

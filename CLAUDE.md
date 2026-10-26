@@ -35,6 +35,7 @@ pip install -r requirements-dev.txt                  # dependências (inclui as 
 streamlit run app.py                                 # app em http://localhost:8501
 pytest -q                                            # todos os testes
 pytest -q -m "not llm"                               # testes sem chamadas reais à LLM (por omissão)
+# Testes com a LLM real: só o José os corre, à mão (ver «Testes»). O Claude Code nunca os executa.
 ruff check . --fix ; ruff format .                   # lint e formatação
 python -m vigoria.motor.cli exemplos/persona_teste.json   # gerar plano sem interface
 ```
@@ -74,17 +75,17 @@ Princípio central: **a interface não tem lógica de negócio**. Tudo o que dec
 4. **Verificação** (`motor/verificacao.py`, híbrido): verificações determinísticas obrigatórias + revisão crítica opcional por LLM. Se falhar, uma única regeneração com o motivo; se voltar a falhar, devolve erro claro ao utilizador.
 5. **Voz de marca** (`motor/voz.py`): pós-processamento leve (termos técnicos explicados, deteção de brasileirismos, formatação para a interface).
 
-Máximo de 3 chamadas à LLM por plano. Sem CrewAI no MVP (decisão registada em `docs/PLANO_IMPLEMENTACAO.md`, secção 2).
+Máximo de 3 chamadas à LLM por plano: geração, revisão crítica e, se preciso, uma regeneração. A regeneração passa só pelas verificações em código, sem nova revisão pela LLM. Sem CrewAI no MVP (decisão registada em `docs/PLANO_IMPLEMENTACAO.md`, secção 2).
 
 ## Regras de segurança do domínio (inegociáveis)
 
 O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 
 - Os números (IMC, limiares de cintura, proteína, hidratação, ritmo máximo de perda de peso por idade, 0,5 kg de músculo por cada 4 semanas) são calculados em `regras/`, **nunca** pela LLM. A LLM recebe-os já calculados.
-- IMC ≥ 35, ou condições sinalizadas no questionário, ⇒ plano em modo prudente e aviso de orientação individualizada antes de iniciar.
+- IMC ≥ 35 ⇒ modo prudente com teto «Ligeira». As condições e limitações do questionário levam ou não a modo prudente segundo a tabela 1.1 das REGRAS_DOMINIO (por exemplo, hipertensão controlada fica na versão-base).
 - Disclaimer e sinais para interromper o exercício presentes em **todos** os planos (testado).
 - Proibido recomendar produtos, chás ou suplementos «queima-gordura»; suplementos só com a ressalva de validação clínica.
-- Exercícios só da biblioteca em `conteudo/exercicios.yaml`; a LLM escolhe e adapta, não inventa. Por omissão, sempre a variante-base; a avançada só com os critérios de REGRAS_DOMINIO §6.3.
+- Exercícios só da biblioteca em `conteudo/exercicios.yaml`; a LLM escolhe e adapta, não inventa. No MVP, sempre a variante-base; as variantes avançadas nunca entram no plano (REGRAS_DOMINIO §6.3).
 - Programa sempre de 16 semanas (4 fases); tudo em semanas, nunca em meses.
 - A app não diagnostica nem trata. Linguagem de bem-estar, nunca de diagnóstico.
 - Só maiores de 18 anos. Gravidez: não gera plano.
@@ -93,6 +94,7 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 
 - **Login obrigatório** antes do questionário. Sem sessão iniciada, só são visíveis a página de entrada, a política de privacidade e os termos.
 - Autenticação com `st.login("auth0")` (Streamlit + Auth0). O Auth0 trata do registo, palavras-passe, verificação de email e recuperação; a app **nunca** guarda palavras-passe. Métodos: Google, ou email e palavra-passe. Guia: `docs/GUIA_AUTH0.md`.
+- Telemóvel e email pertencem ao modelo `Utilizador`, nunca ao `Questionario`.
 - O utilizador é identificado pelo `sub` do token (identificador permanente), **nunca** pelo email. A conta na base de dados cria-se automaticamente no primeiro login.
 - Contas com email e palavra-passe só acedem depois de `email_verified` ser verdadeiro.
 - Se o mesmo email já existir com outro método de entrada, não juntar contas: mostrar «Já existe uma conta com este email. Entre com o método que usou da primeira vez.»
@@ -112,13 +114,13 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 - Python 3.14 (`requires-python = ">=3.14"`), tipagem em todas as funções públicas, Pydantic v2 para modelos, SQLAlchemy 2.x.
 - Nomes de módulos, classes e funções de domínio em português sem acentos (`calcular_imc`, `Questionario`); termos técnicos genéricos podem ficar em inglês (`client`, `retry`).
 - Docstrings e comentários em PT-EU, curtos. Textos visíveis ao utilizador em `paginas/` ou `prompts/`, nunca espalhados pelo código.
-- Testes: cada regra em `regras/` tem testes com casos-limite. Chamadas à LLM marcadas com `@pytest.mark.llm` e simuladas por omissão.
+- Testes: cada regra em `regras/` tem testes com casos-limite. Chamadas à LLM marcadas com `@pytest.mark.llm` e simuladas por omissão. Os testes `llm` só correm de verdade com a variável `VIGORIA_TESTES_LLM_REAIS=1`; sem ela, o `conftest.py` salta-os. Nunca definas essa variável nem corras esses testes: pede-me para o fazer.
 - Configuração por variáveis de ambiente lidas num único sítio (`src/vigoria/config.py`); em alternativa, de `st.secrets` (Streamlit Community Cloud, `AMBIENTE=demo`, só dados fictícios).
 - Modelo da LLM configurável (`GEMINI_MODEL`); não fixar nomes de modelos no código.
 
 ## Git
 
-- Um ramo por fase (`fase-03-regras`), commits pequenos com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
+- Um ramo por fase (`fase-02-regras`), commits pequenos com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
 - Antes de commit: lint e testes. Nunca commit de `.env`, `secrets.toml`, bases de dados locais ou ficheiros em `docs/privado/`.
 - `git push` e merge para `main` só depois de eu confirmar.
 

@@ -2,6 +2,7 @@
 
 > Traduz o Prompt Universal v2 (`docs/referencia/Prompt_Universal_Saude_Vitalidade_v2.md`) em campos de formulário e no modelo Pydantic `Questionario`.
 > Diferenças face ao Prompt v2 (decisões de 25/10/2026): o campo 5.D (duração em meses) desaparece — o programa tem sempre 16 semanas; em 6.B, «mensal» passa a «a cada 4 semanas»; a gravidez impede a geração do plano.
+> Os passos agrupam secções do Prompt por tema; prevalece esta organização. Máximo de cerca de 6 perguntas por ecrã; se um passo crescer, divide-se em subpassos.
 > Regra geral: preferir escolhas fechadas a texto livre. Texto livre só onde o contexto pessoal importa, e com limite de caracteres.
 
 ## Antes do passo 0 — Entrar ou criar conta
@@ -36,12 +37,14 @@ Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca al
 
 | Campo | Prompt | Tipo | Notas |
 |---|---|---|---|
-| `condicoes` | 4.A–4.C | escolha múltipla | hipertensão controlada; hipertensão não controlada; diabetes; doença cardiovascular; doença respiratória; doença renal; osteoporose; doença inflamatória intestinal; dor articular persistente; prótese/pós-cirurgia recente; gravidez; nenhuma; outra |
+| `condicoes` | 4.A–4.C | escolha múltipla | hipertensão; diabetes; doença cardiovascular; doença respiratória; doença renal; osteoporose; doença inflamatória intestinal; dor articular persistente; prótese articular ou cirurgia nos últimos 6 meses; gravidez; nenhuma; outra. Consequência de cada uma: REGRAS_DOMINIO §1.1 |
 | — | 4.C | regra | Se `gravidez` for escolhida, o questionário para de imediato e mostra: «A Vigoria não é recomendável para situações de gravidez.», com uma sugestão cordial de falar com o médico ou obstetra. Os dados já introduzidos não são guardados. |
-| `condicoes_controladas` | 4.A | sim/não por condição | |
+| `condicoes_controladas` | 4.A | sim / não, só para hipertensão, diabetes e doença inflamatória intestinal | «Está controlada com o tratamento atual?» |
+| `osteoporose_risco` | 4.A | sim / não / não sei, só se escolher osteoporose | «Já teve alguma fratura por fragilidade, ou o seu médico indicou risco elevado de fratura?» («não sei» = sim) |
 | `condicoes_outras` | 4.B | texto (200) | aplica modo prudente por defeito |
 | `limitacoes` | 1.H | escolha múltipla + texto (200) | joelhos, ancas, ombros, coluna, equilíbrio, nenhuma |
-| `medicacao_afeta_fc` | 4.D | sim / não / não sei | pergunta simples: «Toma medicação para o coração ou tensão que baixe o ritmo cardíaco (ex.: betabloqueantes)?» |
+| `limitacoes_gravidade` | 1.H | por limitação: ligeira / importante | ligeira = «incomoda, mas não me impede de fazer o dia a dia»; importante = «impede ou limita atividades do dia a dia» |
+| `medicacao_afeta_fc` | 4.D | sim / não / não sei | pergunta simples: «Toma medicação para o coração ou tensão que baixe o ritmo cardíaco (ex.: betabloqueantes)?» («não sei» = sim) |
 | `medicacao_notas` | 4.D | texto (200), opcional | |
 
 ## Passo 3 — Exercício (1.I–1.K)
@@ -85,8 +88,8 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 | `acompanhamento_ativo` | 6.A | sim/não | **sim** (recomendado) |
 | `frequencia_registo` | 6.B | semanal / a cada 4 semanas | semanal |
 | `lembretes_email` | 6.C | sim/não | sim |
-| `telemovel_pais` | 1.M | lista de países com indicativo, com pesquisa | **Portugal (+351)** |
-| `telemovel_numero` | 1.M | texto, **opcional** | vazio |
+| `telemovel_pais` | 1.M | lista de países com indicativo, com pesquisa | **Portugal (+351)** — guardado no `Utilizador`, não no `Questionario` |
+| `telemovel_numero` | 1.M | texto, **opcional** | vazio — guardado no `Utilizador`, não no `Questionario` |
 
 ## Contactos (1.L e 1.M)
 
@@ -97,7 +100,7 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
   - Validação com `phonenumbers`: tem de ser um número de telemóvel válido para o país escolhido (em Portugal, 9 algarismos a começar por 9). O utilizador pode escrever com ou sem espaços; se colar um número com `+` ou `00`, o país é detetado automaticamente.
   - Guardado no formato internacional E.164 (ex.: `+3519XXXXXXXX`) e apresentado no formato nacional legível (ex.: «912 345 678»).
   - Texto junto ao campo: «Opcional. Usamos o seu telemóvel apenas para contacto sobre a sua conta e, no futuro, se o ativar, para lembretes por SMS ou WhatsApp. Nunca o partilhamos.»
-  - Nunca enviado à LLM nem incluído em exportações do plano (PDF); incluído na exportação dos dados da conta (RGPD).
+  - Faz parte do modelo `Utilizador`, não do `Questionario`. Nunca enviado à LLM nem incluído em exportações do plano (PDF); incluído na exportação dos dados da conta (RGPD).
 
 ## Passo 7 — Revisão
 
