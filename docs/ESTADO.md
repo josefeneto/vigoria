@@ -4,7 +4,7 @@
 
 ## Fase atual
 
-**Fase 0 — Preparação do ambiente.** Kit no repositório e primeira revisão pelo Claude Code feita; ajustes de coerência aplicados a 25/10. Ainda sem código.
+**Fase 1 — Fundações do código: concluída a 27/10/2026.** Estrutura de pastas, dependências fixadas (testadas em Python 3.14 no Windows), `config.py`, modelo `Questionario` com validações e testes, página de boas-vindas com o tema da marca. Próximo passo: Fase 2 (regras determinísticas).
 
 ## Decisões tomadas
 
@@ -19,6 +19,8 @@
 - 25/10/2026 — Telemóvel opcional: Portugal (+351) por omissão, outros países por lista com indicativos; validado e guardado em E.164; sem SMS/WhatsApp no MVP.
 - 25/10/2026 — Ajustes após a revisão da Fase 0 pelo Claude Code: tabela de condições e limitações (REGRAS §1.1), sem variantes avançadas no MVP, disponibilidade → intensidade, contactos fora do Questionario, máximo de 3 chamadas à LLM clarificado, testes com a LLM real só pelo José.
 - 26/10/2026 — Segunda revisão do Claude Code (pontos A–H): CLI só autorizada com --so-estrategia; conftest lê só os.environ; verificação só aceita `nivel: base`; «outra» ⇒ prudente; hidratação e proteína com doença renal/cardiovascular; proteína nunca acima de 1,2 g/kg; subpassos 2a/2b e 4a/4b; regra de .env simplificada.
+- 27/10/2026 — Git: trabalho direto no `main`, sem ramos por fase (simplicidade).
+- 27/10/2026 — Questionário: halteres como `"halteres"` + campo `halteres_kg`; refeições com as cinco chaves fixas e texto vazio = «não faz»; o modelo aceita gravidez (é a estratégia, na Fase 2, que impede o plano); campos começados por «_» são ignorados e campos desconhecidos são rejeitados.
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 
 ## Decisões pendentes
@@ -29,8 +31,8 @@ Nenhuma decisão de domínio pendente. Os valores das regras de domínio aguarda
 
 | Fase | Estado | Data | Notas |
 |---|---|---|---|
-| 0 — Ambiente | em curso | | |
-| 1 — Fundações | por iniciar | | |
+| 0 — Ambiente | concluída | 26/10/2026 | |
+| 1 — Fundações | concluída | 27/10/2026 | 51 testes; letra base de 17 px no tema |
 | 2 — Regras determinísticas | por iniciar | | Persona de teste deve disparar o aviso de realismo (94 → 85 kg em 16 semanas excede 0,4 %/semana; alvo realista ≈ 88 kg) |
 | 3 — Conteúdo editorial | por iniciar | | Variantes da Fase 4 definidas em REGRAS_DOMINIO §6.4 |
 | 4 — Motor de geração | por iniciar | | |

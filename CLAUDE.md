@@ -120,9 +120,9 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 
 ## Git
 
-- Um ramo por fase (`fase-02-regras`), commits pequenos com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
+- Trabalho direto no `main`, sem ramos por fase. Commits pequenos com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
 - Antes de commit: lint e testes. Nunca commit de `.env`, `secrets.toml`, bases de dados locais ou ficheiros em `docs/privado/`.
-- `git push` e merge para `main` só depois de eu confirmar.
+- `git push` só depois de eu confirmar.
 
 ## Documentação de referência
 

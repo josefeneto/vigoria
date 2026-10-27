@@ -27,9 +27,10 @@
   "medicacao_notas": "",
   "equipamento": [
     "cadeira_firme",
-    "halteres_2kg",
+    "halteres",
     "passadeira"
   ],
+  "halteres_kg": 2,
   "dias_semana": 5,
   "minutos_dia": 30,
   "preferencias": [

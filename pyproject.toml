@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vigoria"
+version = "0.1.0"
+description = "Planos pessoais de saúde e vitalidade para adultos 45+."
+requires-python = ">=3.14"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"vigoria.conteudo" = ["*.yaml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "llm: chama a LLM real; só corre com VIGORIA_TESTES_LLM_REAIS=1",
+]

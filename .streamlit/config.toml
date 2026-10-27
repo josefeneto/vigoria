@@ -5,6 +5,7 @@ backgroundColor = "#F7F3EC"         # branco-osso
 secondaryBackgroundColor = "#ECE5D8"
 textColor = "#2E3338"               # grafite
 font = "sans serif"
+baseFontSize = 17                   # público 45+: letra base de pelo menos 17 px
 
 [server]
 headless = true
