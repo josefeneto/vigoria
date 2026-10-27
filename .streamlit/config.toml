@@ -8,7 +8,7 @@ font = "sans serif"
 baseFontSize = 17                   # público 45+: letra base de pelo menos 17 px
 
 [server]
-headless = true
+headless = false                    # abre o browser em local; em produção (Docker/Railway) usar STREAMLIT_SERVER_HEADLESS=true
 
 [browser]
 gatherUsageStats = false

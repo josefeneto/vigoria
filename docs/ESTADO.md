@@ -41,7 +41,7 @@ Nenhuma decisão de domínio pendente. Os valores das regras de domínio aguarda
 | 7 — Acompanhamento | por iniciar | | |
 | 8 — Lembretes | por iniciar | | |
 | 9 — Exportação | por iniciar | | |
-| 10 — Publicação e beta | por iniciar | | |
+| 10 — Publicação e beta | por iniciar | | Definir `STREAMLIT_SERVER_HEADLESS=true` no Railway (em local, o config.toml tem `headless = false` para abrir o browser) |
 
 ## Versões dos prompts
 
