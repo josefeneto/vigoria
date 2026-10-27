@@ -33,7 +33,7 @@ Data e versão do texto de consentimento ficam registadas.
 
 Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca alarmista).
 
-## Passo 2 — Corpo e limitações (1.H) e saúde (4.A–4.D)
+## Passo 2a — Saúde (4.A–4.D)
 
 | Campo | Prompt | Tipo | Notas |
 |---|---|---|---|
@@ -41,11 +41,17 @@ Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca al
 | — | 4.C | regra | Se `gravidez` for escolhida, o questionário para de imediato e mostra: «A Vigoria não é recomendável para situações de gravidez.», com uma sugestão cordial de falar com o médico ou obstetra. Os dados já introduzidos não são guardados. |
 | `condicoes_controladas` | 4.A | sim / não, só para hipertensão, diabetes e doença inflamatória intestinal | «Está controlada com o tratamento atual?» |
 | `osteoporose_risco` | 4.A | sim / não / não sei, só se escolher osteoporose | «Já teve alguma fratura por fragilidade, ou o seu médico indicou risco elevado de fratura?» («não sei» = sim) |
-| `condicoes_outras` | 4.B | texto (200) | aplica modo prudente por defeito |
-| `limitacoes` | 1.H | escolha múltipla + texto (200) | joelhos, ancas, ombros, coluna, equilíbrio, nenhuma |
-| `limitacoes_gravidade` | 1.H | por limitação: ligeira / importante | ligeira = «incomoda, mas não me impede de fazer o dia a dia»; importante = «impede ou limita atividades do dia a dia» |
+| `condicoes_outras` | 4.B | texto (200), só se escolher «outra» | «outra» leva sempre a modo prudente; o texto nunca é interpretado pelo motor |
 | `medicacao_afeta_fc` | 4.D | sim / não / não sei | pergunta simples: «Toma medicação para o coração ou tensão que baixe o ritmo cardíaco (ex.: betabloqueantes)?» («não sei» = sim) |
 | `medicacao_notas` | 4.D | texto (200), opcional | |
+
+## Passo 2b — Limitações (1.H)
+
+| Campo | Prompt | Tipo | Notas |
+|---|---|---|---|
+| `limitacoes` | 1.H | escolha múltipla | joelhos, ancas, ombros, coluna, equilíbrio, outra, nenhuma |
+| `limitacoes_gravidade` | 1.H | por limitação: ligeira / importante | ligeira = «incomoda, mas não me impede de fazer o dia a dia»; importante = «impede ou limita atividades do dia a dia» |
+| `limitacoes_outra` | 1.H | texto (200), só se escolher «outra» | «outra» leva sempre a modo prudente (REGRAS_DOMINIO §1.1) |
 
 ## Passo 3 — Exercício (1.I–1.K)
 
@@ -56,7 +62,7 @@ Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca al
 | `minutos_dia` | 1.J | escolha: 15 / 20 / 30 / 45 / 60 |
 | `preferencias` | 1.K | escolha múltipla: caminhada, Tai Chi, dança, força, natação, outro |
 
-## Passo 4 — Alimentação (2.A–2.F) e consumos (3.A–3.E)
+## Passo 4a — Refeições (2.A–2.F)
 
 Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 
@@ -64,6 +70,11 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 |---|---|---|
 | `refeicoes` | 2.A–2.E | por refeição: faz/não faz + texto curto opcional (150) |
 | `restricoes_alimentares` | 2.F | escolha múltipla (vegetariano, sem lactose, sem glúten, outra) + texto |
+
+## Passo 4b — Bebidas e consumos (3.A–3.E)
+
+| Campo | Prompt | Tipo |
+|---|---|---|
 | `agua_litros` | 3.A | escolha: < 0,5 / 0,5–1 / 1–1,5 / 1,5–2 / > 2 |
 | `bebidas_acucaradas_litros` | 3.B | escolha: nenhuma / < 0,33 / 0,33–1 / > 1 |
 | `vinho_copos_dia` | 3.C | inteiro 0–10 |

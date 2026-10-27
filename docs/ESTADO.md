@@ -14,10 +14,11 @@
 - 22/10/2026 — Nenhum dado identificativo é enviado à LLM.
 - 24/10/2026 — Python 3.14 (versão instalada). CrewAI não suporta oficialmente 3.14, mas não é usado no MVP.
 - 24/10/2026 — PWA desde o início: desenho mobile-first; camada PWA (Caddy + manifest + service worker) à frente do Streamlit no Railway. Sem modo offline.
-- 25/10/2026 — Regras de domínio fechadas: gravidez fora do âmbito; teto «Média» com condições crónicas; proteína 1,0–1,2 g/kg em todas as idades; perda de peso máxima 0,4 / 0,5 / 0,6 %/semana (61+ / 45–60 / 18–44); programa sempre de 16 semanas, sem meses; Fase 4 do Vol. 2 resolvida com variantes-base (REGRAS_DOMINIO §6); prazos dos lembretes confirmados.
+- 25/10/2026 — Regras de domínio fechadas: gravidez fora do âmbito; teto «Média» em modo prudente (que condições levam a modo prudente: REGRAS §1.1); proteína 1,0–1,2 g/kg em todas as idades; perda de peso máxima 0,4 / 0,5 / 0,6 %/semana (61+ / 45–60 / 18–44); programa sempre de 16 semanas, sem meses; Fase 4 do Vol. 2 resolvida com variantes-base (REGRAS_DOMINIO §6); prazos dos lembretes confirmados.
 - 25/10/2026 — Volume 2 em Word revisto segundo REGRAS_DOMINIO §6 (variantes-base nas tabelas, avançadas por baixo, Fase 4 «Integração», cardio finalizador sem corrida).
 - 25/10/2026 — Telemóvel opcional: Portugal (+351) por omissão, outros países por lista com indicativos; validado e guardado em E.164; sem SMS/WhatsApp no MVP.
 - 25/10/2026 — Ajustes após a revisão da Fase 0 pelo Claude Code: tabela de condições e limitações (REGRAS §1.1), sem variantes avançadas no MVP, disponibilidade → intensidade, contactos fora do Questionario, máximo de 3 chamadas à LLM clarificado, testes com a LLM real só pelo José.
+- 26/10/2026 — Segunda revisão do Claude Code (pontos A–H): CLI só autorizada com --so-estrategia; conftest lê só os.environ; verificação só aceita `nivel: base`; «outra» ⇒ prudente; hidratação e proteína com doença renal/cardiovascular; proteína nunca acima de 1,2 g/kg; subpassos 2a/2b e 4a/4b; regra de .env simplificada.
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 
 ## Decisões pendentes

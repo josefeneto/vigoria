@@ -114,7 +114,7 @@ Não escrevas código ainda. Quero que:
 Fase 1 do PLANO_IMPLEMENTACAO. Em modo de planeamento, propõe e depois executa:
 - A estrutura de pastas descrita no CLAUDE.md (só com __init__.py e ficheiros mínimos).
 - Python 3.14: requires-python ">=3.14" no pyproject.toml. Antes de fixar versões, confirma que todas as dependências instalam sem erros em 3.14 no Windows (pip install num ambiente limpo) e diz-me se alguma falhar.
-- tests/conftest.py que salta os testes marcados "llm" se a variável VIGORIA_TESTES_LLM_REAIS não for 1.
+- tests/conftest.py que salta os testes marcados "llm" se a variável VIGORIA_TESTES_LLM_REAIS não for 1. Lê a variável só de os.environ, nunca do config.py nem do .env.
 - pyproject.toml (configuração do ruff e do pytest, com o marcador "llm"), requirements.txt e requirements-dev.txt com versões fixadas: streamlit[auth], pydantic, pydantic-settings, google-genai, sqlalchemy, alembic, psycopg[binary], pyyaml, plotly, httpx, tenacity, phonenumbers, babel; dev: pytest, ruff.
 - src/vigoria/config.py a ler o .env com pydantic-settings.
 - src/vigoria/modelos/questionario.py com o modelo Questionario completo segundo @docs/dominio/QUESTIONARIO.md, incluindo validações de intervalos. Email e telemóvel ficam fora deste modelo (pertencem ao Utilizador, na Fase 6).
@@ -139,7 +139,7 @@ Implementa em src/vigoria/regras/:
 - elegibilidade.py: modo base / prudente / não elegível, com a lista de motivos.
 - intensidade.py: intensidade efetiva = mínimo entre pedida, permitida e compatível com a disponibilidade, com explicação em PT-EU.
 Depois src/vigoria/modelos/estrategia.py (modelo Estrategia) e src/vigoria/motor/acolhimento.py e estrategia.py, que recebem um Questionario e devolvem uma Estrategia.
-Testes com casos-limite: IMC exatamente 35,0; cintura 94 e 95 em homens, 80 e 81 em mulheres; idade 17, 18, 44, 45, 60 e 61 (mudança de faixa no ritmo de perda de peso); gravidez (não gera plano); condição crónica com intensidade pedida Alta (fica Média); uma linha de teste para cada opção da tabela 1.1; limitação ligeira vs. importante; medicação «não sei»; doença renal sem valor de proteína; disponibilidade 2 dias, 3 dias, 5 dias × 20 min e 7 dias × 30 min; persona de teste (resultado esperado descrito no campo _nota do JSON, incluindo alvo realista ≈ 88 kg à semana 16).
+Testes com casos-limite: IMC exatamente 35,0; cintura 94 e 95 em homens, 80 e 81 em mulheres; idade 17, 18, 44, 45, 60 e 61 (mudança de faixa no ritmo de perda de peso); gravidez (não gera plano); doença cardiovascular com intensidade pedida Alta (fica Média); hipertensão controlada com Alta e 7 dias × 30 min (fica Alta); doença renal sem valores de proteína nem de hidratação; uma linha de teste para cada opção da tabela 1.1; limitação ligeira vs. importante; medicação «não sei»; doença renal sem valor de proteína; disponibilidade 2 dias, 3 dias, 5 dias × 20 min e 7 dias × 30 min; persona de teste (resultado esperado descrito no campo _nota do JSON, incluindo alvo realista ≈ 88 kg à semana 16).
 Usa só os valores do documento. O programa é sempre de 16 semanas: nada de meses no código.
 Acrescenta um comando de linha python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json que imprime a estratégia em texto legível.
 ```
@@ -180,7 +180,7 @@ Fase 4. Implementa o motor de geração conforme o CLAUDE.md (secção "Pipeline
 2. src/vigoria/modelos/plano.py: modelo Plano (resumo, marcos às semanas 4, 8, 12 e 16, semana-tipo, treino por fase com ids de exercícios, orientação alimentar, hidratação, hábitos, indicadores de acompanhamento, notas personalizadas).
 3. prompts/gerador_sistema.md (versão 1): papel, tom de voz Vigoria a partir de @docs/referencia/Vigoria_Briefing_Marca.md, regras do que a LLM pode e não pode decidir. Os números chegam calculados pela estratégia.
 4. motor/gerador.py: monta o pedido com a Estrategia, os dados do questionário SEM identificadores e o excerto relevante do conteúdo YAML.
-5. motor/verificacao.py com as verificações de .claude/rules/regras-e-motor.md; uma regeneração com o motivo se falhar.
+5. motor/verificacao.py com as verificações de .claude/rules/regras-e-motor.md, incluindo a rejeição de qualquer exercício que não tenha nivel: base; uma regeneração com o motivo se falhar.
 6. motor/voz.py: insere os textos obrigatórios de avisos.yaml e deteta brasileirismos.
 7. motor/pipeline.py que junta tudo, e o cli.py a gerar o plano em Markdown para saidas/.
 Testes com a LLM simulada (respostas JSON de exemplo em tests/fixtures/), incluindo uma resposta "má" que a verificação tem de chumbar. Um único teste marcado @pytest.mark.llm que corre a sério com a persona — nunca o executes; diz-me o comando para eu o correr.

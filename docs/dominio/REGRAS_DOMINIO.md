@@ -32,7 +32,7 @@ Cada opção do questionário (passo 2) tem uma consequência definida. Nenhuma 
 | Diabetes, não controlada | prudente | Igual, mais aviso reforçado: falar com o médico antes de iniciar |
 | Doença cardiovascular | prudente | Validação médica antes de iniciar |
 | Doença respiratória | prudente | Cardio pelo teste da fala; interromper perante falta de ar desproporcionada |
-| Doença renal | prudente | **Sem valores de proteína no plano** (ver secção 2); hidratação também a definir com o médico |
+| Doença renal | prudente | **Sem valores de proteína nem de hidratação no plano** (ver secção 2) |
 | Osteoporose **com** fratura anterior por fragilidade ou risco elevado indicado pelo médico (ou «não sei») | prudente | Sem flexão do tronco com carga; bird-dog em vez de crunch; equilíbrio sempre com apoio |
 | Osteoporose **sem** fratura nem risco elevado indicado | base | Sem flexão do tronco com carga; bird-dog em vez de crunch; sem impacto |
 | Doença inflamatória intestinal, controlada | base | Alterações alimentares (fibra, leguminosas, hortícolas crus, lacticínios) só com a ressalva de respeitar o plano alimentar indicado pelo médico ou nutricionista |
@@ -40,15 +40,16 @@ Cada opção do questionário (passo 2) tem uma consequência definida. Nenhuma 
 | Dor articular persistente | prudente | Variante-base com regressão nos exercícios que carregam a articulação indicada |
 | Prótese articular ou cirurgia nos últimos 6 meses | prudente | Validação pelo cirurgião ou fisioterapeuta antes de iniciar |
 | Gravidez | não gera plano | Mensagem da tabela acima |
-| Outra (texto livre) | prudente | O texto vai para a LLM apenas como contexto |
+| Outra (com texto livre) | prudente, sempre | O motor nunca interpreta o texto; segue para a LLM apenas como contexto |
 
 | Limitação (1.H) e gravidade | Modo | Consequências |
 |---|---|---|
 | Ligeira — «incomoda, mas não me impede de fazer o dia a dia» | base | Regressão nos exercícios que envolvem a zona indicada (joelhos, ancas, ombros, coluna) e exclusão dos que a tenham em `contraindicacoes` |
 | Importante — «impede ou limita atividades do dia a dia» | prudente | Igual, mais aviso de orientação individualizada |
 | Equilíbrio (qualquer gravidade) | prudente se importante | Todos os exercícios de equilíbrio e de pé com apoio por perto |
+| Outra limitação (com texto livre) | prudente, sempre | Igual a «Outra» nas condições: texto só como contexto para a LLM |
 
-Deteção das condições: a partir de escolhas fechadas no questionário (lista de condições comuns + «outra»), nunca por interpretação livre de texto. O texto livre vai para a LLM apenas como contexto; quando contém algo que o motor não reconhece, aplica-se o modo prudente por defeito.
+Deteção das condições e limitações: apenas a partir das escolhas fechadas do questionário. O motor **nunca** interpreta texto livre. Escolher «outra» (condição ou limitação) leva sempre a modo prudente, seja qual for o texto; o texto livre (condições, limitações, medicação) segue para a LLM apenas como contexto.
 
 ## 2. Cálculos
 
@@ -58,8 +59,10 @@ Deteção das condições: a partir de escolhas fechadas no questionário (lista
 | Classe de IMC | < 18,5 baixo peso; 18,5–24,9 normal; 25–29,9 excesso de peso; 30–34,9 obesidade I; ≥ 35 fora da versão-base | Vol. 1 / OMS |
 | Cintura de risco | > 94 cm (H) ou > 80 cm (M) ⇒ ativa o módulo de gordura visceral | Prompt v2, 1.F |
 | Hidratação diária | 25 a 35 ml × peso (kg); valor central 30 ml/kg; mostrar o intervalo | Prompt v2, ponto 4 |
+| Hidratação com doença renal | sem valor em ml no plano: «a quantidade de líquidos deve ser definida pelo seu médico» | Segurança (26/10) |
+| Hidratação com doença cardiovascular | mostra o intervalo, com a nota: «se tiver indicação médica para limitar líquidos (por exemplo, insuficiência cardíaca), siga essa indicação» | Segurança (26/10) |
 | Proteína diária | 1,0 a 1,2 g × peso (kg), em todas as idades | Prompt v2, ponto 3; decisão de 25/10 |
-| Proteína com doença crónica | até 1,5 g/kg, sempre com nota de acompanhamento clínico — **exceto doença renal** | Prompt v2, ponto 3 |
+| Proteína acima de 1,2 g/kg | **o plano nunca propõe**. Com qualquer condição da tabela 1.1 (exceto doença renal), acrescenta a nota: «em algumas situações, o médico ou nutricionista pode indicar até 1,5 g/kg; não aumente sem essa indicação» | Prompt v2, ponto 3; decisão de 26/10 |
 | Proteína com doença renal | sem valor no plano: «a quantidade de proteína deve ser definida pelo seu médico ou nutricionista» | Segurança (25/10) |
 | Proteína por refeição principal | 25 a 30 g | Prompt v2 (metodologia) |
 | Ganho de massa muscular | máximo 0,5 kg por cada 4 semanas (cerca de 2 kg nas 16 semanas), em qualquer intensidade | Prompt v2, 5.C |
@@ -127,7 +130,7 @@ A Fase 4 do Vol. 2 («Integração e Desafio de Alta Intensidade») prescreve sa
 ### 6.3 A resolução
 
 1. **Prevalece o Vol. 1.** A Fase 4 chama-se «Integração» e mantém o foco do Vol. 1: consolidar hábitos e preparar a manutenção.
-2. **Variante-base sempre, no MVP.** Em todas as fases, o plano usa a variante-base da tabela 6.4. **No MVP, as variantes avançadas nunca entram no plano**, porque o plano é gerado uma vez no início e não há ainda reajuste com base no progresso. Ficam na biblioteca (marcadas `nivel: avancado`) para uma versão futura, em que só poderão entrar quando se cumprirem **todos** os critérios: idade ≤ 60; IMC < 30; sem nenhuma situação de modo prudente nem limitação em 1.H; intensidade efetiva Alta; registo de progresso das semanas anteriores sem dor nem sinais de alerta.
+2. **Variante-base sempre, no MVP.** Em todas as fases, o plano usa só exercícios com `nivel: base`: os do Vol. 1, os do Vol. 2 classificados como base e as variantes-base da tabela 6.4. **No MVP, as variantes avançadas nunca entram no plano**, porque o plano é gerado uma vez no início e não há ainda reajuste com base no progresso. Ficam na biblioteca (marcadas `nivel: intermedio` ou `nivel: avancado`, conforme a tabela 6.4) para uma versão futura, em que só poderão entrar quando se cumprirem **todos** os critérios: idade ≤ 60; IMC < 30; sem nenhuma situação de modo prudente nem limitação em 1.H; intensidade efetiva Alta; registo de progresso das semanas anteriores sem dor nem sinais de alerta.
 3. **Parâmetros da Fase 4 na versão-base:** 3 séries (em vez de 4), descanso de 45 a 60 s (em vez de 30 a 45 s), esforço até 6. Na versão avançada (futura): os valores do Vol. 2, com esforço até 7.
 4. **Cardio finalizador** (Vol. 2, estrutura da sessão): na versão-base, «corrida estática» passa a **marcha rápida no lugar**, alternando 30 s mais vivos com 30 s calmos.
 5. **Osteoporose:** sem flexão do tronco com carga (abdominal crunch) em nenhuma fase; usa-se o bird-dog.
@@ -165,7 +168,7 @@ Estes textos ficam em `conteudo/avisos.yaml` e são inseridos pelo código depoi
 
 ## 8. Lista negra (verificação automática)
 
-Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», «queima gordura», «detox», «desintoxicação», «chá emagrecedor», «termogénico», «seca barriga», «secante», jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada («perder barriga em X dias»), qualquer marca comercial de suplementos, e qualquer exercício de nível avançado (no MVP, sem exceção). Lista mantida em `conteudo/avisos.yaml`, com uma lista paralela de brasileirismos frequentes (tela, usuário, celular, café da manhã, academia, arquivo, salvar, baixar, time, registro).
+Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», «queima gordura», «detox», «desintoxicação», «chá emagrecedor», «termogénico», «seca barriga», «secante», jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada («perder barriga em X dias»), qualquer marca comercial de suplementos, e qualquer exercício que não tenha `nivel: base` (no MVP, sem exceção). Lista mantida em `conteudo/avisos.yaml`, com uma lista paralela de brasileirismos frequentes (tela, usuário, celular, café da manhã, academia, arquivo, salvar, baixar, time, registro).
 
 ## 9. Acompanhamento e lembretes
 
@@ -189,3 +192,4 @@ Não há decisões de domínio pendentes.
 
 - 25/10/2026 — Gravidez: não gera plano, com a mensagem da secção 1. Teto «Média» com condições crónicas confirmado. Proteína 1,0–1,2 g/kg em todas as idades. Ritmos máximos de perda de peso 0,4 / 0,5 / 0,6 %/semana. Programa sempre em 16 semanas, sem meses. Incoerência da Fase 4 resolvida (secção 6). Prazos dos lembretes confirmados. Telemóvel opcional, nacional por omissão ou internacional.
 - 25/10/2026 — Revisão de coerência (após análise do Claude Code): tabela 1.1 com a consequência de cada condição e limitação; gravidade das limitações (ligeira/importante); «não sei» na medicação = «sim»; sem proteína numérica com doença renal; intensidade compatível com a disponibilidade definida; variantes avançadas fora do MVP.
+- 26/10/2026 — Segunda revisão de coerência: verificação rejeita tudo o que não seja `nivel: base`; «outra» condição ou limitação ⇒ prudente sem interpretar texto; sem valores de hidratação com doença renal e nota de restrição de líquidos com doença cardiovascular; o plano nunca propõe proteína acima de 1,2 g/kg; teto «Média» aplica-se ao modo prudente (não a todas as condições crónicas).

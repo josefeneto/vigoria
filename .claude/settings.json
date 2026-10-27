@@ -4,7 +4,6 @@
       "Bash(pytest *)",
       "Bash(python -m pytest *)",
       "Bash(ruff *)",
-      "Bash(python -m vigoria.motor.cli *)",
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
@@ -16,7 +15,9 @@
       "PowerShell(ruff *)",
       "PowerShell(git status *)",
       "PowerShell(git diff *)",
-      "PowerShell(git log *)"
+      "PowerShell(git log *)",
+      "Bash(python -m vigoria.motor.cli --so-estrategia *)",
+      "PowerShell(python -m vigoria.motor.cli --so-estrategia *)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -27,8 +28,8 @@
     ],
     "deny": [
       "Read(.env)",
-      "Read(.env.*)",
-      "Read(!.env.example)",
+      "Read(.env.local)",
+      "Read(.env.production)",
       "Read(.streamlit/secrets.toml)",
       "Read(docs/privado/**)",
       "Edit(.env)",
