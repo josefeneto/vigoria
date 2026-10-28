@@ -16,6 +16,8 @@ from vigoria.regras.calculos import (
     ganho_muscular_maximo_kg,
     imc_leva_a_prudente,
     limiar_cintura_cm,
+    marcos_peso_kg,
+    peso_minimo_saudavel_kg,
     ritmo_maximo_perda_pct,
 )
 
@@ -238,3 +240,42 @@ def test_ganho_muscular_acima_do_maximo() -> None:
 def test_ganho_muscular_rejeita_valor_nao_positivo() -> None:
     with pytest.raises(ValueError):
         avaliar_ganho_muscular(0)
+
+
+# --- Peso mínimo saudável (IMC 18,5) e marcos de peso (decisões de 28/10/2026) ---
+
+
+@pytest.mark.parametrize(
+    ("altura_cm", "esperado"),
+    [(172, 54.8), (160, 47.4), (200, 74.0)],  # 54,73 → 54,8; 47,36 → 47,4; exato 74,0
+)
+def test_peso_minimo_saudavel(altura_cm: float, esperado: float) -> None:
+    peso = peso_minimo_saudavel_kg(altura_cm)
+    assert peso == esperado
+    assert calcular_imc(peso, altura_cm) >= 18.5
+
+
+def test_peso_minimo_rejeita_altura_invalida() -> None:
+    with pytest.raises(ValueError):
+        peso_minimo_saudavel_kg(0)
+
+
+def test_marcos_persona_com_ritmo_maximo() -> None:
+    # 68 anos, 94 → 85 kg: ritmo limitado a 0,376 kg/semana
+    assert marcos_peso_kg(94.0, 85.0, 68) == (92.5, 91.0, 89.5, 88.0)
+
+
+def test_marcos_objetivo_realista_chega_ao_alvo_na_semana_16() -> None:
+    # 50 anos, 80 → 76 kg: 0,25 kg/semana, abaixo do máximo de 0,4
+    assert marcos_peso_kg(80.0, 76.0, 50) == (79.0, 78.0, 77.0, 76.0)
+
+
+@pytest.mark.parametrize("alvo", [80.0, 85.0])
+def test_marcos_sem_perda_mantem_o_peso(alvo: float) -> None:
+    assert marcos_peso_kg(80.0, alvo, 50) == (80.0, 80.0, 80.0, 80.0)
+
+
+def test_marcos_nunca_passam_abaixo_do_alvo() -> None:
+    for marco in marcos_peso_kg(70.0, 69.5, 30):
+        assert marco >= 69.5
+    assert marcos_peso_kg(70.0, 69.5, 30)[-1] == 69.5

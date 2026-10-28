@@ -4,7 +4,7 @@
 
 ## Fase atual
 
-**Fase 1 — Fundações do código: concluída a 27/10/2026.** Estrutura de pastas, dependências fixadas (testadas em Python 3.14 no Windows), `config.py`, modelo `Questionario` com validações e testes, página de boas-vindas com o tema da marca. Próximo passo: Fase 2 (regras determinísticas).
+**Fase 2 — Regras determinísticas: concluída a 28/10/2026.** Cálculos, elegibilidade, intensidade efetiva, modelo `Estrategia`, acolhimento, estratégia e CLI (`python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json`). Estratégia da persona revista e aprovada pelo José. Próximo passo: Fase 3 (conteúdo editorial); os textos de `regras/textos.py` passam para `conteudo/avisos.yaml`.
 
 ## Decisões tomadas
 
@@ -22,6 +22,8 @@
 - 28/10/2026 — Ferramentas Python sempre com `python -m` (`python -m pytest`, `python -m ruff`, `python -m streamlit run app.py`, `python -m pip`): o Smart App Control do Windows bloqueia os executáveis do `.venv`. Atualizados CLAUDE.md, README, guia de arranque, plano, regras e `.claude/settings.json`.
 - 28/10/2026 — Git: só o ramo `main`, sem ramos por fase; commits pequenos, um ou mais por fase; lint e testes têm de passar antes de cada commit; push só depois de o José confirmar.
 - 27/10/2026 — Questionário: halteres como `"halteres"` + campo `halteres_kg`; refeições com as cinco chaves fixas e texto vazio = «não faz»; o modelo aceita gravidez (é a estratégia, na Fase 2, que impede o plano); campos começados por «_» são ignorados e campos desconhecidos são rejeitados.
+- 28/10/2026 — Fase 2 (registadas na REGRAS_DOMINIO): marcos de peso lineares com o ritmo usado (iguais ao objetivo depois de o atingir), cintura sem número (só o limiar como referência), marcos de força pela LLM; nova pergunta «Em que articulações?» (`dor_articular_zonas`, `dor_articular_outra`) para a dor articular persistente; incoerências nos objetivos como avisos (peso-alvo com IMC < 18,5 limitado a IMC 18,5; cintura-alvo ≥ atual; peso-alvo ≥ atual).
+- 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias; no MVP, sem impacto e equilíbrio com apoio para todos (REGRAS §6.3, ponto 6); `.gitattributes` com `* text=auto eol=lf` (quebras de linha LF no repositório).
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 
 ## Decisões pendentes
@@ -34,7 +36,7 @@ Nenhuma decisão de domínio pendente. Os valores das regras de domínio aguarda
 |---|---|---|---|
 | 0 — Ambiente | concluída | 26/10/2026 | |
 | 1 — Fundações | concluída | 27/10/2026 | 51 testes; letra base de 17 px no tema |
-| 2 — Regras determinísticas | por iniciar | | Persona de teste deve disparar o aviso de realismo (94 → 85 kg em 16 semanas excede 0,4 %/semana; alvo realista ≈ 88 kg) |
+| 2 — Regras determinísticas | concluída | 28/10/2026 | 262 testes. Persona: versão-base, Média, esforço percebido, módulo visceral, alvo realista 88 kg à semana 16 (85 kg por volta da semana 24), regressão nos joelhos, sem impacto e equilíbrio com apoio. Textos novos em `regras/textos.py` até à Fase 3 |
 | 3 — Conteúdo editorial | por iniciar | | Variantes da Fase 4 definidas em REGRAS_DOMINIO §6.4 |
 | 4 — Motor de geração | por iniciar | | |
 | 5 — Interface | por iniciar | | |

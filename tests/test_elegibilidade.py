@@ -140,7 +140,12 @@ LINHAS_CONDICOES = [
         Modo.PRUDENTE,
         textos.DII_NAO_CONTROLADA,
     ),
-    ("dor_articular_persistente", {}, Modo.PRUDENTE, textos.DOR_ARTICULAR_PERSISTENTE),
+    (
+        "dor_articular_persistente",
+        {"dor_articular_zonas": ["joelhos"]},
+        Modo.PRUDENTE,
+        textos.DOR_ARTICULAR_PERSISTENTE,
+    ),
     ("protese_ou_cirurgia_recente", {}, Modo.PRUDENTE, textos.PROTESE_OU_CIRURGIA_RECENTE),
     ("gravidez", {}, Modo.NAO_ELEGIVEL, textos.GRAVIDEZ),
     ("outra", {"condicoes_outras": "texto qualquer"}, Modo.PRUDENTE, textos.CONDICAO_OUTRA),

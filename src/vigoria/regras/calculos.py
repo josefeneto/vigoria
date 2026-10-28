@@ -15,8 +15,10 @@ from vigoria.modelos.questionario import Condicao, Sexo
 from vigoria.regras import textos
 
 SEMANAS_PROGRAMA = 16
+SEMANAS_MARCOS = (4, 8, 12, 16)
 
 LIMIAR_IMC_PRUDENTE = Decimal("35")
+LIMIAR_IMC_BAIXO_PESO = Decimal("18.5")
 LIMIAR_CINTURA_CM = {Sexo.MASCULINO: 94, Sexo.FEMININO: 80}
 HIDRATACAO_ML_POR_KG = (Decimal("25"), Decimal("30"), Decimal("35"))
 PROTEINA_G_POR_KG = (Decimal("1.0"), Decimal("1.2"))
@@ -191,6 +193,30 @@ def avaliar_perda_peso(peso_kg: float, peso_alvo_kg: float, idade: int) -> Avali
         alvo_semana_16_kg=_arredondar(alvo, "0.1"),
         semana_objetivo=semana,
     )
+
+
+def peso_minimo_saudavel_kg(altura_cm: float) -> float:
+    """Peso correspondente a IMC 18,5, arredondado para cima a 1 casa (o IMC nunca fica abaixo)."""
+    if altura_cm <= 0:
+        raise ValueError("a altura tem de ser positiva")
+    altura_m = _d(altura_cm) / 100
+    peso = LIMIAR_IMC_BAIXO_PESO * altura_m**2
+    return float(peso.quantize(Decimal("0.1"), rounding=ROUND_CEILING))
+
+
+def marcos_peso_kg(peso_kg: float, peso_alvo_kg: float, idade: int) -> tuple[float, ...]:
+    """Peso indicativo às semanas 4, 8, 12 e 16 (decisão de 28/10/2026).
+
+    Linear, com o ritmo usado = mínimo entre o necessário e o máximo da faixa etária.
+    Atingido o objetivo, os marcos seguintes ficam iguais a ele (fase de manter).
+    Sem perda pedida, todos os marcos são o peso atual.
+    """
+    peso, alvo = _d(peso_kg), _d(peso_alvo_kg)
+    if alvo >= peso:
+        return tuple(_arredondar(peso, "0.1") for _ in SEMANAS_MARCOS)
+    ritmo_maximo = peso * _ritmo_maximo_pct(idade) / 100
+    ritmo = min((peso - alvo) / SEMANAS_PROGRAMA, ritmo_maximo)
+    return tuple(_arredondar(max(peso - ritmo * s, alvo), "0.1") for s in SEMANAS_MARCOS)
 
 
 def ganho_muscular_maximo_kg(semanas: int = SEMANAS_PROGRAMA) -> float:

@@ -41,6 +41,8 @@ Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca al
 | — | 4.C | regra | Se `gravidez` for escolhida, o questionário para de imediato e mostra: «A Vigoria não é recomendável para situações de gravidez.», com uma sugestão cordial de falar com o médico ou obstetra. Os dados já introduzidos não são guardados. |
 | `condicoes_controladas` | 4.A | sim / não, só para hipertensão, diabetes e doença inflamatória intestinal | «Está controlada com o tratamento atual?» |
 | `osteoporose_risco` | 4.A | sim / não / não sei, só se escolher osteoporose | «Já teve alguma fratura por fragilidade, ou o seu médico indicou risco elevado de fratura?» («não sei» = sim) |
+| `dor_articular_zonas` | 4.A | escolha múltipla, só se escolher dor articular persistente (pelo menos uma) | «Em que articulações?»: joelhos, ancas, ombros, coluna, outra. Regressão nas zonas indicadas; «outra» aplica regressão geral (REGRAS_DOMINIO §1.1). Decisão de 28/10/2026 |
+| `dor_articular_outra` | 4.A | texto (200), só se escolher «outra» nas articulações | o texto nunca é interpretado pelo motor; segue para a LLM só como contexto |
 | `condicoes_outras` | 4.B | texto (200), só se escolher «outra» | «outra» leva sempre a modo prudente; o texto nunca é interpretado pelo motor |
 | `medicacao_afeta_fc` | 4.D | sim / não / não sei | pergunta simples: «Toma medicação para o coração ou tensão que baixe o ritmo cardíaco (ex.: betabloqueantes)?» («não sei» = sim) |
 | `medicacao_notas` | 4.D | texto (200), opcional | |

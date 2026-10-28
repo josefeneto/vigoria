@@ -53,6 +53,16 @@ class SimNaoNaoSei(StrEnum):
     NAO_SEI = "nao_sei"
 
 
+class Articulacao(StrEnum):
+    """Articulações com dor persistente (pergunta «Em que articulações?»)."""
+
+    JOELHOS = "joelhos"
+    ANCAS = "ancas"
+    OMBROS = "ombros"
+    COLUNA = "coluna"
+    OUTRA = "outra"
+
+
 class Limitacao(StrEnum):
     JOELHOS = "joelhos"
     ANCAS = "ancas"
@@ -164,6 +174,8 @@ class Questionario(BaseModel):
     condicoes: list[Condicao] = Field(min_length=1)
     condicoes_controladas: dict[Condicao, bool] = {}
     osteoporose_risco: SimNaoNaoSei | None = None
+    dor_articular_zonas: list[Articulacao] = []
+    dor_articular_outra: TextoCurto = ""
     condicoes_outras: TextoCurto = ""
     medicacao_afeta_fc: SimNaoNaoSei
     medicacao_notas: TextoCurto = ""
@@ -226,6 +238,16 @@ class Questionario(BaseModel):
             )
 
         _so_com(self.osteoporose_risco, Condicao.OSTEOPOROSE in self.condicoes, "osteoporose_risco")
+        _so_com(
+            self.dor_articular_zonas,
+            Condicao.DOR_ARTICULAR_PERSISTENTE in self.condicoes,
+            "dor_articular_zonas",
+        )
+        _so_com(
+            self.dor_articular_outra,
+            Articulacao.OUTRA in self.dor_articular_zonas,
+            "dor_articular_outra",
+        )
         _so_com(self.condicoes_outras, Condicao.OUTRA in self.condicoes, "condicoes_outras")
         _so_com(self.limitacoes_outra, Limitacao.OUTRA in self.limitacoes, "limitacoes_outra")
         _so_com(self.halteres_kg, Equipamento.HALTERES in self.equipamento, "halteres_kg")
@@ -249,7 +271,7 @@ def _exclusivo(escolhas: list[Any], nenhum: Any, campo: str) -> None:
 
 def _so_com(valor: Any, escolhido: bool, campo: str) -> None:
     """O campo é obrigatório se a opção foi escolhida e tem de ficar vazio se não foi."""
-    preenchido = valor not in (None, "")
+    preenchido = valor not in (None, "", [])
     if escolhido and not preenchido:
         raise ValueError(f"{campo} é obrigatório para a opção escolhida")
     if preenchido and not escolhido:

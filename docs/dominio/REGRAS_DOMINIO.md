@@ -37,7 +37,7 @@ Cada opção do questionário (passo 2) tem uma consequência definida. Nenhuma 
 | Osteoporose **sem** fratura nem risco elevado indicado | base | Sem flexão do tronco com carga; bird-dog em vez de crunch; sem impacto |
 | Doença inflamatória intestinal, controlada | base | Alterações alimentares (fibra, leguminosas, hortícolas crus, lacticínios) só com a ressalva de respeitar o plano alimentar indicado pelo médico ou nutricionista |
 | Doença inflamatória intestinal, em crise ou não controlada | prudente | Igual, mais aviso para adiar mudanças alimentares até estabilizar |
-| Dor articular persistente | prudente | Variante-base com regressão nos exercícios que carregam a articulação indicada |
+| Dor articular persistente | prudente | Variante-base com regressão nos exercícios que carregam as articulações indicadas em «Em que articulações?» (joelhos, ancas, ombros, coluna); «outra» aplica regressão geral e o texto segue só como contexto para a LLM |
 | Prótese articular ou cirurgia nos últimos 6 meses | prudente | Validação pelo cirurgião ou fisioterapeuta antes de iniciar |
 | Gravidez | não gera plano | Mensagem da tabela acima |
 | Outra (com texto livre) | prudente, sempre | O motor nunca interpreta o texto; segue para a LLM apenas como contexto |
@@ -72,6 +72,14 @@ Deteção das condições e limitações: apenas a partir das escolhas fechadas 
 
 Exemplo (persona de teste, 68 anos, 94 kg → 85 kg): ritmo máximo 0,4 % × 94 ≈ 0,38 kg/semana ⇒ alvo realista à semana 16 ≈ 88 kg; objetivo de 85 kg estimado para cerca da semana 24.
 
+**Incoerências nos objetivos** (decisão de 28/10/2026). Detetadas no acolhimento; são avisos, nunca bloqueios:
+
+| Situação | Consequência |
+|---|---|
+| Peso-alvo que daria IMC < 18,5 | Aviso; o alvo usado nos cálculos fica limitado ao peso correspondente a IMC 18,5 |
+| Cintura-alvo igual ou superior à atual | Aviso |
+| Peso-alvo igual ou superior ao atual | Aviso: o plano foca-se em manter o peso e ganhar força, sem objetivo de perda |
+
 ## 3. Intensidade
 
 | Nível | Alimentação | Álcool | Exercício |
@@ -89,7 +97,7 @@ Exemplo (persona de teste, 68 anos, 94 kg → 85 kg): ritmo máximo 0,4 % × 94 
 | 6 ou 7 dias e pelo menos 30 min/dia | Alta |
 | 4 ou 5 dias e pelo menos 30 min/dia | Média |
 | 3 dias, ou menos de 30 min/dia | Ligeira |
-| 1 ou 2 dias (qualquer duração) | Ligeira, com aviso honesto: está abaixo do mínimo recomendado (força em pelo menos 2 dias e atividade aeróbia regular); o plano junta caminhada diária fora das sessões e sugere acrescentar um dia logo que possível |
+| 1 ou 2 dias (qualquer duração) | Ligeira, com aviso honesto (decisão de 28/10/2026). 1 dia: «Com 1 dia por semana fica abaixo do mínimo recomendado de força (2 dias) e de atividade aeróbia regular.» 2 dias: «Com 2 dias por semana cumpre o mínimo de força, mas fica abaixo da atividade aeróbia recomendada (150 a 300 minutos semanais).» Em ambos, o plano junta caminhada diária fora das sessões e sugere acrescentar um dia logo que possível |
 
 Com 15 ou 20 min/dia, as sessões concentram-se no essencial (aquecimento curto, 4 a 5 exercícios de força, retorno à calma) e a caminhada diária completa o resto.
 
@@ -108,7 +116,10 @@ Nota obrigatória (Vol. 1): o perímetro da cintura é um indicador de adiposida
 
 - **Tudo em semanas.** O programa tem sempre **16 semanas**; o questionário não pergunta a duração. Objetivos, marcos e registos contam-se em semanas, nunca em meses.
 - 4 fases: Adaptação (semanas 1–4), Construção (5–8), Consolidação (9–12), Integração (13–16).
-- Marcos de objetivos no fim de cada fase: semanas 4, 8, 12 e 16 (peso indicativo, cintura, marcos de força ou resistência).
+- Marcos de objetivos no fim de cada fase: semanas 4, 8, 12 e 16 (decisão de 28/10/2026):
+  - **Peso:** valor indicativo linear, peso atual − ritmo usado × semanas, com ritmo usado = mínimo entre o ritmo necessário e o máximo da faixa etária (secção 2). Se o objetivo for atingido antes da semana 16, os marcos seguintes ficam iguais ao objetivo (fase de manter).
+  - **Cintura:** sem número. «Medir e comparar», com o limiar de risco (94 cm H / 80 cm M) como referência quando a cintura atual estiver acima dele.
+  - **Força ou resistência:** escritos pela LLM, só a partir do conteúdo editorial (Fase 3) e dos exercícios da biblioteca.
 - A partir da semana 17: manutenção (Vol. 1) — 2 a 3 sessões de força por semana, atividade aeróbia regular, equilíbrio e mobilidade. O utilizador pode gerar um novo ciclo de 16 semanas com dados atualizados.
 - Semana-base (Vol. 1): segunda força A + mobilidade; terça cardio + mobilidade; quarta força B + equilíbrio; quinta cardio leve + mobilidade; sexta força A/B alternada; sábado cardio; domingo recuperação ativa ou descanso. Ajustada ao número de dias de 1.J.
 - Ordem de progressão: técnica → duração → séries/repetições → carga → intensidade. **Nunca** aumentar duas variáveis em simultâneo.
@@ -134,6 +145,7 @@ A Fase 4 do Vol. 2 («Integração e Desafio de Alta Intensidade») prescreve sa
 3. **Parâmetros da Fase 4 na versão-base:** 3 séries (em vez de 4), descanso de 45 a 60 s (em vez de 30 a 45 s), esforço até 6. Na versão avançada (futura): os valores do Vol. 2, com esforço até 7.
 4. **Cardio finalizador** (Vol. 2, estrutura da sessão): na versão-base, «corrida estática» passa a **marcha rápida no lugar**, alternando 30 s mais vivos com 30 s calmos.
 5. **Osteoporose:** sem flexão do tronco com carga (abdominal crunch) em nenhuma fase; usa-se o bird-dog.
+6. **Sem impacto e equilíbrio com apoio, para todos, no MVP** (decisão de 28/10/2026). Nenhum plano inclui exercícios de impacto (o Vol. 1 privilegia o baixo impacto para este público), e todos os exercícios de equilíbrio se fazem com apoio por perto, junto a uma parede ou bancada (Vol. 1, secção 6; Vol. 2, regras rápidas). As menções a «sem impacto» e a «equilíbrio com apoio» na secção 1 e na tabela 1.1 ficam cobertas por esta regra. A regra pode ser revista quando houver variantes avançadas.
 
 ### 6.4 Tabela de variantes
 
@@ -193,3 +205,5 @@ Não há decisões de domínio pendentes.
 - 25/10/2026 — Gravidez: não gera plano, com a mensagem da secção 1. Teto «Média» com condições crónicas confirmado. Proteína 1,0–1,2 g/kg em todas as idades. Ritmos máximos de perda de peso 0,4 / 0,5 / 0,6 %/semana. Programa sempre em 16 semanas, sem meses. Incoerência da Fase 4 resolvida (secção 6). Prazos dos lembretes confirmados. Telemóvel opcional, nacional por omissão ou internacional.
 - 25/10/2026 — Revisão de coerência (após análise do Claude Code): tabela 1.1 com a consequência de cada condição e limitação; gravidade das limitações (ligeira/importante); «não sei» na medicação = «sim»; sem proteína numérica com doença renal; intensidade compatível com a disponibilidade definida; variantes avançadas fora do MVP.
 - 26/10/2026 — Segunda revisão de coerência: verificação rejeita tudo o que não seja `nivel: base`; «outra» condição ou limitação ⇒ prudente sem interpretar texto; sem valores de hidratação com doença renal e nota de restrição de líquidos com doença cardiovascular; o plano nunca propõe proteína acima de 1,2 g/kg; teto «Média» aplica-se ao modo prudente (não a todas as condições crónicas).
+- 28/10/2026 — Fase 2: marcos de peso lineares com o ritmo usado (e «manter» depois de atingido o objetivo), cintura sem número; nova pergunta «Em que articulações?» para a dor articular persistente; três incoerências nos objetivos tratadas como avisos (peso-alvo com IMC < 18,5 limitado a IMC 18,5; cintura-alvo ≥ atual; peso-alvo ≥ atual).
+- 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias (secção 3); no MVP, sem impacto e equilíbrio com apoio para todos (secção 6.3, ponto 6).

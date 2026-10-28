@@ -99,6 +99,15 @@ def test_valores_invalidos_sao_rejeitados(dados: dict[str, Any], campo: str, val
         {"condicoes": ["outra"], "condicoes_controladas": {}},
         {"condicoes_outras": "asma ligeira"},
         {"limitacoes": ["outra"], "limitacoes_gravidade": {"outra": "ligeira"}},
+        # dor articular sem zonas, zonas sem dor articular, «outra» zona sem texto
+        {"condicoes": ["dor_articular_persistente"], "condicoes_controladas": {}},
+        {"dor_articular_zonas": ["joelhos"]},
+        {
+            "condicoes": ["dor_articular_persistente"],
+            "condicoes_controladas": {},
+            "dor_articular_zonas": ["outra"],
+        },
+        {"dor_articular_outra": "pulsos"},
         {"restricoes_alimentares": ["outra"]},
         # gravidade em falta
         {"limitacoes_gravidade": {}},
@@ -119,6 +128,16 @@ def test_sem_condicoes_nem_limitacoes(dados: dict[str, Any]) -> None:
         condicoes_controladas={},
         limitacoes=["nenhuma"],
         limitacoes_gravidade={},
+    )
+    Questionario.model_validate(dados)
+
+
+def test_dor_articular_com_zonas(dados: dict[str, Any]) -> None:
+    dados.update(
+        condicoes=["dor_articular_persistente"],
+        condicoes_controladas={},
+        dor_articular_zonas=["ombros", "outra"],
+        dor_articular_outra="pulsos",
     )
     Questionario.model_validate(dados)
 
