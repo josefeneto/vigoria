@@ -3,11 +3,10 @@
 O gerador recebe a Estrategia já calculada; a LLM nunca recalcula estes valores.
 """
 
-from enum import StrEnum
-
 from pydantic import BaseModel, ConfigDict
 
 from vigoria.modelos.questionario import Intensidade
+from vigoria.modelos.zonas import Zona
 from vigoria.regras.calculos import (
     AvaliacaoGanhoMuscular,
     AvaliacaoPerdaPeso,
@@ -21,15 +20,6 @@ from vigoria.regras.intensidade import Limitador
 
 class _Imutavel(BaseModel):
     model_config = ConfigDict(frozen=True)
-
-
-class Zona(StrEnum):
-    """Zonas com regressão (e exclusão dos exercícios que as tenham em contraindicações)."""
-
-    JOELHOS = "joelhos"
-    ANCAS = "ancas"
-    OMBROS = "ombros"
-    COLUNA = "coluna"
 
 
 class Indicadores(_Imutavel):

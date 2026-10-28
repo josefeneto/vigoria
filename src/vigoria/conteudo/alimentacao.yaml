@@ -1,0 +1,138 @@
+# Alimentação (Volume 3), copiado tal como está; só se retiraram as marcas de negrito.
+# §2 «Os princípios alimentares do programa», §3 «Construir uma refeição simples» e
+# §17 «Quando a evolução abranda».
+
+principios:
+  introducao: O Volume 1 estabelece uma orientação muito clara para esta área.
+  lista:
+
+    # V3 §2.1
+    - titulo: Distribuir fontes de proteína pelas refeições principais
+      texto:
+        - A proteína deve estar presente de forma regular ao longo do dia.
+        - Não é necessário que todas as refeições tenham a mesma quantidade.
+        - >-
+          O objetivo prático é evitar que a alimentação diária seja constituída quase
+          exclusivamente por alimentos com pouca proteína.
+        - "Exemplos de fontes alimentares incluem:"
+      exemplos: [peixe, ovos, carne, leite e derivados, iogurte, queijo, leguminosas]
+      nota: >-
+        As necessidades individuais de proteína não são definidas neste volume, porque
+        dependem de características pessoais e do estado de saúde.
+
+    # V3 §2.2
+    - titulo: Privilegiar hortícolas, fruta e leguminosas
+      texto:
+        - Estes alimentos devem fazer parte da alimentação habitual.
+        - "Podem aparecer de várias formas:"
+      exemplos:
+        - sopa
+        - saladas
+        - legumes cozinhados
+        - legumes assados
+        - fruta inteira
+        - feijão
+        - grão
+        - lentilhas
+        - ervilhas
+        - outras leguminosas
+      nota: >-
+        Não é necessário que cada refeição contenha todos estes grupos. A ideia é criar
+        variedade ao longo do dia e da semana.
+
+    # V3 §2.3
+    - titulo: Preferir alimentos pouco processados
+      texto:
+        - >-
+          Quanto mais simples for a base da alimentação, mais fácil tende a ser perceber o
+          que se está a comer e controlar a quantidade.
+        - Isto não significa que todos os alimentos processados tenham de ser eliminados.
+        - "O princípio é simplesmente este:"
+        - >-
+          Fazer dos alimentos pouco processados a base da alimentação e deixar os alimentos
+          mais processados para um lugar secundário.
+
+    # V3 §2.4
+    - titulo: Usar gorduras com moderação
+      texto:
+        - >-
+          O azeite e outras fontes de gordura podem fazer parte de uma alimentação
+          equilibrada.
+        - Contudo, a gordura é energeticamente concentrada.
+        - >-
+          Quando existe o objetivo de reduzir gordura corporal, quantidades muito elevadas
+          podem dificultar o controlo da ingestão energética, mesmo quando o alimento é
+          nutricionalmente adequado.
+
+    # V3 §2.5
+    - titulo: Preferir água
+      texto:
+        - A água deve ser a bebida habitual.
+        - As bebidas açucaradas devem ser reduzidas.
+        - >-
+          Este é um dos ajustes mais simples que podem melhorar a alimentação sem exigir
+          alterações profundas às refeições.
+
+# V3 §3
+refeicao_simples:
+  introducao:
+    - Não é necessário pesar todos os alimentos.
+    - >-
+      Uma forma prática de organizar uma refeição principal é pensar em quatro elementos:
+  elementos:
+    - titulo: 1. Proteína
+      texto: Peixe, ovos, carne, iogurte, queijo ou leguminosas.
+    - titulo: 2. Hortícolas
+      texto: Sopa, salada ou legumes cozinhados.
+    - titulo: 3. Fonte de energia
+      texto: Batata, arroz, massa, pão, aveia ou leguminosas.
+    - titulo: 4. Gordura
+      texto: Por exemplo, azeite, usado de forma moderada.
+  notas:
+    - >-
+      A quantidade de cada componente deve variar de acordo com a fome, a atividade física e
+      o objetivo individual.
+    - Não existe uma proporção única que seja adequada para todas as pessoas.
+  exemplos:
+    - "Um exemplo simples: Peixe + batata + legumes + azeite"
+    - "Outra refeição poderá ser: Ovos + sopa + pão + fruta"
+    - "Ou: Grão + legumes + ovo + fruta"
+  conclusao:
+    - O importante não é repetir sempre a mesma combinação.
+    - É reconhecer a estrutura.
+
+# V3 §17 (sugerida quando a evolução fica abaixo do esperado em 2 períodos seguidos, §9)
+evolucao_abranda:
+  introducao:
+    - É normal que a evolução não seja sempre linear.
+    - Antes de alterar tudo, voltar aos fundamentos.
+  verificar:
+    - pergunta: 1. O treino continua regular?
+      texto: O Volume 2 deve continuar a ser seguido de acordo com a fase em curso.
+    - pergunta: 2. A alimentação continua organizada?
+      texto: Uma pequena perda de atenção pode acumular-se ao longo das semanas.
+    - pergunta: 3. As porções aumentaram?
+      texto: Isto pode acontecer sem que a pessoa se aperceba.
+    - pergunta: 4. Existem mais alimentos densos em energia?
+      texto: >-
+        Azeite, frutos secos, doces e outros alimentos podem ser adequados, mas as
+        quantidades contam.
+    - pergunta: 5. A atividade diária diminuiu?
+      texto: >-
+        Uma pessoa pode manter o treino e, simultaneamente, passar mais tempo sentada
+        durante o resto do dia.
+    - pergunta: 6. O sono piorou?
+      texto: Alterações do sono podem afetar energia, recuperação e rotina.
+  ajustar:
+    introducao:
+      - "Se for necessário ajustar: fazer uma alteração de cada vez."
+      - "Por exemplo:"
+    exemplos:
+      - reduzir ligeiramente uma porção
+      - reduzir um alimento mais denso em energia
+      - aumentar a presença de hortícolas
+      - melhorar a regularidade da proteína
+      - aumentar a caminhada ou outra atividade diária adequada
+    conclusao:
+      - Depois, observar.
+      - Não mudar cinco coisas ao mesmo tempo.

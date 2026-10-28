@@ -198,6 +198,10 @@ Estes textos ficam em `conteudo/avisos.yaml` e são inseridos pelo código depoi
 
 Termos e ideias que fazem chumbar o plano na verificação: «queima-gordura», «queima gordura», «detox», «desintoxicação», «chá emagrecedor», «termogénico», «seca barriga», «secante», jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada («perder barriga em X dias»), qualquer marca comercial de suplementos, e qualquer exercício que não tenha `nivel: base` (no MVP, sem exceção). Lista mantida em `conteudo/avisos.yaml`, com uma lista paralela de brasileirismos frequentes (tela, usuário, celular, café da manhã, academia, arquivo, salvar, baixar, time, registro).
 
+Aplicação (decisão de 28/10/2026):
+- A lista negra divide-se em **termos** (procurados à letra pelo código, como palavra ou expressão inteira, sem distinguir maiúsculas: queima-gordura, queima gordura, detox, desintoxicação, chá emagrecedor, termogénico, seca barriga, secante) e **ideias** (para a revisão crítica pela LLM: jejum prolongado sem acompanhamento, dietas com menos de 1200 kcal, promessas de perda localizada, marcas comerciais de suplementos). Assim, o aviso de diabetes («Não treine em jejum prolongado») não chumba. A regra «só nível base» é verificada pela biblioteca.
+- «Baixar» só conta como brasileirismo no sentido de descarregar («baixar o ficheiro», «baixar a app»): «baixar a frequência cardíaca» (Vol. 2) é português europeu correto.
+
 ## 9. Acompanhamento e lembretes
 
 - Indicadores semanais (Vol. 1, Anexo B): peso, cintura, sessões feitas, minutos de cardio, força, mobilidade/equilíbrio, sono médio, energia 0–10, esforço 0–10, observações, reflexão («o que correu bem? o que ajustar?»).
@@ -224,3 +228,4 @@ Não há decisões de domínio pendentes.
 - 28/10/2026 — Fase 2: marcos de peso lineares com o ritmo usado (e «manter» depois de atingido o objetivo), cintura sem número; nova pergunta «Em que articulações?» para a dor articular persistente; três incoerências nos objetivos tratadas como avisos (peso-alvo com IMC < 18,5 limitado a IMC 18,5; cintura-alvo ≥ atual; peso-alvo ≥ atual).
 - 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias (secção 3); no MVP, sem impacto para todos (secção 6.3, ponto 6). Equilíbrio com apoio mantém-se segundo a tabela 1.1 (correção no mesmo dia: chegou a ser aplicado a todos).
 - 28/10/2026 — Fase 3, biblioteca: campos `zonas`, `flexao_tronco_carga` e `apoio_equilibrio` (§6.1); flexão do tronco com carga só no abdominal crunch; zonas e regressões aprovadas; regra de aplicação das regressões (§6.6); dois pontos «A CONFIRMAR» (osteoporose de risco elevado em §6.1; Tai Chi em §3).
+- 28/10/2026 — Fase 3, avisos: lista negra dividida em termos (verificados pelo código) e ideias (revisão pela LLM); «baixar» só como brasileirismo no sentido de descarregar (§8).

@@ -1,0 +1,179 @@
+# Textos visíveis ao utilizador produzidos pelas regras e pelo motor (REGRAS_DOMINIO §1 a §8).
+# Fixos: nunca gerados pela LLM. Os campos entre chavetas ({imc}, {peso_alvo}...) são
+# preenchidos pelo código. Lidos por regras/textos.py, que mantém os nomes usados no motor.
+# Qualquer alteração muda a saída da CLI: atualizar as fotografias em tests/fixtures/.
+
+# Textos obrigatórios em todos os planos (§7), inseridos pelo código depois da geração.
+obrigatorios: [aviso_geral, sinais_interromper]
+
+textos:
+
+  # ---------------------------------------------------------------- Não elegível (§1)
+  menor_idade: A Vigoria destina-se a maiores de 18 anos.
+  gravidez: >-
+    A Vigoria não é recomendável para situações de gravidez. Fale com o seu médico ou
+    obstetra sobre a atividade física mais adequada nesta fase.
+
+  # ---------------------------------------------------------------- Motivos de modo prudente (§1 e §1.1)
+  imc_35_ou_mais: IMC de {imc} (igual ou superior a 35).
+  hipertensao_nao_controlada: Hipertensão não controlada.
+  diabetes_controlada: Diabetes controlada.
+  diabetes_nao_controlada: Diabetes não controlada.
+  doenca_cardiovascular: Doença cardiovascular.
+  doenca_respiratoria: Doença respiratória.
+  doenca_renal: Doença renal.
+  osteoporose_com_risco: >-
+    Osteoporose com fratura anterior por fragilidade ou risco elevado indicado pelo médico.
+  osteoporose_risco_desconhecido: >-
+    Osteoporose, sem saber se há fratura anterior ou risco elevado.
+  dii_nao_controlada: Doença inflamatória intestinal em crise ou não controlada.
+  dor_articular_persistente: Dor articular persistente.
+  protese_ou_cirurgia_recente: Prótese articular ou cirurgia recente.
+  condicao_outra: Outra condição de saúde indicada.
+  limitacao_importante: Limitação importante {zona}.
+  limitacao_outra: Outra limitação física indicada.
+
+  # ---------------------------------------------------------------- Notas dos cálculos (§2)
+  hidratacao_doenca_renal: A quantidade de líquidos deve ser definida pelo seu médico.
+  hidratacao_doenca_cardiovascular: >-
+    Se tiver indicação médica para limitar líquidos (por exemplo, insuficiência cardíaca),
+    siga essa indicação.
+  proteina_doenca_renal: >-
+    A quantidade de proteína deve ser definida pelo seu médico ou nutricionista.
+  proteina_ate_1_5: >-
+    Em algumas situações, o médico ou nutricionista pode indicar até 1,5 g/kg; não aumente
+    sem essa indicação.
+
+  # ---------------------------------------------------------------- Intensidade (§3)
+  intensidade_reduzida: "A intensidade passa de «{pedida}» para «{efetiva}»: {motivo}."
+  motivo_teto_imc: >-
+    com um IMC igual ou superior a 35, o plano começa de forma mais gradual, por segurança
+  motivo_teto_prudente: >-
+    com a situação de saúde indicada, o plano segue o modo prudente, em que o máximo é a
+    intensidade «Média»
+  motivo_disponibilidade: >-
+    com {dias} {palavra_dias} por semana e {minutos} min por dia, é a intensidade que cabe
+    no tempo disponível
+
+  # ---------------------------------------------------------------- Obrigatórios (§7)
+  aviso_geral: >-
+    Este plano é uma sugestão de apoio à decisão, preparada com recurso a inteligência
+    artificial e a conteúdo editorial revisto. Não substitui avaliação, diagnóstico,
+    tratamento ou acompanhamento por médico, nutricionista ou profissional de exercício.
+    Antes de iniciar ou intensificar o plano — sobretudo com doenças crónicas, medicação
+    regular ou idade avançada — valide-o com um profissional de saúde.
+  sinais_interromper: >-
+    Interrompa imediatamente o exercício se sentir dor no peito, falta de ar invulgar ou
+    desproporcionada, desmaio ou sensação de desmaio, confusão, palpitações preocupantes,
+    tonturas ou dor articular aguda. Procure avaliação adequada.
+
+  # ---------------------------------------------------------------- Avisos condicionais (§1, §1.1, §3 e §4)
+  orientacao_individualizada: >-
+    Antes de iniciar, procure orientação individualizada de um profissional de saúde para
+    adaptar este plano à sua situação.
+  intensificacao_validacao_medica: >-
+    Qualquer intensificação (intervalos, ritmo vigoroso) deve ser validada antes com o seu
+    médico.
+  falar_com_medico_antes: Fale com o seu médico antes de iniciar o plano.
+  validacao_medica_antes: Valide o plano com o seu médico antes de iniciar.
+  validacao_cirurgiao_antes: >-
+    Valide o plano com o seu cirurgião ou fisioterapeuta antes de iniciar.
+  diabetes_hipoglicemia: >-
+    Não treine em jejum prolongado. Se usar insulina ou medicação que baixe o açúcar,
+    tenha algo açucarado à mão durante o exercício.
+  respiratoria_teste_da_fala: >-
+    No cardio, guie-se pelo teste da fala e interrompa perante falta de ar desproporcionada.
+  dii_plano_alimentar: >-
+    As alterações alimentares (fibra, leguminosas, hortícolas crus, lacticínios) devem
+    respeitar o plano alimentar indicado pelo seu médico ou nutricionista.
+  dii_adiar_mudancas: Adie as mudanças alimentares até a situação estabilizar.
+  esforco_percebido: >-
+    A intensidade guia-se pela escala de esforço percebido (0 a 10) e pelo teste da fala, e
+    não pela frequência cardíaca.
+  disponibilidade_1_dia: >-
+    Com 1 dia por semana fica abaixo do mínimo recomendado de força (2 dias) e de atividade
+    aeróbia regular. O plano junta uma caminhada diária fora das sessões; logo que possa,
+    acrescente mais um dia.
+  disponibilidade_2_dias: >-
+    Com 2 dias por semana cumpre o mínimo de força, mas fica abaixo da atividade aeróbia
+    recomendada (150 a 300 minutos semanais). O plano junta uma caminhada diária fora das
+    sessões; logo que possa, acrescente mais um dia.
+  visceral_reducao: >-
+    A gordura visceral tende a reduzir-se proporcionalmente mais depressa do que a
+    subcutânea com o mesmo plano.
+  visceral_indicador: >-
+    O perímetro da cintura é um indicador de adiposidade central; não mede diretamente a
+    gordura visceral.
+
+  # ---------------------------------------------------------------- Realismo e incoerências nos objetivos (§2)
+  perda_nao_realista: >-
+    Chegar aos {peso_alvo} kg em 16 semanas exigiria perder cerca de {ritmo_necessario} kg
+    por semana, acima do máximo recomendado para a sua idade ({ritmo_maximo} kg por semana).
+    O plano aponta para cerca de {alvo_16} kg à semana 16; os {peso_alvo} kg são alcançáveis
+    por volta da semana {semana}.
+  peso_alvo_imc_baixo: >-
+    O peso-alvo indicado ({peso_alvo} kg) corresponderia a um IMC abaixo de 18,5 (baixo
+    peso). O plano usa como alvo {peso_minimo} kg, que corresponde a um IMC de 18,5.
+  cintura_alvo_nao_reduz: >-
+    A cintura-alvo indicada ({cintura_alvo} cm) é igual ou superior à atual ({cintura} cm).
+  peso_alvo_sem_perda: >-
+    O peso-alvo é igual ou superior ao peso atual: o plano foca-se em manter o peso e ganhar
+    força, sem objetivo de perda.
+
+  # ---------------------------------------------------------------- Regressões no fim da cadeia (§6.6)
+  amplitude_confortavel: Amplitude confortável, sem dor.
+
+  # ---------------------------------------------------------------- Marcos (§5)
+  cintura_medir: Medir e comparar com a medição inicial.
+  cintura_medir_com_limiar: >-
+    Medir e comparar com a medição inicial; referência: limiar de risco de {limiar} cm.
+
+# Rótulos curtos usados nos textos e na CLI.
+rotulos:
+  intensidade:
+    ligeira: Ligeira
+    media: Média
+    alta: Alta
+  zonas_limitacao:
+    joelhos: nos joelhos
+    ancas: nas ancas
+    ombros: nos ombros
+    coluna: na coluna
+    equilibrio: no equilíbrio
+
+# Lista negra (§8), decisão de 28/10/2026:
+# - termos: procurados no texto pelo código (palavra ou expressão inteira, sem distinguir
+#   maiúsculas); qualquer ocorrência chumba o plano;
+# - ideias: para a revisão crítica pela LLM (não se procuram à letra: o aviso de diabetes
+#   diz, com razão, «não treine em jejum prolongado»).
+# A regra «só exercícios de nível base» é verificada pela biblioteca (exercicios.yaml).
+lista_negra:
+  termos:
+    - queima-gordura
+    - queima gordura
+    - detox
+    - desintoxicação
+    - chá emagrecedor
+    - termogénico
+    - seca barriga
+    - secante
+  ideias:
+    - jejum prolongado sem acompanhamento
+    - dietas com menos de 1200 kcal
+    - promessas de perda localizada («perder barriga em X dias»)
+    - qualquer marca comercial de suplementos
+
+# Brasileirismos frequentes (§8). «Baixar» só no sentido de descarregar (decisão de
+# 28/10/2026): «baixar a frequência cardíaca» é português europeu correto.
+brasileirismos:
+  - tela
+  - usuário
+  - celular
+  - café da manhã
+  - academia
+  - arquivo
+  - salvar
+  - baixar o ficheiro
+  - baixar a app
+  - time
+  - registro
