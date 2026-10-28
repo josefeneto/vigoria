@@ -61,7 +61,7 @@ Deteção das condições e limitações: apenas a partir das escolhas fechadas 
 | Hidratação diária | 25 a 35 ml × peso (kg); valor central 30 ml/kg; mostrar o intervalo | Prompt v2, ponto 4 |
 | Hidratação com doença renal | sem valor em ml no plano: «a quantidade de líquidos deve ser definida pelo seu médico» | Segurança (26/10) |
 | Hidratação com doença cardiovascular | mostra o intervalo, com a nota: «se tiver indicação médica para limitar líquidos (por exemplo, insuficiência cardíaca), siga essa indicação» | Segurança (26/10) |
-| Proteína diária | 1,0 a 1,2 g × peso (kg), em todas as idades | Prompt v2, ponto 3; decisão de 25/10 |
+| Proteína diária | 1,0 a 1,2 g × peso (kg), em todas as idades.<br>**A CONFIRMAR (revisão profissional):** com IMC ≥ 35, avaliar o uso de peso ajustado em vez do peso atual. | Prompt v2, ponto 3; decisão de 25/10 |
 | Proteína acima de 1,2 g/kg | **o plano nunca propõe**. Com qualquer condição da tabela 1.1 (exceto doença renal), acrescenta a nota: «em algumas situações, o médico ou nutricionista pode indicar até 1,5 g/kg; não aumente sem essa indicação» | Prompt v2, ponto 3; decisão de 26/10 |
 | Proteína com doença renal | sem valor no plano: «a quantidade de proteína deve ser definida pelo seu médico ou nutricionista» | Segurança (25/10) |
 | Proteína por refeição principal | 25 a 30 g | Prompt v2 (metodologia) |
