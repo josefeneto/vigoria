@@ -1,0 +1,60 @@
+{
+  "_nota": "Persona FICTÍCIA para testes, derivada da persona_teste.json (doença renal em vez de hipertensão). Resultado esperado: modo prudente (doença renal), intensidade efetiva Média (pedida Média; 5 dias × 30 min), sem valores de proteína nem de hidratação (só as notas «definida pelo seu médico»), sem a nota dos 1,5 g/kg, sem impacto, sem intervalos, aviso de orientação individualizada, esforço percebido em vez de frequência cardíaca (medicação «não sei»), módulo de gordura visceral ativo, alvo realista 88 kg à semana 16 (85 kg por volta da semana 24), regressão nos joelhos.",
+  "aceita_termos": true,
+  "consentimento_saude": true,
+  "confirma_maior_idade": true,
+  "sexo": "masculino",
+  "idade": 68,
+  "altura_cm": 172,
+  "peso_kg": 94.0,
+  "sono_horas": 6.5,
+  "cintura_cm": 108,
+  "atividade_atual": "ligeiro",
+  "condicoes": [
+    "doenca_renal"
+  ],
+  "condicoes_controladas": {},
+  "condicoes_outras": "",
+  "limitacoes": [
+    "joelhos"
+  ],
+  "limitacoes_gravidade": {
+    "joelhos": "ligeira"
+  },
+  "medicacao_afeta_fc": "nao_sei",
+  "medicacao_notas": "",
+  "equipamento": [
+    "cadeira_firme",
+    "halteres",
+    "passadeira"
+  ],
+  "halteres_kg": 2,
+  "dias_semana": 5,
+  "minutos_dia": 30,
+  "preferencias": [
+    "caminhada",
+    "tai_chi",
+    "forca"
+  ],
+  "refeicoes": {
+    "pequeno_almoco": "café com leite e duas torradas",
+    "almoco": "carne ou peixe com batata ou arroz, sopa",
+    "lanche": "fruta",
+    "jantar": "semelhante ao almoço",
+    "ceia": ""
+  },
+  "restricoes_alimentares": [],
+  "agua_litros": "0,5-1",
+  "bebidas_acucaradas_litros": "nenhuma",
+  "vinho_copos_dia": 3,
+  "espirituosas_dl_dia": 0,
+  "pao_por_dia": "3",
+  "doces_por_semana": 3,
+  "peso_alvo_kg": 85.0,
+  "cintura_alvo_cm": 100,
+  "objetivo_muscular": "aumentar_forca_tonus",
+  "intensidade_pedida": "media",
+  "acompanhamento_ativo": true,
+  "frequencia_registo": "semanal",
+  "lembretes_email": true
+}
