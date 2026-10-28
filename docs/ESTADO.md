@@ -4,7 +4,7 @@
 
 ## Fase atual
 
-**Fase 2 — Regras determinísticas: concluída a 28/10/2026.** Cálculos, elegibilidade, intensidade efetiva, modelo `Estrategia`, acolhimento, estratégia e CLI (`python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json`). Estratégia da persona revista e aprovada pelo José. Próximo passo: Fase 3 (conteúdo editorial); os textos de `regras/textos.py` passam para `conteudo/avisos.yaml`.
+**Fase 3 — Conteúdo editorial: em curso.** Parte 1 concluída a 28/10/2026: `conteudo/exercicios.yaml` (45 exercícios), `conteudo/fases.yaml` (4 fases e estrutura da sessão), `conteudo/carregar.py` e `regras/regressao.py` (regra de §6.6). Próximo passo: parte 2 — `alimentacao.yaml` e `avisos.yaml`; os textos de `regras/textos.py` passam para `avisos.yaml`.
 
 ## Decisões tomadas
 
@@ -24,6 +24,7 @@
 - 27/10/2026 — Questionário: halteres como `"halteres"` + campo `halteres_kg`; refeições com as cinco chaves fixas e texto vazio = «não faz»; o modelo aceita gravidez (é a estratégia, na Fase 2, que impede o plano); campos começados por «_» são ignorados e campos desconhecidos são rejeitados.
 - 28/10/2026 — Fase 2 (registadas na REGRAS_DOMINIO): marcos de peso lineares com o ritmo usado (iguais ao objetivo depois de o atingir), cintura sem número (só o limiar como referência), marcos de força pela LLM; nova pergunta «Em que articulações?» (`dor_articular_zonas`, `dor_articular_outra`) para a dor articular persistente; incoerências nos objetivos como avisos (peso-alvo com IMC < 18,5 limitado a IMC 18,5; cintura-alvo ≥ atual; peso-alvo ≥ atual).
 - 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias; no MVP, sem impacto para todos (REGRAS §6.3, ponto 6); equilíbrio com apoio só segundo a tabela 1.1; `.gitattributes` com `* text=auto eol=lf` (quebras de linha LF no repositório).
+- 28/10/2026 — Fase 3, parte 1: mantêm-se `impacto` (baixo/medio/alto) e `nivel` (base/intermedio/avancado) de §6.1; novos campos `zonas`, `flexao_tronco_carga` (só o crunch) e `apoio_equilibrio`; zonas e regressões aprovadas; regra de aplicação das regressões (REGRAS §6.6); aquecimento, cardio finalizador e retorno à calma em `fases.yaml`; corrida estática e Tai Chi fora da biblioteca; esforço 3–6 em todas as fases (o V2 só dá esse valor). Dois pontos «A CONFIRMAR» na REGRAS (osteoporose de risco elevado; Tai Chi).
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 
 ## Decisões pendentes
@@ -37,7 +38,7 @@ Nenhuma decisão de domínio pendente. Os valores das regras de domínio aguarda
 | 0 — Ambiente | concluída | 26/10/2026 | |
 | 1 — Fundações | concluída | 27/10/2026 | 51 testes; letra base de 17 px no tema |
 | 2 — Regras determinísticas | concluída | 28/10/2026 | 262 testes. Persona: versão-base, Média, esforço percebido, módulo visceral, alvo realista 88 kg à semana 16 (85 kg por volta da semana 24), regressão nos joelhos, sem impacto. Textos novos em `regras/textos.py` até à Fase 3 |
-| 3 — Conteúdo editorial | por iniciar | | Variantes da Fase 4 definidas em REGRAS_DOMINIO §6.4 |
+| 3 — Conteúdo editorial | em curso | 28/10/2026 (parte 1) | 651 testes. Biblioteca: 24 de força base, 4 de cardio base, 6 de mobilidade e equilíbrio, 11 avançados. Falta a parte 2 (alimentação e avisos) |
 | 4 — Motor de geração | por iniciar | | |
 | 5 — Interface | por iniciar | | |
 | 6 — Contas e dados | por iniciar | | |

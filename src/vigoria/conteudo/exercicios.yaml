@@ -1,0 +1,550 @@
+# Biblioteca de exercícios (REGRAS_DOMINIO §6).
+# Texto copiado dos volumes 1 e 2; a origem de cada exercício está no comentário.
+# Zonas e regressões dos exercícios-base: propostas aprovadas pelo José a 28/10/2026.
+# Regressões das variantes avançadas: tabela 6.4 das REGRAS_DOMINIO.
+# No MVP, só entram no plano os exercícios com «nivel: base» (§6.3).
+
+exercicios:
+
+  # ---------------------------------------------------------------- Força, nível base
+
+  # V1 7.1; V2 Fase 1
+  - id: agachamento_cadeira
+    nome: Agachamento para cadeira
+    descricao: Sentar e levantar de uma cadeira estável, controlando a descida.
+    grupo: forca
+    fase_minima: 1
+    equipamento: [cadeira]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar Halter de 5 kg verticalmente junto ao peito.
+    regressao: ponte_gluteos
+    zonas: [joelhos, ancas]
+
+  # V1 7.2; V2 Fase 1
+  - id: flexao_parede
+    nome: Flexão na parede
+    descricao: Manter o corpo alinhado e aproximar o peito da parede de forma controlada.
+    grupo: forca
+    fase_minima: 1
+    equipamento: [parede]
+    impacto: baixo
+    nivel: base
+    zonas: [ombros]
+
+  # V1 7.3; V2 Fase 1
+  - id: remada_halteres
+    nome: Remada com halteres
+    descricao: Puxar os cotovelos para trás, mantendo o tronco estável.
+    grupo: forca
+    fase_minima: 1
+    equipamento: [halteres]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 2 Halteres de 5 kg (um em cada mão).
+    regressao: remada_unilateral_apoio
+    zonas: [ombros, coluna]
+
+  # V1 7.4; V2 Fase 1
+  - id: ponte_gluteos
+    nome: Ponte de glúteos
+    descricao: Elevar a bacia de forma controlada, sem arquear excessivamente as costas.
+    grupo: forca
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    variante_halteres: Colocar o Halter de 5 kg sobre a bacia.
+    zonas: [ancas, coluna]
+
+  # V1 7.5; V2 Fase 1
+  - id: elevacao_lateral
+    nome: Elevação lateral leve
+    descricao: Elevar os braços numa amplitude confortável, sem balanço.
+    grupo: forca
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar os 2 Halteres de 2 kg para resistência.
+    zonas: [ombros]
+
+  # V1 7.6; V2 Fase 1
+  - id: bird_dog
+    nome: Bird-dog
+    descricao: Em quatro apoios, estender braço e perna opostos sem rodar o tronco.
+    grupo: forca
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [coluna, ombros]
+
+  # V1 7.7
+  - id: elevacao_gemeos
+    nome: Elevação de gémeos
+    descricao: Subir e descer lentamente, usando apoio para equilíbrio.
+    grupo: forca
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    apoio_equilibrio: true
+
+  # V2 Fase 1, linha 6 («Bird-dog / Prancha»): «(ou prancha antebraços)».
+  # O volume não descreve mais do que isto.
+  - id: prancha_antebracos
+    nome: Prancha
+    descricao: Prancha antebraços.
+    grupo: forca
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    regressao: bird_dog
+    zonas: [ombros, coluna]
+
+  # V2 Fase 2
+  - id: lunge_atras_apoio
+    nome: Lunge Atrás com Apoio
+    descricao: >-
+      Com uma mão numa cadeira ou bancada, dar um passo atrás e fletir os joelhos até onde
+      for confortável.
+    grupo: forca
+    fase_minima: 2
+    equipamento: [cadeira]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas]
+    apoio_equilibrio: true
+
+  # V2 Fase 2
+  - id: flexao_inclinada_joelhos
+    nome: Flexão Inclinada ou com Joelhos
+    descricao: >-
+      Mãos numa bancada estável (ou no chão com os joelhos apoiados), descer o peito de
+      forma controlada.
+    grupo: forca
+    fase_minima: 2
+    impacto: baixo
+    nivel: base
+    regressao: flexao_parede
+    zonas: [ombros]
+
+  # V2 Fase 2
+  - id: agachamento_sumo
+    nome: Agachamento Sumo
+    descricao: Pernas mais afastadas que os ombros, pontas dos pés para fora.
+    grupo: forca
+    fase_minima: 2
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar o Halter de 5 kg com as duas mãos em baixo.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas]
+
+  # V2 Fase 2
+  - id: remada_aberta
+    nome: Remada Aberta
+    descricao: Tronco inclinado à frente, puxar halteres com cotovelos bem abertos.
+    grupo: forca
+    fase_minima: 2
+    equipamento: [halteres]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 2 Halteres de 2 kg (um em cada mão).
+    regressao: remada_halteres
+    zonas: [ombros, coluna]
+
+  # V2 Fase 2
+  - id: prensa_ombros
+    nome: Prensa de Ombros
+    descricao: Braços a 90º ao lado da cabeça, empurrar verticalmente.
+    grupo: forca
+    fase_minima: 2
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 2 Halteres de 2 kg ou 5 kg para empurrar.
+    regressao: elevacao_lateral
+    zonas: [ombros]
+
+  # V2 Fase 2; REGRAS §1.1 e §6.3, ponto 5 (com osteoporose, bird-dog)
+  - id: abdominal_crunch
+    nome: Abdominal Crunch
+    descricao: Deitado de costas, retirar apenas as escápulas/ombros do chão.
+    grupo: forca
+    fase_minima: 2
+    impacto: baixo
+    nivel: base
+    regressao: bird_dog
+    contraindicacoes: [osteoporose]
+    zonas: [coluna]
+    flexao_tronco_carga: true
+
+  # V2 Fase 3
+  - id: agachamento_dividido_apoio
+    nome: Agachamento Dividido com Apoio
+    descricao: >-
+      Pés afastados em passo, ambos no chão, mão na parede ou numa cadeira; descer e subir
+      na vertical.
+    grupo: forca
+    fase_minima: 3
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas]
+    apoio_equilibrio: true
+
+  # V2 Fase 3
+  - id: peso_morto_romeno
+    nome: Peso Morto Romeno
+    descricao: Descer o tronco à frente com pernas quase esticadas, fletindo a anca.
+    grupo: forca
+    fase_minima: 3
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 2 Halteres de 5 kg deslizando pelas pernas.
+    regressao: ponte_gluteos
+    zonas: [ancas, coluna]
+
+  # V2 Fase 3
+  - id: flexao_inclinada_maos_proximas
+    nome: Flexão Inclinada com Mãos Próximas
+    descricao: >-
+      Mãos numa bancada estável, mais próximas do que a largura dos ombros; descer de forma
+      controlada.
+    grupo: forca
+    fase_minima: 3
+    equipamento: [bancada]
+    impacto: baixo
+    nivel: base
+    regressao: flexao_inclinada_joelhos
+    zonas: [ombros]
+
+  # V2 Fase 3 («Remada Unilateral») e Fase 4 («Remada Unilateral com Apoio»):
+  # o mesmo exercício (REGRAS 6.4). Descrição da Fase 3, onde aparece primeiro.
+  - id: remada_unilateral_apoio
+    nome: Remada Unilateral com Apoio
+    descricao: Tronco inclinado com um braço apoiado, puxar o outro de cada vez.
+    grupo: forca
+    fase_minima: 3
+    equipamento: [halteres]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 1 Halter de 5 kg na mão ativa.
+    zonas: [ombros, coluna]
+
+  # V2 Fase 3
+  - id: elevacao_frontal
+    nome: Elevação Frontal
+    descricao: Elevar braços esticados à frente até à linha dos olhos de forma fluida.
+    grupo: forca
+    fase_minima: 3
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar os 2 Halteres de 2 kg.
+    regressao: elevacao_lateral
+    zonas: [ombros]
+
+  # V2 Fase 3
+  - id: prancha_lateral_joelhos
+    nome: Prancha Lateral com Joelhos Apoiados
+    descricao: Apoio num antebraço e na lateral do joelho, bacia elevada e alinhada.
+    grupo: forca
+    fase_minima: 3
+    impacto: baixo
+    nivel: base
+    regressao: bird_dog
+    zonas: [ombros, coluna]
+
+  # V2 Fase 4
+  - id: agachamento_elevacao_calcanhares
+    nome: Agachamento com Elevação dos Calcanhares
+    descricao: >-
+      Sentar e levantar da cadeira de forma controlada; no topo, subir às pontas dos pés com
+      apoio, sem saltar.
+    grupo: forca
+    fase_minima: 4
+    equipamento: [cadeira]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 1 Halter de 5 kg junto ao peito.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas]
+    apoio_equilibrio: true
+
+  # V2 Fase 4
+  - id: subida_degrau_apoio
+    nome: Subida a Degrau com Apoio
+    descricao: Subir e descer um degrau baixo, alternando a perna, com a mão no corrimão.
+    grupo: forca
+    fase_minima: 4
+    equipamento: [degrau]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas]
+    apoio_equilibrio: true
+
+  # V2 Fase 4
+  - id: prancha_inclinada_toque_ombro
+    nome: Prancha Inclinada com Toque no Ombro
+    descricao: >-
+      Mãos numa bancada estável, corpo alinhado; tocar alternadamente no ombro oposto sem
+      rodar a bacia.
+    grupo: forca
+    fase_minima: 4
+    equipamento: [bancada]
+    impacto: baixo
+    nivel: base
+    regressao: bird_dog
+    zonas: [ombros, coluna]
+
+  # V2 Fase 4
+  - id: agachamento_prensa_ombros
+    nome: Agachamento + Prensa de Ombros
+    descricao: >-
+      Sentar e levantar da cadeira; já de pé, empurrar os braços acima. Dois movimentos
+      separados, sem pressa.
+    grupo: forca
+    fase_minima: 4
+    equipamento: [cadeira]
+    impacto: baixo
+    nivel: base
+    variante_halteres: Segurar 2 Halteres de 2 kg.
+    regressao: agachamento_cadeira
+    zonas: [joelhos, ancas, ombros]
+
+  # ---------------------------------------------------------------- Cardio, nível base
+
+  # V2 Fase 4, linha 6, e cardio finalizador (estrutura da sessão)
+  - id: marcha_rapida_lugar
+    nome: Marcha Rápida no Lugar
+    descricao: >-
+      Elevar os joelhos alternadamente em ritmo vivo, sem saltar, com apoio por perto se
+      necessário.
+    grupo: cardio
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    regressao: caminhada
+    zonas: [joelhos, ancas]
+    apoio_equilibrio: true
+
+  # V1 8.1
+  - id: passadeira
+    nome: Passadeira
+    descricao: >-
+      Começar com marcha confortável. Aumentar primeiro o tempo; depois, se adequado, a
+      velocidade e a inclinação.
+    grupo: cardio
+    fase_minima: 1
+    equipamento: [passadeira]
+    impacto: baixo
+    nivel: base
+    zonas: [joelhos, ancas]
+
+  # V1 8.2
+  - id: eliptica
+    nome: Elíptica
+    descricao: >-
+      Usar resistência baixa a moderada e movimento fluido. Reduzir a resistência se a
+      técnica se deteriorar.
+    grupo: cardio
+    fase_minima: 1
+    equipamento: [eliptica]
+    impacto: baixo
+    nivel: base
+    zonas: [joelhos, ancas]
+
+  # V1 8.3
+  - id: caminhada
+    nome: Caminhada
+    descricao: Excelente opção para recuperação ativa e aumento da atividade diária.
+    grupo: cardio
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [joelhos, ancas]
+
+  # ---------------------------------------------------------------- Mobilidade e equilíbrio
+  # Nome do V1 §6 e do V2 (biblioteca); descrição da coluna «Referência» do V2.
+
+  - id: circulos_ombros
+    nome: Círculos de ombros / braços
+    descricao: Movimentos suaves, sem forçar a amplitude.
+    grupo: mobilidade
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [ombros]
+
+  - id: rotacoes_toracicas
+    nome: Rotações torácicas
+    descricao: Rotações controladas do tronco, dentro de uma amplitude confortável.
+    grupo: mobilidade
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [coluna]
+
+  - id: mobilidade_anca
+    nome: Mobilidade da anca
+    descricao: Movimentos suaves e controlados dentro da amplitude disponível.
+    grupo: mobilidade
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [ancas]
+
+  - id: mobilidade_tornozelos
+    nome: Mobilidade dos tornozelos
+    descricao: Mobilização controlada, incluindo elevação dos calcanhares.
+    grupo: mobilidade
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+
+  - id: transferencias_peso
+    nome: Transferências de peso
+    descricao: Deslocar o peso de forma controlada, usando apoio quando necessário.
+    grupo: equilibrio
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    zonas: [ancas]
+    apoio_equilibrio: true
+
+  # V1 §6 (só no V1)
+  - id: apoio_unipodal_assistido
+    nome: Apoio unipodal assistido
+    descricao: >-
+      Equilíbrio junto a uma parede ou bancada, começando com transferência de peso e
+      progredindo para apoio unipodal assistido.
+    grupo: equilibrio
+    fase_minima: 1
+    impacto: baixo
+    nivel: base
+    regressao: transferencias_peso
+    zonas: [ancas, joelhos]
+    apoio_equilibrio: true
+
+  # ---------------------------------------------------------------- Variantes avançadas
+  # Nunca entram no plano no MVP (§6.3). Impacto, nível e regressão: tabela 6.4.
+  # Descrição: o texto curto do V2 (notas por baixo das tabelas), quando existe.
+
+  # V2 Fase 2 (variantes avançadas)
+  - id: lunge_alternado_atras
+    nome: Lunge alternado atrás
+    descricao: sem apoio (2 halteres de 2 kg)
+    grupo: forca
+    fase_minima: 2
+    equipamento: [halteres]
+    impacto: medio
+    nivel: intermedio
+    regressao: lunge_atras_apoio
+    zonas: [joelhos, ancas]
+
+  - id: flexoes_chao
+    nome: Flexões no chão
+    descricao: sem joelhos apoiados
+    grupo: forca
+    fase_minima: 2
+    impacto: medio
+    nivel: intermedio
+    regressao: flexao_inclinada_joelhos
+    zonas: [ombros]
+
+  # V2 Fase 3 (variantes avançadas)
+  - id: agachamento_bulgaro
+    nome: Agachamento búlgaro
+    descricao: pé de trás apoiado num sofá ou cadeira, 2 halteres de 2 kg
+    grupo: forca
+    fase_minima: 3
+    equipamento: [cadeira, halteres]
+    impacto: medio
+    nivel: avancado
+    regressao: agachamento_dividido_apoio
+    zonas: [joelhos, ancas]
+
+  - id: flexoes_diamante
+    nome: Flexões diamante
+    descricao: no chão
+    grupo: forca
+    fase_minima: 3
+    impacto: medio
+    nivel: avancado
+    regressao: flexao_inclinada_maos_proximas
+    zonas: [ombros]
+
+  - id: prancha_lateral_completa
+    nome: Prancha lateral completa
+    descricao: com apoio no pé
+    grupo: forca
+    fase_minima: 3
+    impacto: baixo
+    nivel: intermedio
+    regressao: prancha_lateral_joelhos
+    zonas: [ombros, coluna]
+
+  # V2 Fase 4 (variantes avançadas, versão anterior): só o nome, sem descrição.
+  - id: agachamento_salto
+    nome: Agachamento com salto
+    descricao: ""
+    grupo: forca
+    fase_minima: 4
+    impacto: alto
+    nivel: avancado
+    regressao: agachamento_elevacao_calcanhares
+    zonas: [joelhos, ancas]
+
+  - id: lunge_caminhando
+    nome: Lunge caminhando
+    descricao: ""
+    grupo: forca
+    fase_minima: 4
+    impacto: medio
+    nivel: intermedio
+    regressao: subida_degrau_apoio
+    zonas: [joelhos, ancas]
+
+  - id: flexao_toque_ombro
+    nome: Flexão com toque no ombro
+    descricao: ""
+    grupo: forca
+    fase_minima: 4
+    impacto: medio
+    nivel: avancado
+    regressao: prancha_inclinada_toque_ombro
+    zonas: [ombros, coluna]
+
+  - id: remada_prancha
+    nome: Remada em prancha
+    descricao: ""
+    grupo: forca
+    fase_minima: 4
+    equipamento: [halteres]
+    impacto: medio
+    nivel: avancado
+    regressao: remada_unilateral_apoio
+    zonas: [ombros, coluna]
+
+  - id: thruster
+    nome: Thruster
+    descricao: ""
+    grupo: forca
+    fase_minima: 4
+    equipamento: [halteres]
+    impacto: medio
+    nivel: avancado
+    regressao: agachamento_prensa_ombros
+    zonas: [joelhos, ancas, ombros]
+
+  - id: escaladores
+    nome: Escaladores
+    descricao: ""
+    grupo: cardio
+    fase_minima: 4
+    impacto: alto
+    nivel: avancado
+    regressao: marcha_rapida_lugar
+    zonas: [joelhos, ancas, ombros]

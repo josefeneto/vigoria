@@ -1,0 +1,273 @@
+# Programa de 16 semanas (REGRAS_DOMINIO §5 e §6.3), versão-base.
+# foco_treino: V1 §9. foco_estrategico, exercícios, séries, repetições e descanso: V2,
+# «Detalhe prático das fases de treino». foco_alimentar: V3 §15.
+# Esforço: o V2 só indica um valor para todas as fases — «Em todas as fases, na
+# variante-base, o esforço percebido mantém-se entre 3 e 6.»
+
+# V2, «Estrutura padrão de cada sessão» (cardio finalizador na versão-base, §6.3 ponto 4).
+estrutura_sessao:
+  aquecimento: >-
+    Aquecimento Dinâmico (5 a 10 min): Mobilidade ativa (rotações suaves de braços, ombros,
+    anca e tornozelos). Opcional com equipamento: se tiver Passadeira ou Elíptica, realize 7
+    minutos de marcha estável ou ritmo suave para preparar as articulações.
+  bloco_principal: >-
+    Bloco Principal (Força e Tonificação): Execução do circuito Full-Body prescrito para a
+    respetiva fase, focando no controlo postural e na respiração contínua (evite prender o ar).
+  cardio_finalizador: >-
+    Cardio Finalizador Opcional (10 a 15 min): Trabalho aeróbio de baixo impacto. Padrão sem
+    equipamento: marcha rápida no lugar, alternando 30 s mais vivos com 30 s calmos. Opcional
+    com equipamento: 12 minutos de caminhada com inclinação leve na Passadeira ou ritmo
+    contínuo na Elíptica.
+  retorno_calma: >-
+    Retorno à Calma (5 min): Alongamentos estáticos globais e exercícios de respiração
+    profunda controlada para baixar a frequência cardíaca.
+
+fases:
+
+  - numero: 1
+    nome: Adaptação
+    semanas: {min: 1, max: 4}
+    foco_treino: Aprender a técnica, estabelecer rotina e iniciar cardio sem fadiga excessiva.
+    foco_estrategico: >-
+      Aprender os padrões de movimento, estabilizar as articulações e iniciar o cardio sem
+      fadiga excessiva.
+    foco_alimentar:
+      objetivo: Criar organização.
+      pontos:
+        - refeições relativamente regulares;
+        - água como bebida habitual;
+        - presença de proteína nas refeições principais;
+        - introdução gradual de hortícolas e fruta;
+        - perceber os horários em que existe mais fome;
+        - começar a observar a relação entre alimentação e treino.
+        - Não tentar fazer tudo. O primeiro objetivo é criar a rotina.
+    esforco: {min: 3, max: 6}
+    exercicios:
+      - id: agachamento_cadeira
+        series: 3
+        repeticoes: "12-15"
+        descanso_s: {min: 60, max: 60}
+        como_executar: Sentar e levantar de uma cadeira estável controlando a descida.
+        com_halteres: Segurar Halter de 5 kg verticalmente junto ao peito.
+      - id: flexao_parede
+        series: 3
+        repeticoes: "10-12"
+        descanso_s: {min: 60, max: 60}
+        como_executar: >-
+          Aproximar o peito da parede de forma controlada (ou chão com joelhos).
+        com_halteres: Manter peso corporal. Foco na total amplitude do peito.
+      - id: ponte_gluteos
+        series: 3
+        repeticoes: "15"
+        descanso_s: {min: 45, max: 45}
+        como_executar: >-
+          Deitado de costas, elevar a bacia contraindo glúteos de forma controlada.
+        com_halteres: Colocar o Halter de 5 kg sobre a bacia.
+      - id: remada_halteres
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 60, max: 60}
+        como_executar: >-
+          Tronco inclinado à frente, puxar cotovelos mantendo o tronco estável.
+        com_halteres: Segurar 2 Halteres de 5 kg (um em cada mão).
+      - id: elevacao_lateral
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Elevar braços esticados até à linha dos ombros, sem balanço.
+        com_halteres: Segurar os 2 Halteres de 2 kg para resistência.
+      - id: bird_dog
+        alternativas: [prancha_antebracos]
+        series: 3
+        repeticoes: "30-45s"
+        descanso_s: {min: 45, max: 45}
+        como_executar: >-
+          Em 4 apoios, estender braço e perna opostos (ou prancha antebraços).
+        com_halteres: Manter peso corporal. Máxima contração abdominal.
+
+  - numero: 2
+    nome: Construção
+    semanas: {min: 5, max: 8}
+    foco_treino: Aumentar gradualmente o volume de força e o tempo de cardio.
+    foco_estrategico: >-
+      Aumentar gradualmente o volume de repetições e reduzir o descanso para desafiar a
+      resistência física geral.
+    foco_alimentar:
+      objetivo: Tornar os hábitos mais consistentes.
+      pontos:
+        - aumentar a regularidade dos hortícolas;
+        - utilizar fruta de forma habitual;
+        - incluir leguminosas com maior frequência;
+        - melhorar a organização das compras;
+        - reduzir bebidas açucaradas;
+        - reduzir gradualmente alimentos ultraprocessados que apareçam com demasiada frequência.
+        - A prioridade continua a ser a consistência.
+    esforco: {min: 3, max: 6}
+    exercicios:
+      - id: lunge_atras_apoio
+        series: 3
+        repeticoes: "10 (por perna)"
+        descanso_s: {min: 45, max: 45}
+        como_executar: >-
+          Com uma mão numa cadeira ou bancada, dar um passo atrás e fletir os joelhos até onde
+          for confortável.
+        com_halteres: Segurar 1 Halter de 2 kg na mão livre.
+      - id: flexao_inclinada_joelhos
+        series: 3
+        repeticoes: "12-15"
+        descanso_s: {min: 45, max: 45}
+        como_executar: >-
+          Mãos numa bancada estável (ou no chão com os joelhos apoiados), descer o peito de
+          forma controlada.
+        com_halteres: Manter peso corporal. Cadência lenta na descida.
+      - id: agachamento_sumo
+        series: 3
+        repeticoes: "15"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Pernas mais afastadas que os ombros, pontas dos pés para fora.
+        com_halteres: Segurar o Halter de 5 kg com as duas mãos em baixo.
+      - id: remada_aberta
+        series: 3
+        repeticoes: "15"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Tronco inclinado à frente, puxar halteres com cotovelos bem abertos.
+        com_halteres: Segurar 2 Halteres de 2 kg (um em cada mão).
+      - id: prensa_ombros
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Braços a 90º ao lado da cabeça, empurrar verticalmente.
+        com_halteres: Segurar 2 Halteres de 2 kg ou 5 kg para empurrar.
+      # Com osteoporose, bird-dog (contraindicação e regressão na biblioteca).
+      - id: abdominal_crunch
+        series: 3
+        repeticoes: "20"
+        descanso_s: {min: 30, max: 30}
+        como_executar: Deitado de costas, retirar apenas as escápulas/ombros do chão.
+        com_halteres: Manter igual. Subida controlada com contração forte.
+
+  - numero: 3
+    nome: Consolidação
+    semanas: {min: 9, max: 12}
+    foco_treino: Progredir repetições ou carga e melhorar a capacidade funcional.
+    foco_estrategico: >-
+      Introduzir movimentos unilaterais, sempre com apoio disponível, para melhorar o
+      equilíbrio, a força funcional e a simetria.
+    foco_alimentar:
+      objetivo: Se a redução de gordura corporal for um objetivo, observar melhor as quantidades.
+      pontos:
+        - As porções aumentaram?
+        - Existem muitos alimentos densos em energia?
+        - Há bebidas açucaradas frequentes?
+        - Os extras estão a acontecer diariamente?
+        - A atividade diária mantém-se?
+        - O treino continua regular?
+        - Pequenos ajustes podem ser suficientes. Não é necessário iniciar uma dieta radical.
+    esforco: {min: 3, max: 6}
+    exercicios:
+      - id: agachamento_dividido_apoio
+        series: 3
+        repeticoes: "10 (por perna)"
+        descanso_s: {min: 60, max: 60}
+        como_executar: >-
+          Pés afastados em passo, ambos no chão, mão na parede ou numa cadeira; descer e subir
+          na vertical.
+        com_halteres: Segurar 1 Halter de 2 kg na mão livre.
+      - id: peso_morto_romeno
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 60, max: 60}
+        como_executar: Descer o tronco à frente com pernas quase esticadas, fletindo a anca.
+        com_halteres: Segurar 2 Halteres de 5 kg deslizando pelas pernas.
+      - id: flexao_inclinada_maos_proximas
+        series: 3
+        repeticoes: "8-10"
+        descanso_s: {min: 60, max: 60}
+        como_executar: >-
+          Mãos numa bancada estável, mais próximas do que a largura dos ombros; descer de forma
+          controlada.
+        com_halteres: Manter peso corporal. Ajustar a altura da bancada à capacidade.
+      - id: remada_unilateral_apoio
+        series: 3
+        repeticoes: "12 (por braço)"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Tronco inclinado com um braço apoiado, puxar o outro de cada vez.
+        com_halteres: Segurar 1 Halter de 5 kg na mão ativa.
+      - id: elevacao_frontal
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Elevar braços esticados à frente até à linha dos olhos de forma fluida.
+        com_halteres: Segurar os 2 Halteres de 2 kg.
+      - id: prancha_lateral_joelhos
+        series: 3
+        repeticoes: "30s (cada lado)"
+        descanso_s: {min: 45, max: 45}
+        como_executar: Apoio num antebraço e na lateral do joelho, bacia elevada e alinhada.
+        com_halteres: Manter peso corporal. Alinhamento cervical e da anca.
+
+  # Versão-base de §6.3 e §6.4 (já no V2 revisto): 3 séries, descanso de 45 a 60 s.
+  - numero: 4
+    nome: Integração
+    semanas: {min: 13, max: 16}
+    foco_treino: Consolidar hábitos e preparar a manutenção.
+    foco_estrategico: >-
+      Consolidar o que foi aprendido, manter a regularidade e preparar a manutenção, com
+      movimentos combinados, controlados e sem impacto.
+    foco_alimentar:
+      objetivo: Transformar o que funcionou em rotina.
+      pontos:
+        - >-
+          Nesta fase, a pergunta principal deixa de ser: “Como consigo cumprir estas 16
+          semanas?” e passa a ser: “Quais destes hábitos consigo manter durante os próximos
+          anos?”
+        - A resposta será diferente para cada pessoa.
+        - O objetivo do programa é encontrar essa resposta.
+    esforco: {min: 3, max: 6}
+    exercicios:
+      - id: agachamento_elevacao_calcanhares
+        series: 3
+        repeticoes: "12"
+        descanso_s: {min: 45, max: 60}
+        como_executar: >-
+          Sentar e levantar da cadeira de forma controlada; no topo, subir às pontas dos pés com
+          apoio, sem saltar.
+        com_halteres: Segurar 1 Halter de 5 kg junto ao peito.
+      - id: subida_degrau_apoio
+        series: 3
+        repeticoes: "10 (por perna)"
+        descanso_s: {min: 45, max: 60}
+        como_executar: >-
+          Subir e descer um degrau baixo, alternando a perna, com a mão no corrimão.
+        com_halteres: Segurar 1 Halter de 2 kg na mão livre.
+      - id: prancha_inclinada_toque_ombro
+        series: 3
+        repeticoes: "10"
+        descanso_s: {min: 45, max: 60}
+        como_executar: >-
+          Mãos numa bancada estável, corpo alinhado; tocar alternadamente no ombro oposto sem
+          rodar a bacia.
+        com_halteres: Manter peso corporal. Máxima estabilidade do core.
+      - id: remada_unilateral_apoio
+        series: 3
+        repeticoes: "12 (por braço)"
+        descanso_s: {min: 45, max: 60}
+        como_executar: >-
+          Tronco inclinado com uma mão apoiada numa cadeira; puxar o halter com o outro braço.
+        com_halteres: Segurar 1 Halter de 5 kg na mão ativa.
+      - id: agachamento_prensa_ombros
+        series: 3
+        repeticoes: "10"
+        descanso_s: {min: 45, max: 60}
+        como_executar: >-
+          Sentar e levantar da cadeira; já de pé, empurrar os braços acima. Dois movimentos
+          separados, sem pressa.
+        com_halteres: Segurar 2 Halteres de 2 kg.
+      - id: marcha_rapida_lugar
+        series: 3
+        repeticoes: "40 s"
+        descanso_s: {min: 45, max: 45}
+        como_executar: >-
+          Elevar os joelhos alternadamente em ritmo vivo, sem saltar, com apoio por perto se
+          necessário.
+        com_halteres: Manter igual. Ritmo em que ainda consegue falar em frases curtas.

@@ -159,6 +159,9 @@ PESO_ALVO_SEM_PERDA = (
     "ganhar força, sem objetivo de perda."
 )
 
+# Regressões no fim da cadeia (§6.6)
+AMPLITUDE_CONFORTAVEL = "Amplitude confortável, sem dor."
+
 # Marcos (§5)
 FASES = ("Adaptação", "Construção", "Consolidação", "Integração")
 CINTURA_MEDIR = "Medir e comparar com a medição inicial."

@@ -99,6 +99,8 @@ Exemplo (persona de teste, 68 anos, 94 kg → 85 kg): ritmo máximo 0,4 % × 94 
 | 3 dias, ou menos de 30 min/dia | Ligeira |
 | 1 ou 2 dias (qualquer duração) | Ligeira, com aviso honesto (decisão de 28/10/2026). 1 dia: «Com 1 dia por semana fica abaixo do mínimo recomendado de força (2 dias) e de atividade aeróbia regular.» 2 dias: «Com 2 dias por semana cumpre o mínimo de força, mas fica abaixo da atividade aeróbia recomendada (150 a 300 minutos semanais).» Em ambos, o plano junta caminhada diária fora das sessões e sugere acrescentar um dia logo que possível |
 
+**A CONFIRMAR (revisão profissional):** o Tai Chi da intensidade Ligeira não está na biblioteca (os volumes não o descrevem). Proposta: até haver conteúdo editorial, o plano usa os exercícios de mobilidade e equilíbrio da biblioteca no lugar do Tai Chi, que pode ser mencionado só como atividade que o utilizador já pratique.
+
 Com 15 ou 20 min/dia, as sessões concentram-se no essencial (aquecimento curto, 4 a 5 exercícios de força, retorno à calma) e a caminhada diária completa o resto.
 
 ## 4. Módulo de gordura visceral
@@ -133,6 +135,12 @@ Nota obrigatória (Vol. 1): o perímetro da cintura é um indicador de adiposida
 ### 6.1 Campos da biblioteca
 
 Fonte: Vol. 1 (secções 6–8) e Vol. 2 (biblioteca e tabelas das 4 fases). Cada exercício em `conteudo/exercicios.yaml` tem: `id`, `nome`, `descricao`, `grupo`, `fase_minima`, `equipamento`, `impacto` (baixo/medio/alto), `nivel` (base/intermedio/avancado), `variante_halteres`, `regressao` (id da versão mais fácil), `contraindicacoes`.
+
+Campos acrescentados a 28/10/2026: `zonas` (articulações que o exercício solicita: joelhos, ancas, ombros, coluna), `flexao_tronco_carga` (só o abdominal crunch) e `apoio_equilibrio` (o texto prevê apoio na parede, cadeira ou corrimão). As zonas e as regressões dos exercícios-base não vêm dos volumes: são propostas do Claude Code aprovadas pelo José a 28/10/2026. As das variantes avançadas vêm da tabela 6.4.
+
+Ficam fora da biblioteca: «corrida estática» (já não existe no Vol. 2 revisto) e Tai Chi (ver §3).
+
+**A CONFIRMAR (revisão profissional):** com osteoporose de risco elevado, avaliar se `peso_morto_romeno` e `remada_halteres` devem passar sempre às regressões `ponte_gluteos` e `remada_unilateral_apoio`. Hoje, só o abdominal crunch conta como flexão do tronco com carga.
 
 ### 6.2 O problema
 
@@ -169,6 +177,14 @@ Os restantes exercícios do Vol. 1 e do Vol. 2 são baixo impacto / nível base 
 ### 6.5 Volume 2 em Word
 
 Resolução aplicada ao Volume 2 em Word (revisão de 25/10/2026): as tabelas mostram a variante-base, as avançadas aparecem por baixo de cada tabela com os critérios, e a Fase 4 chama-se «Integração». A cópia em `docs/referencia/` corresponde a esta revisão.
+
+### 6.6 Aplicação das regressões por zona (decisão de 28/10/2026)
+
+Para a Fase 4 (motor), implementado em `regras/regressao.py`:
+
+1. Para cada zona com regressão (tabela 1.1), o motor segue a cadeia de regressões até encontrar um exercício que não solicite essa zona.
+2. Se chegar ao fim da cadeia e o exercício ainda a solicitar, usa esse último, com esforço máximo 4 e a indicação «amplitude confortável, sem dor».
+3. Com várias zonas, aplica a regra a todas ao mesmo tempo: o exercício escolhido não pode solicitar nenhuma delas (ou, no fim da cadeia, segue o ponto 2).
 
 ## 7. Textos obrigatórios (fixos, nunca gerados pela LLM)
 
@@ -207,3 +223,4 @@ Não há decisões de domínio pendentes.
 - 26/10/2026 — Segunda revisão de coerência: verificação rejeita tudo o que não seja `nivel: base`; «outra» condição ou limitação ⇒ prudente sem interpretar texto; sem valores de hidratação com doença renal e nota de restrição de líquidos com doença cardiovascular; o plano nunca propõe proteína acima de 1,2 g/kg; teto «Média» aplica-se ao modo prudente (não a todas as condições crónicas).
 - 28/10/2026 — Fase 2: marcos de peso lineares com o ritmo usado (e «manter» depois de atingido o objetivo), cintura sem número; nova pergunta «Em que articulações?» para a dor articular persistente; três incoerências nos objetivos tratadas como avisos (peso-alvo com IMC < 18,5 limitado a IMC 18,5; cintura-alvo ≥ atual; peso-alvo ≥ atual).
 - 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias (secção 3); no MVP, sem impacto para todos (secção 6.3, ponto 6). Equilíbrio com apoio mantém-se segundo a tabela 1.1 (correção no mesmo dia: chegou a ser aplicado a todos).
+- 28/10/2026 — Fase 3, biblioteca: campos `zonas`, `flexao_tronco_carga` e `apoio_equilibrio` (§6.1); flexão do tronco com carga só no abdominal crunch; zonas e regressões aprovadas; regra de aplicação das regressões (§6.6); dois pontos «A CONFIRMAR» (osteoporose de risco elevado em §6.1; Tai Chi em §3).
