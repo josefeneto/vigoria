@@ -10,7 +10,9 @@ from vigoria.modelos.estrategia import Estrategia, Indicadores, Marco, Restricoe
 from vigoria.modelos.questionario import (
     Articulacao,
     Condicao,
+    Limitacao,
     Questionario,
+    SimNaoNaoSei,
 )
 from vigoria.motor.acolhimento import Acolhimento, acolher
 from vigoria.regras import textos
@@ -63,13 +65,14 @@ def restricoes_exercicio(q: Questionario, eleg: Elegibilidade) -> Restricoes:
     # Limitações (qualquer gravidade) e dor articular nas mesmas zonas.
     zonas_escolhidas = {str(lim) for lim in q.limitacoes} | {str(a) for a in q.dor_articular_zonas}
     zonas = tuple(zona for zona in Zona if zona in zonas_escolhidas)
+    osteoporose = Condicao.OSTEOPOROSE in q.condicoes
+    osteoporose_com_risco = osteoporose and q.osteoporose_risco is not SimNaoNaoSei.NAO
 
     return Restricoes(
-        # No MVP, para todos (decisão de 28/10/2026, REGRAS_DOMINIO §6.3).
-        sem_impacto=True,
-        equilibrio_com_apoio=True,
+        sem_impacto=True,  # no MVP, para todos (decisão de 28/10/2026, REGRAS_DOMINIO §6.3)
+        equilibrio_com_apoio=osteoporose_com_risco or Limitacao.EQUILIBRIO in q.limitacoes,
         sem_intervalos=eleg.modo is Modo.PRUDENTE,
-        sem_flexao_tronco_com_carga=Condicao.OSTEOPOROSE in q.condicoes,
+        sem_flexao_tronco_com_carga=osteoporose,
         zonas_regressao=zonas,
         regressao_geral=Articulacao.OUTRA in q.dor_articular_zonas,
     )

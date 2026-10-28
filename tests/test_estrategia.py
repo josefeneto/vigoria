@@ -214,8 +214,9 @@ def test_doenca_renal_sem_valores_de_proteina_nem_hidratacao() -> None:
 
 def test_versao_base_so_com_as_restricoes_gerais() -> None:
     r = _estrategia().restricoes
-    assert r.sem_impacto and r.equilibrio_com_apoio  # para todos, no MVP (§6.3)
+    assert r.sem_impacto  # para todos, no MVP (§6.3)
     assert not (r.sem_intervalos or r.sem_flexao_tronco_com_carga or r.regressao_geral)
+    assert not r.equilibrio_com_apoio
     assert r.zonas_regressao == ()
 
 
@@ -230,10 +231,8 @@ def test_versao_base_so_com_as_restricoes_gerais() -> None:
         {"idade": 30, "intensidade_pedida": "alta"},
     ],
 )
-def test_sem_impacto_e_equilibrio_com_apoio_para_todos(alteracoes: dict[str, Any]) -> None:
-    r = _estrategia(**alteracoes).restricoes
-    assert r.sem_impacto
-    assert r.equilibrio_com_apoio
+def test_sem_impacto_para_todos(alteracoes: dict[str, Any]) -> None:
+    assert _estrategia(**alteracoes).restricoes.sem_impacto
 
 
 def test_prudente_sem_impacto_nem_intervalos() -> None:
@@ -248,12 +247,14 @@ def test_osteoporose_sem_risco() -> None:
     assert e.restricoes.sem_impacto
     assert e.restricoes.sem_flexao_tronco_com_carga
     assert not e.restricoes.sem_intervalos
+    assert not e.restricoes.equilibrio_com_apoio
 
 
 @pytest.mark.parametrize("risco", ["sim", "nao_sei"])
 def test_osteoporose_com_risco(risco: str) -> None:
     r = _estrategia(condicoes=["osteoporose"], osteoporose_risco=risco).restricoes
     assert r.sem_flexao_tronco_com_carga
+    assert r.equilibrio_com_apoio
     assert r.sem_intervalos
 
 
@@ -375,7 +376,7 @@ def test_persona_resultado_esperado() -> None:
 
     assert e.restricoes.zonas_regressao == (Zona.JOELHOS,)
     assert e.restricoes.sem_impacto
-    assert e.restricoes.equilibrio_com_apoio
+    assert not e.restricoes.equilibrio_com_apoio
     assert not e.restricoes.sem_intervalos
     assert [m.peso_indicativo_kg for m in e.marcos] == [92.5, 91.0, 89.5, 88.0]
 
@@ -388,6 +389,18 @@ def test_cli_so_estrategia(capsys: pytest.CaptureFixture[str]) -> None:
     saida = capsys.readouterr().out
     assert "Pedida: Média | Efetiva: Média" in saida
     assert "Regressão nas zonas: joelhos" in saida
+    assert "Sem impacto: sim" in saida
+    assert "Equilíbrio com apoio: não" in saida
+
+
+def test_cli_limitacao_equilibrio(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    dados = json.loads(PERSONA.read_text(encoding="utf-8"))
+    dados.update(limitacoes=["equilibrio"], limitacoes_gravidade={"equilibrio": "ligeira"})
+    ficheiro = tmp_path / "equilibrio.json"
+    ficheiro.write_text(json.dumps(dados), encoding="utf-8")
+    assert cli.main(["--so-estrategia", str(ficheiro)]) == 0
+    saida = capsys.readouterr().out
+    assert "Equilíbrio com apoio: sim" in saida
     assert "Sem impacto: sim" in saida
     assert "sem essa indicação" in saida
     assert "Semana 16 (Integração): peso indicativo 88 kg" in saida

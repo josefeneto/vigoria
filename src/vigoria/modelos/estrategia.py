@@ -53,7 +53,7 @@ class Restricoes(_Imutavel):
     sem_impacto: bool = True  # no MVP, sempre (§6.3)
     sem_intervalos: bool = False
     sem_flexao_tronco_com_carga: bool = False  # osteoporose: bird-dog em vez de crunch
-    equilibrio_com_apoio: bool = True  # no MVP, sempre (§6.3)
+    equilibrio_com_apoio: bool = False
     zonas_regressao: tuple[Zona, ...] = ()
     regressao_geral: bool = False  # dor articular em «outra» articulação
 
