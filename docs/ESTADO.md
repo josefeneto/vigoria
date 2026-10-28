@@ -19,7 +19,8 @@
 - 25/10/2026 — Telemóvel opcional: Portugal (+351) por omissão, outros países por lista com indicativos; validado e guardado em E.164; sem SMS/WhatsApp no MVP.
 - 25/10/2026 — Ajustes após a revisão da Fase 0 pelo Claude Code: tabela de condições e limitações (REGRAS §1.1), sem variantes avançadas no MVP, disponibilidade → intensidade, contactos fora do Questionario, máximo de 3 chamadas à LLM clarificado, testes com a LLM real só pelo José.
 - 26/10/2026 — Segunda revisão do Claude Code (pontos A–H): CLI só autorizada com --so-estrategia; conftest lê só os.environ; verificação só aceita `nivel: base`; «outra» ⇒ prudente; hidratação e proteína com doença renal/cardiovascular; proteína nunca acima de 1,2 g/kg; subpassos 2a/2b e 4a/4b; regra de .env simplificada.
-- 27/10/2026 — Git: trabalho direto no `main`, sem ramos por fase (simplicidade).
+- 28/10/2026 — Ferramentas Python sempre com `python -m` (`python -m pytest`, `python -m ruff`, `python -m streamlit run app.py`, `python -m pip`): o Smart App Control do Windows bloqueia os executáveis do `.venv`. Atualizados CLAUDE.md, README, guia de arranque, plano, regras e `.claude/settings.json`.
+- 28/10/2026 — Git: só o ramo `main`, sem ramos por fase; commits pequenos, um ou mais por fase; lint e testes têm de passar antes de cada commit; push só depois de o José confirmar.
 - 27/10/2026 — Questionário: halteres como `"halteres"` + campo `halteres_kg`; refeições com as cinco chaves fixas e texto vazio = «não faz»; o modelo aceita gravidez (é a estratégia, na Fase 2, que impede o plano); campos começados por «_» são ignorados e campos desconhecidos são rejeitados.
 - 24/10/2026 — Demonstrações online possíveis no Streamlit Community Cloud (`AMBIENTE=demo`), só com dados fictícios; beta com pessoas reais apenas no Railway (UE).
 

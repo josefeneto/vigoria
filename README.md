@@ -19,6 +19,6 @@ Aplicação web que gera planos pessoais de saúde e vitalidade — perda de gor
 
 ```powershell
 .venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-streamlit run app.py
+python -m pip install -r requirements-dev.txt
+python -m streamlit run app.py
 ```

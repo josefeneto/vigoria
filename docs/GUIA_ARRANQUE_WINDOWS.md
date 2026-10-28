@@ -82,6 +82,15 @@ e repita a ativação. Com o ambiente ativo, a linha do terminal começa por `(.
 
 No VS Code: `Ctrl+Shift+P` → «Python: Select Interpreter» → escolher o que está em `.venv`.
 
+Ferramentas Python sempre com `python -m` (o Smart App Control do Windows bloqueia os executáveis do `.venv`, como `pytest.exe`):
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pytest -q -m "not llm"
+python -m ruff check .
+python -m streamlit run app.py
+```
+
 ## 7. Chave da LLM e ficheiro .env
 
 1. Em aistudio.google.com, iniciar sessão com a conta Google → *Get API key* → criar chave.
@@ -124,4 +133,5 @@ git push -u origin main
 | `claude` não é reconhecido | Abrir um terminal novo; se persistir, `claude doctor` ou reinstalar |
 | O Claude Code diz que não encontra o Git Bash | Instalar o Git for Windows; em último caso, definir `CLAUDE_CODE_GIT_BASH_PATH` com `C:\Program Files\Git\bin\bash.exe` no `settings.json` do utilizador |
 | Erro de autenticação no `git push` | O Git abre o browser para autorizar o GitHub; aceitar e repetir |
+| «Esta aplicação foi bloqueada» ao correr `pytest`, `ruff` ou `streamlit` | É o Smart App Control do Windows a bloquear os executáveis do `.venv`. Usar sempre `python -m pytest`, `python -m ruff`, `python -m streamlit run app.py` |
 | O Streamlit não abre no browser | Abrir manualmente `http://localhost:8501` |

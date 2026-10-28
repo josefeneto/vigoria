@@ -29,18 +29,20 @@ Plano completo por fases: `docs/PLANO_IMPLEMENTACAO.md`.
 
 ## Comandos
 
+Ferramentas Python sempre com `python -m`: o Smart App Control do Windows bloqueia os executáveis do `.venv` (por exemplo, `pytest.exe`).
+
 ```powershell
-python -m venv .venv ; .venv\Scripts\Activate.ps1   # criar/ativar ambiente
-pip install -r requirements-dev.txt                  # dependências (inclui as de produção)
-streamlit run app.py                                 # app em http://localhost:8501
-pytest -q                                            # todos os testes
-pytest -q -m "not llm"                               # testes sem chamadas reais à LLM (por omissão)
+python -m venv .venv ; .venv\Scripts\Activate.ps1         # criar/ativar ambiente
+python -m pip install -r requirements-dev.txt              # dependências (inclui as de produção)
+python -m streamlit run app.py                             # app em http://localhost:8501
+python -m pytest -q                                        # todos os testes
+python -m pytest -q -m "not llm"                           # testes sem chamadas reais à LLM (por omissão)
 # Testes com a LLM real: só o José os corre, à mão (ver «Testes»). O Claude Code nunca os executa.
-ruff check . --fix ; ruff format .                   # lint e formatação
-python -m vigoria.motor.cli exemplos/persona_teste.json   # gerar plano sem interface
+python -m ruff check . --fix ; python -m ruff format .     # lint e formatação
+python -m vigoria.motor.cli exemplos/persona_teste.json    # gerar plano sem interface
 ```
 
-Antes de dar uma tarefa por concluída: `ruff check .` e `pytest -q -m "not llm"` têm de passar.
+Antes de dar uma tarefa por concluída: `python -m ruff check .` e `python -m pytest -q -m "not llm"` têm de passar.
 
 ## Arquitetura
 
@@ -120,8 +122,8 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 
 ## Git
 
-- Trabalho direto no `main`, sem ramos por fase. Commits pequenos com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
-- Antes de commit: lint e testes. Nunca commit de `.env`, `secrets.toml`, bases de dados locais ou ficheiros em `docs/privado/`.
+- Só o ramo `main`, sem ramos por fase. Commits pequenos no `main`, um ou mais por fase, com mensagens em PT-EU no imperativo («Adiciona cálculo de hidratação»).
+- Antes de cada commit, lint e testes têm de passar (`python -m ruff check .` e `python -m pytest -q -m "not llm"`). Nunca commit de `.env`, `secrets.toml`, bases de dados locais ou ficheiros em `docs/privado/`.
 - `git push` só depois de eu confirmar.
 
 ## Documentação de referência

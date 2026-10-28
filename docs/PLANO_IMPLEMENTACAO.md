@@ -65,12 +65,12 @@ Cada fase tem o mesmo formato: o que se pretende, o que o José tem de fazer à 
 O Claude Code funciona melhor com sessões curtas e focadas. Para cada fase:
 
 1. **Abrir a pasta do projeto no VS Code** e o painel do Claude Code (ícone ✱ na barra lateral).
-2. **Criar o ramo da fase** — pedir ao Claude Code ou correr no terminal: `git switch -c fase-02-regras`.
+2. **Trabalhar sempre no `main`** — sem ramos por fase. Confirmar com `git status` que se está no `main` e sem alterações pendentes.
 3. **Começar em modo de planeamento.** No painel, escolher o modo *Plan* (no terminal: `Shift+Tab` até aparecer «plan mode»). O Claude Code lê os ficheiros e propõe um plano sem alterar nada.
 4. **Colar o prompt da fase** (secção 5) e ler o plano com atenção. Corrigir o que não estiver bem antes de aprovar. É aqui que se poupa mais tempo.
 5. **Aprovar e acompanhar.** O Claude Code pede autorização para editar ficheiros e correr comandos; o `.claude/settings.json` já autoriza os comandos seguros (testes, lint, git status) e bloqueia os perigosos.
 6. **Testar à mão** o que a fase produziu (os critérios de aceitação dizem como).
-7. **Commit**, e atualizar o `docs/ESTADO.md` (pedir ao Claude Code: «Atualiza o ESTADO.md com o que fizemos nesta fase»).
+7. **Commit no `main`** — commits pequenos, um ou mais por fase; antes de cada commit, lint e testes têm de passar (`python -m ruff check .` e `python -m pytest -q -m "not llm"`). O `git push` só depois de o José confirmar. Atualizar o `docs/ESTADO.md` (pedir ao Claude Code: «Atualiza o ESTADO.md com o que fizemos nesta fase»).
 8. **Limpar o contexto antes da fase seguinte:** `/clear`. O CLAUDE.md e o ESTADO.md voltam a ser lidos automaticamente; a conversa anterior não é precisa.
 
 Comandos úteis dentro do Claude Code:
@@ -123,7 +123,7 @@ Fase 1 do PLANO_IMPLEMENTACAO. Em modo de planeamento, propõe e depois executa:
 No fim, corre ruff e pytest e mostra-me como arrancar a app.
 ```
 
-**Fica bem feita quando:** `pytest -q` passa, `streamlit run app.py` abre a página com as cores da marca e o ficheiro de persona é validado sem erros.
+**Fica bem feita quando:** `python -m pytest -q` passa, `python -m streamlit run app.py` abre a página com as cores da marca e o ficheiro de persona é validado sem erros.
 
 ---
 
@@ -207,7 +207,7 @@ Fase 5. Constrói a interface Streamlit seguindo @docs/dominio/QUESTIONARIO.md e
 Desenho mobile-first: constrói cada ecrã para 390 px e só depois confirma a 1280 px. Em telemóvel, tabelas largas (semana-tipo, progressão) passam a cartões empilhados.
 ```
 
-**Fica bem feita quando:** o José preenche o questionário primeiro no telemóvel e depois no computador, e em ambos (mesma rede Wi-Fi: `streamlit run app.py` mostra o endereço «Network URL») e obtém um plano legível sem ajuda.
+**Fica bem feita quando:** o José preenche o questionário primeiro no telemóvel e depois no computador, e em ambos (mesma rede Wi-Fi: `python -m streamlit run app.py` mostra o endereço «Network URL») e obtém um plano legível sem ajuda.
 
 ---
 
