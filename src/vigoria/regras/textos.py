@@ -80,6 +80,7 @@ PESO_ALVO_SEM_PERDA = _T["peso_alvo_sem_perda"]
 
 # Regressões no fim da cadeia (§6.6)
 AMPLITUDE_CONFORTAVEL = _T["amplitude_confortavel"]
+APOIO_POR_PERTO = _T["apoio_por_perto"]
 
 # Marcos (§5)
 FASES = tuple(fase.nome for fase in carregar_fases())

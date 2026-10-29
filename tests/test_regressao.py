@@ -86,6 +86,7 @@ def test_ciclo_e_detetado() -> None:
             fase_minima=1,
             impacto=Impacto.BAIXO,
             nivel=Nivel.BASE,
+            de_pe=True,
             regressao=regressao,
             zonas=(Zona.JOELHOS,),
         )

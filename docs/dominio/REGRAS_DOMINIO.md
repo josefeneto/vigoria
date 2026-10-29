@@ -138,6 +138,8 @@ Fonte: Vol. 1 (secções 6–8) e Vol. 2 (biblioteca e tabelas das 4 fases). Cad
 
 Campos acrescentados a 28/10/2026: `zonas` (articulações que o exercício solicita: joelhos, ancas, ombros, coluna), `flexao_tronco_carga` (só o abdominal crunch) e `apoio_equilibrio` (o texto prevê apoio na parede, cadeira ou corrimão). As zonas e as regressões dos exercícios-base não vêm dos volumes: são propostas do Claude Code aprovadas pelo José a 28/10/2026. As das variantes avançadas vêm da tabela 6.4.
 
+Campo acrescentado a 29/10/2026: `de_pe` (obrigatório em todos os exercícios), proposta do Claude Code aprovada pelo José. Não são de pé: ponte de glúteos, bird-dog, pranchas no chão, abdominal crunch e flexões no chão. As flexões e a prancha inclinadas (mãos numa bancada) contam como de pé.
+
 Ficam fora da biblioteca: «corrida estática» (já não existe no Vol. 2 revisto) e Tai Chi (ver §3).
 
 **A CONFIRMAR (revisão profissional):** com osteoporose de risco elevado, avaliar se `peso_morto_romeno` e `remada_halteres` devem passar sempre às regressões `ponte_gluteos` e `remada_unilateral_apoio`. Hoje, só o abdominal crunch conta como flexão do tronco com carga.
@@ -180,11 +182,23 @@ Resolução aplicada ao Volume 2 em Word (revisão de 25/10/2026): as tabelas mo
 
 ### 6.6 Aplicação das regressões por zona (decisão de 28/10/2026)
 
-Para a Fase 4 (motor), implementado em `regras/regressao.py`:
+Para a Fase 4 (motor), implementado em `regras/regressao.py` e `motor/selecao.py`.
+
+**A CONFIRMAR (revisão profissional):** gravidade na regra das zonas (decisão de 29/10/2026). A regra completa (pontos 1 a 4) aplica-se à **dor articular persistente** (zonas de «Em que articulações?») e à **limitação importante** (1.H). À **limitação ligeira** aplica-se a regra ligeira:
+- no máximo **um passo** de regressão, e só nos exercícios com `fase_minima` 2 a 4 (exceto o cardio); se a regressão ainda solicitar a zona, leva a nota «amplitude confortável, sem dor»;
+- os exercícios de fase 1 e o cardio mantêm-se, sem limite de esforço adicional, com a nota «amplitude confortável, sem dor»;
+- o passo não é dado se a regressão solicitar uma zona da regra completa.
+
+Se a mesma zona estiver nas duas situações, vale a regra completa (a mais restritiva, §1).
+
+Regra completa:
 
 1. Para cada zona com regressão (tabela 1.1), o motor segue a cadeia de regressões até encontrar um exercício que não solicite essa zona.
 2. Se chegar ao fim da cadeia e o exercício ainda a solicitar, usa esse último, com esforço máximo 4 e a indicação «amplitude confortável, sem dor».
 3. Com várias zonas, aplica a regra a todas ao mesmo tempo: o exercício escolhido não pode solicitar nenhuma delas (ou, no fim da cadeia, segue o ponto 2).
+4. Uma regressão pode ser usada em qualquer fase, mesmo que a sua `fase_minima` seja posterior (decisão de 29/10/2026). Exemplo: com limitação na coluna, a remada com halteres (fase 1) passa à remada unilateral com apoio (fase 3) logo na fase 1.
+
+Seleção dos exercícios permitidos por fase (`motor/selecao.py`, decisão de 29/10/2026), por esta ordem: só `nivel: base`; sem impacto médio ou alto; sem os que exigem equipamento não declarado (halteres, passadeira, elíptica; cadeira, parede, bancada e degrau contam como existentes em casa); sem os contraindicados (condições e zonas escolhidas no questionário); sem flexão do tronco com carga quando aplicável (passa à regressão); regressão por zona (regra completa ou ligeira); nota «Sempre com apoio por perto» em todos os exercícios de pé (`de_pe`) e de equilíbrio, quando o equilíbrio com apoio se aplica (tabela 1.1). A «regressão geral» (dor articular em «outra» articulação, tabela 1.1) desce um passo na cadeia em todos os exercícios que tenham regressão, sem limite de esforço adicional. A regressão escolhida tem de cumprir os mesmos filtros (exceto a fase); se não cumprir, o exercício sai da lista.
 
 ## 7. Textos obrigatórios (fixos, nunca gerados pela LLM)
 
@@ -229,3 +243,5 @@ Não há decisões de domínio pendentes.
 - 28/10/2026 — Revisão da estratégia da persona: aviso de disponibilidade separado para 1 e 2 dias (secção 3); no MVP, sem impacto para todos (secção 6.3, ponto 6). Equilíbrio com apoio mantém-se segundo a tabela 1.1 (correção no mesmo dia: chegou a ser aplicado a todos).
 - 28/10/2026 — Fase 3, biblioteca: campos `zonas`, `flexao_tronco_carga` e `apoio_equilibrio` (§6.1); flexão do tronco com carga só no abdominal crunch; zonas e regressões aprovadas; regra de aplicação das regressões (§6.6); dois pontos «A CONFIRMAR» (osteoporose de risco elevado em §6.1; Tai Chi em §3).
 - 28/10/2026 — Fase 3, avisos: lista negra dividida em termos (verificados pelo código) e ideias (revisão pela LLM); «baixar» só como brasileirismo no sentido de descarregar (§8).
+- 29/10/2026 — Fase 4, seleção de exercícios: uma regressão pode ser usada em qualquer fase, mesmo com `fase_minima` posterior (§6.6, ponto 4); ordem dos filtros, filtro de equipamento e «regressão geral» = um passo na cadeia (§6.6).
+- 29/10/2026 — Revisão da Fase 4, parte 1: regra das zonas por gravidade (§6.6, «A CONFIRMAR»): limitação ligeira com no máximo um passo, só nos exercícios de fase 2 a 4; fase 1 e cardio mantêm-se com «amplitude confortável, sem dor»; dor articular persistente e limitação importante com a regra completa. Campo `de_pe` (§6.1): com equilíbrio com apoio, a nota de apoio por perto vai para todos os exercícios de pé.

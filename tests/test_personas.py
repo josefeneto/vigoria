@@ -27,7 +27,8 @@ def _comum(e: Estrategia) -> None:
     assert e.modulo_gordura_visceral
     assert e.restricoes.sem_impacto
     assert not e.restricoes.equilibrio_com_apoio
-    assert e.restricoes.zonas_regressao == (Zona.JOELHOS,)
+    assert e.restricoes.zonas_regressao == ()  # limitação ligeira: regra ligeira (§6.6)
+    assert e.restricoes.zonas_regressao_ligeira == (Zona.JOELHOS,)
 
 
 def test_persona_renal() -> None:
@@ -88,3 +89,31 @@ def test_persona_50_alta() -> None:
     assert ind.perda_peso.ritmo_maximo_kg_semana == 0.47  # 0,5 % de 94 kg
     assert ind.perda_peso.alvo_semana_16_kg == 86.5
     assert ind.perda_peso.semana_objetivo == 20
+
+
+def test_persona_osteoporose() -> None:
+    e = _estrategia("persona_osteoporose.json")
+    assert e.pode_gerar_plano
+    assert e.modo is Modo.PRUDENTE
+    assert e.motivos == (textos.OSTEOPOROSE_COM_RISCO,)
+    assert e.intensidade_efetiva is Intensidade.MEDIA
+    assert e.usar_frequencia_cardiaca  # medicação «não»
+    assert e.modulo_gordura_visceral
+    r = e.restricoes
+    assert r.sem_impacto and r.sem_intervalos
+    assert r.sem_flexao_tronco_com_carga
+    assert r.equilibrio_com_apoio
+    assert r.zonas_regressao == ()
+    assert r.contraindicacoes == ("osteoporose",)
+    assert textos.ORIENTACAO_INDIVIDUALIZADA in e.avisos
+
+    ind = e.indicadores
+    assert ind is not None
+    assert ind.perda_peso.realista
+    assert ind.perda_peso.alvo_semana_16_kg == 66.0
+
+
+def test_contraindicacoes_e_equipamento_da_persona_teste() -> None:
+    r = _estrategia("persona_teste.json").restricoes
+    assert r.contraindicacoes == ("hipertensao", "joelhos")
+    assert [str(x) for x in r.equipamento] == ["cadeira_firme", "halteres", "passadeira"]

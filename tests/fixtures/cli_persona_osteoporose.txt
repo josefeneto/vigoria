@@ -1,0 +1,44 @@
+ESTRATÉGIA - persona_osteoporose.json
+
+Modo: prudente
+  - Osteoporose com fratura anterior por fragilidade ou risco elevado indicado pelo médico.
+
+INTENSIDADE
+  Pedida: Média | Efetiva: Média
+  Usar frequência cardíaca: sim
+
+INDICADORES
+  IMC: 27,3 (excesso de peso)
+  Cintura: 86 cm (acima do limiar de 80 cm)
+  Módulo de gordura visceral: ativo
+  Hidratação: 1750 a 2450 ml/dia (central 2100 ml)
+  Proteína: 70 a 84 g/dia; 25 a 30 g por refeição principal
+  Proteína (nota): Em algumas situações, o médico ou nutricionista pode indicar até 1,5 g/kg; não aumente sem essa indicação.
+  Peso-alvo usado: 66 kg | perda pedida 4 kg | ritmo necessário 0,25 kg/semana | máximo 0,28 kg/semana
+  Realista em 16 semanas: sim | alvo à semana 16: 66 kg | objetivo completo por volta da semana 16
+  Massa muscular: aumentar força e tónus (máximo 2 kg em 16 semanas)
+
+RESTRIÇÕES DE EXERCÍCIO
+  Sem impacto: sim
+  Sem intervalos: sim
+  Sem flexão do tronco com carga: sim
+  Equilíbrio com apoio: sim
+  Regressão nas zonas (cadeia completa): nenhuma
+  Regressão ligeira nas zonas (um passo): nenhuma
+  Regressão geral: não
+  Só variantes-base (nível base) da biblioteca.
+
+MARCOS
+  Semana  4 (Adaptação): peso indicativo 69 kg
+  Semana  8 (Construção): peso indicativo 68 kg
+  Semana 12 (Consolidação): peso indicativo 67 kg
+  Semana 16 (Integração): peso indicativo 66 kg
+  Cintura: Medir e comparar com a medição inicial; referência: limiar de risco de 80 cm.
+  Força e resistência: definidos no plano, a partir da biblioteca.
+
+AVISOS
+  1. Este plano é uma sugestão de apoio à decisão, preparada com recurso a inteligência artificial e a conteúdo editorial revisto. Não substitui avaliação, diagnóstico, tratamento ou acompanhamento por médico, nutricionista ou profissional de exercício. Antes de iniciar ou intensificar o plano — sobretudo com doenças crónicas, medicação regular ou idade avançada — valide-o com um profissional de saúde.
+  2. Interrompa imediatamente o exercício se sentir dor no peito, falta de ar invulgar ou desproporcionada, desmaio ou sensação de desmaio, confusão, palpitações preocupantes, tonturas ou dor articular aguda. Procure avaliação adequada.
+  3. Antes de iniciar, procure orientação individualizada de um profissional de saúde para adaptar este plano à sua situação.
+  4. A gordura visceral tende a reduzir-se proporcionalmente mais depressa do que a subcutânea com o mesmo plano.
+  5. O perímetro da cintura é um indicador de adiposidade central; não mede diretamente a gordura visceral.

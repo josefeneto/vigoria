@@ -65,6 +65,7 @@ class Exercicio(_Conteudo):
     equipamento: tuple[Equipamento, ...] = ()
     impacto: Impacto
     nivel: Nivel
+    de_pe: bool  # obrigatório em todos: decide a nota de apoio por perto (§1.1)
     variante_halteres: str | None = None
     regressao: str | None = None
     contraindicacoes: tuple[str, ...] = ()

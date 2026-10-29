@@ -273,7 +273,9 @@ def test_limitacoes_dao_zonas_de_regressao() -> None:
         limitacoes=["ombros", "joelhos"],
         limitacoes_gravidade={"ombros": "ligeira", "joelhos": "importante"},
     )
-    assert e.restricoes.zonas_regressao == (Zona.JOELHOS, Zona.OMBROS)
+    # Importante: regra completa; ligeira: regra ligeira (REGRAS §6.6).
+    assert e.restricoes.zonas_regressao == (Zona.JOELHOS,)
+    assert e.restricoes.zonas_regressao_ligeira == (Zona.OMBROS,)
 
 
 def test_dor_articular_nas_zonas_indicadas() -> None:
@@ -285,6 +287,7 @@ def test_dor_articular_nas_zonas_indicadas() -> None:
     )
     assert e.modo is Modo.PRUDENTE
     assert e.restricoes.zonas_regressao == (Zona.ANCAS, Zona.COLUNA)
+    assert e.restricoes.zonas_regressao_ligeira == ()  # ancas: vale a regra completa
     assert not e.restricoes.regressao_geral
 
 
@@ -374,7 +377,8 @@ def test_persona_resultado_esperado() -> None:
     assert ind.perda_peso.semana_objetivo == 24
     assert any(a.startswith("Chegar aos 85 kg em 16 semanas") for a in e.avisos)
 
-    assert e.restricoes.zonas_regressao == (Zona.JOELHOS,)
+    assert e.restricoes.zonas_regressao == ()
+    assert e.restricoes.zonas_regressao_ligeira == (Zona.JOELHOS,)
     assert e.restricoes.sem_impacto
     assert not e.restricoes.equilibrio_com_apoio
     assert not e.restricoes.sem_intervalos
@@ -388,7 +392,7 @@ def test_cli_so_estrategia(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["--so-estrategia", str(PERSONA)]) == 0
     saida = capsys.readouterr().out
     assert "Pedida: Média | Efetiva: Média" in saida
-    assert "Regressão nas zonas: joelhos" in saida
+    assert "Regressão ligeira nas zonas (um passo): joelhos" in saida
     assert "Sem impacto: sim" in saida
     assert "Equilíbrio com apoio: não" in saida
 

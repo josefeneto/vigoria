@@ -10,6 +10,7 @@ from vigoria.modelos.estrategia import Estrategia, Indicadores, Marco, Restricoe
 from vigoria.modelos.questionario import (
     Articulacao,
     Condicao,
+    Gravidade,
     Limitacao,
     Questionario,
     SimNaoNaoSei,
@@ -62,11 +63,22 @@ def gerar_estrategia(q: Questionario) -> Estrategia:
 
 def restricoes_exercicio(q: Questionario, eleg: Elegibilidade) -> Restricoes:
     """Restrições de exercício da §1, da tabela 1.1 e da §6.3."""
-    # Limitações (qualquer gravidade) e dor articular nas mesmas zonas.
+    # Regra completa: dor articular persistente e limitação importante; regra ligeira: limitação
+    # ligeira numa zona sem a completa (vale a mais restritiva, §1). REGRAS_DOMINIO §6.6.
     zonas_escolhidas = {str(lim) for lim in q.limitacoes} | {str(a) for a in q.dor_articular_zonas}
-    zonas = tuple(zona for zona in Zona if zona in zonas_escolhidas)
+    completas = {str(a) for a in q.dor_articular_zonas} | {
+        str(lim) for lim, g in q.limitacoes_gravidade.items() if g is Gravidade.IMPORTANTE
+    }
+    zonas = tuple(zona for zona in Zona if zona in completas)
+    zonas_ligeira = tuple(zona for zona in Zona if zona in zonas_escolhidas - completas)
     osteoporose = Condicao.OSTEOPOROSE in q.condicoes
     osteoporose_com_risco = osteoporose and q.osteoporose_risco is not SimNaoNaoSei.NAO
+    contraindicacoes = ({str(c) for c in q.condicoes} | zonas_escolhidas) - {
+        Condicao.NENHUMA,
+        Condicao.OUTRA,
+        Limitacao.NENHUMA,
+        Limitacao.OUTRA,
+    }
 
     return Restricoes(
         sem_impacto=True,  # no MVP, para todos (decisão de 28/10/2026, REGRAS_DOMINIO §6.3)
@@ -74,7 +86,10 @@ def restricoes_exercicio(q: Questionario, eleg: Elegibilidade) -> Restricoes:
         sem_intervalos=eleg.modo is Modo.PRUDENTE,
         sem_flexao_tronco_com_carga=osteoporose,
         zonas_regressao=zonas,
+        zonas_regressao_ligeira=zonas_ligeira,
         regressao_geral=Articulacao.OUTRA in q.dor_articular_zonas,
+        contraindicacoes=tuple(sorted(contraindicacoes)),
+        equipamento=tuple(q.equipamento),
     )
 
 

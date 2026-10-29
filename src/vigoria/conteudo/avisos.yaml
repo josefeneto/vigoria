@@ -123,6 +123,9 @@ textos:
   # ---------------------------------------------------------------- Regressões no fim da cadeia (§6.6)
   amplitude_confortavel: Amplitude confortável, sem dor.
 
+  # ---------------------------------------------------------------- Equilíbrio com apoio (§1.1)
+  apoio_por_perto: Sempre com apoio por perto (parede, cadeira ou corrimão).
+
   # ---------------------------------------------------------------- Marcos (§5)
   cintura_medir: Medir e comparar com a medição inicial.
   cintura_medir_com_limiar: >-

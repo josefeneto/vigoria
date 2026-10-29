@@ -1,7 +1,9 @@
 """Linha de comando do motor: gera a estratégia (ou, a partir da Fase 4, o plano) sem interface.
 
 Uso: python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json
-Só --so-estrategia corre sem LLM. A geração completa chama o Gemini e só o José a executa.
+     python -m vigoria.motor.cli --so-pedido exemplos/persona_teste.json
+--so-estrategia e --so-pedido correm sem LLM. A geração completa chama o Gemini e só o
+José a executa.
 """
 
 import argparse
@@ -15,6 +17,7 @@ from pydantic import ValidationError
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
+from vigoria.motor.gerador import ErroGeracao, montar_pedido
 from vigoria.regras.calculos import ClasseImc
 from vigoria.regras.textos import NOMES_INTENSIDADE, numero
 
@@ -35,10 +38,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--so-estrategia", action="store_true", help="só a estratégia, sem chamar a LLM"
     )
+    parser.add_argument(
+        "--so-pedido",
+        action="store_true",
+        help="mostra o pedido que seria enviado à LLM, sem a chamar",
+    )
     args = parser.parse_args(argv)
 
-    if not args.so_estrategia:
-        print("A geração completa do plano só chega na Fase 4. Use --so-estrategia.")
+    if not (args.so_estrategia or args.so_pedido):
+        print(
+            "A geração completa do plano só chega com a verificação (Fase 4, parte 2). "
+            "Use --so-estrategia ou --so-pedido."
+        )
         return 2
 
     try:
@@ -54,7 +65,19 @@ def main(argv: list[str] | None = None) -> int:
     # Fora de uma consola interativa, o Windows usaria cp1252 e estragaria os acentos.
     if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8")
-    print(formatar_estrategia(gerar_estrategia(q), args.questionario.name))
+    estrategia = gerar_estrategia(q)
+    if args.so_estrategia:
+        print(formatar_estrategia(estrategia, args.questionario.name))
+        return 0
+    try:
+        pedido = montar_pedido(q, estrategia)
+    except ErroGeracao as erro:
+        print(erro)
+        return 1
+    print(f"=== PROMPT DE SISTEMA (versão {pedido.versao_prompt}) ===\n")
+    print(pedido.sistema)
+    print("\n=== PEDIDO ===\n")
+    print(pedido.conteudo)
     return 0
 
 
@@ -131,6 +154,7 @@ def formatar_estrategia(e: Estrategia, origem: str = "") -> str:
 
     r = e.restricoes
     zonas = ", ".join(r.zonas_regressao) or "nenhuma"
+    zonas_ligeira = ", ".join(r.zonas_regressao_ligeira) or "nenhuma"
     linhas += [
         "",
         "RESTRIÇÕES DE EXERCÍCIO",
@@ -138,7 +162,8 @@ def formatar_estrategia(e: Estrategia, origem: str = "") -> str:
         f"  Sem intervalos: {_sim_nao(r.sem_intervalos)}",
         f"  Sem flexão do tronco com carga: {_sim_nao(r.sem_flexao_tronco_com_carga)}",
         f"  Equilíbrio com apoio: {_sim_nao(r.equilibrio_com_apoio)}",
-        f"  Regressão nas zonas: {zonas}",
+        f"  Regressão nas zonas (cadeia completa): {zonas}",
+        f"  Regressão ligeira nas zonas (um passo): {zonas_ligeira}",
         f"  Regressão geral: {_sim_nao(r.regressao_geral)}",
         "  Só variantes-base (nível base) da biblioteca.",
         "",

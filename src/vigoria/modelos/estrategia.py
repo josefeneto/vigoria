@@ -5,7 +5,7 @@ O gerador recebe a Estrategia já calculada; a LLM nunca recalcula estes valores
 
 from pydantic import BaseModel, ConfigDict
 
-from vigoria.modelos.questionario import Intensidade
+from vigoria.modelos.questionario import Equipamento, Intensidade
 from vigoria.modelos.zonas import Zona
 from vigoria.regras.calculos import (
     AvaliacaoGanhoMuscular,
@@ -44,8 +44,14 @@ class Restricoes(_Imutavel):
     sem_intervalos: bool = False
     sem_flexao_tronco_com_carga: bool = False  # osteoporose: bird-dog em vez de crunch
     equilibrio_com_apoio: bool = False
+    # Regra completa (§6.6): dor articular persistente e limitação importante.
     zonas_regressao: tuple[Zona, ...] = ()
+    # Regra ligeira (§6.6): limitação ligeira numa zona sem a regra completa.
+    zonas_regressao_ligeira: tuple[Zona, ...] = ()
     regressao_geral: bool = False  # dor articular em «outra» articulação
+    # Condições e zonas escolhidas: excluem os exercícios que as tenham em contraindicações.
+    contraindicacoes: tuple[str, ...] = ()
+    equipamento: tuple[Equipamento, ...] = ()  # declarado no questionário (passo 3)
 
 
 class Marco(_Imutavel):

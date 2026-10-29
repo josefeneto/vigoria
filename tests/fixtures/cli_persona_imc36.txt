@@ -24,7 +24,8 @@ RESTRIÇÕES DE EXERCÍCIO
   Sem intervalos: sim
   Sem flexão do tronco com carga: não
   Equilíbrio com apoio: não
-  Regressão nas zonas: joelhos
+  Regressão nas zonas (cadeia completa): nenhuma
+  Regressão ligeira nas zonas (um passo): joelhos
   Regressão geral: não
   Só variantes-base (nível base) da biblioteca.
 

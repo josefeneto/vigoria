@@ -2,6 +2,8 @@
 # Texto copiado dos volumes 1 e 2; a origem de cada exercício está no comentário.
 # Zonas e regressões dos exercícios-base: propostas aprovadas pelo José a 28/10/2026.
 # Regressões das variantes avançadas: tabela 6.4 das REGRAS_DOMINIO.
+# de_pe: feito de pé (com «equilíbrio com apoio», leva a nota de apoio por perto). Proposta
+# do Claude Code aprovada pelo José a 29/10/2026; flexões e pranchas inclinadas contam como de pé.
 # No MVP, só entram no plano os exercícios com «nivel: base» (§6.3).
 
 exercicios:
@@ -17,6 +19,7 @@ exercicios:
     equipamento: [cadeira]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar Halter de 5 kg verticalmente junto ao peito.
     regressao: ponte_gluteos
     zonas: [joelhos, ancas]
@@ -30,6 +33,7 @@ exercicios:
     equipamento: [parede]
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [ombros]
 
   # V1 7.3; V2 Fase 1
@@ -41,6 +45,7 @@ exercicios:
     equipamento: [halteres]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 2 Halteres de 5 kg (um em cada mão).
     regressao: remada_unilateral_apoio
     zonas: [ombros, coluna]
@@ -53,6 +58,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: false
     variante_halteres: Colocar o Halter de 5 kg sobre a bacia.
     zonas: [ancas, coluna]
 
@@ -64,6 +70,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar os 2 Halteres de 2 kg para resistência.
     zonas: [ombros]
 
@@ -75,6 +82,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: false
     zonas: [coluna, ombros]
 
   # V1 7.7
@@ -85,6 +93,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     apoio_equilibrio: true
 
   # V2 Fase 1, linha 6 («Bird-dog / Prancha»): «(ou prancha antebraços)».
@@ -96,6 +105,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: false
     regressao: bird_dog
     zonas: [ombros, coluna]
 
@@ -110,6 +120,7 @@ exercicios:
     equipamento: [cadeira]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas]
@@ -125,6 +136,7 @@ exercicios:
     fase_minima: 2
     impacto: baixo
     nivel: base
+    de_pe: true
     regressao: flexao_parede
     zonas: [ombros]
 
@@ -136,6 +148,7 @@ exercicios:
     fase_minima: 2
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar o Halter de 5 kg com as duas mãos em baixo.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas]
@@ -149,6 +162,7 @@ exercicios:
     equipamento: [halteres]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 2 Halteres de 2 kg (um em cada mão).
     regressao: remada_halteres
     zonas: [ombros, coluna]
@@ -161,6 +175,7 @@ exercicios:
     fase_minima: 2
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 2 Halteres de 2 kg ou 5 kg para empurrar.
     regressao: elevacao_lateral
     zonas: [ombros]
@@ -173,6 +188,7 @@ exercicios:
     fase_minima: 2
     impacto: baixo
     nivel: base
+    de_pe: false
     regressao: bird_dog
     contraindicacoes: [osteoporose]
     zonas: [coluna]
@@ -188,6 +204,7 @@ exercicios:
     fase_minima: 3
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas]
@@ -201,6 +218,7 @@ exercicios:
     fase_minima: 3
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 2 Halteres de 5 kg deslizando pelas pernas.
     regressao: ponte_gluteos
     zonas: [ancas, coluna]
@@ -216,6 +234,7 @@ exercicios:
     equipamento: [bancada]
     impacto: baixo
     nivel: base
+    de_pe: true
     regressao: flexao_inclinada_joelhos
     zonas: [ombros]
 
@@ -229,6 +248,7 @@ exercicios:
     equipamento: [halteres]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 1 Halter de 5 kg na mão ativa.
     zonas: [ombros, coluna]
 
@@ -240,6 +260,7 @@ exercicios:
     fase_minima: 3
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar os 2 Halteres de 2 kg.
     regressao: elevacao_lateral
     zonas: [ombros]
@@ -252,6 +273,7 @@ exercicios:
     fase_minima: 3
     impacto: baixo
     nivel: base
+    de_pe: false
     regressao: bird_dog
     zonas: [ombros, coluna]
 
@@ -266,6 +288,7 @@ exercicios:
     equipamento: [cadeira]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 1 Halter de 5 kg junto ao peito.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas]
@@ -280,6 +303,7 @@ exercicios:
     equipamento: [degrau]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 1 Halter de 2 kg na mão livre.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas]
@@ -296,6 +320,7 @@ exercicios:
     equipamento: [bancada]
     impacto: baixo
     nivel: base
+    de_pe: true
     regressao: bird_dog
     zonas: [ombros, coluna]
 
@@ -310,6 +335,7 @@ exercicios:
     equipamento: [cadeira]
     impacto: baixo
     nivel: base
+    de_pe: true
     variante_halteres: Segurar 2 Halteres de 2 kg.
     regressao: agachamento_cadeira
     zonas: [joelhos, ancas, ombros]
@@ -326,6 +352,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     regressao: caminhada
     zonas: [joelhos, ancas]
     apoio_equilibrio: true
@@ -341,6 +368,7 @@ exercicios:
     equipamento: [passadeira]
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [joelhos, ancas]
 
   # V1 8.2
@@ -354,6 +382,7 @@ exercicios:
     equipamento: [eliptica]
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [joelhos, ancas]
 
   # V1 8.3
@@ -364,6 +393,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [joelhos, ancas]
 
   # ---------------------------------------------------------------- Mobilidade e equilíbrio
@@ -376,6 +406,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [ombros]
 
   - id: rotacoes_toracicas
@@ -385,6 +416,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [coluna]
 
   - id: mobilidade_anca
@@ -394,6 +426,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [ancas]
 
   - id: mobilidade_tornozelos
@@ -403,6 +436,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
 
   - id: transferencias_peso
     nome: Transferências de peso
@@ -411,6 +445,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     zonas: [ancas]
     apoio_equilibrio: true
 
@@ -424,6 +459,7 @@ exercicios:
     fase_minima: 1
     impacto: baixo
     nivel: base
+    de_pe: true
     regressao: transferencias_peso
     zonas: [ancas, joelhos]
     apoio_equilibrio: true
@@ -441,6 +477,7 @@ exercicios:
     equipamento: [halteres]
     impacto: medio
     nivel: intermedio
+    de_pe: true
     regressao: lunge_atras_apoio
     zonas: [joelhos, ancas]
 
@@ -451,6 +488,7 @@ exercicios:
     fase_minima: 2
     impacto: medio
     nivel: intermedio
+    de_pe: false
     regressao: flexao_inclinada_joelhos
     zonas: [ombros]
 
@@ -463,6 +501,7 @@ exercicios:
     equipamento: [cadeira, halteres]
     impacto: medio
     nivel: avancado
+    de_pe: true
     regressao: agachamento_dividido_apoio
     zonas: [joelhos, ancas]
 
@@ -473,6 +512,7 @@ exercicios:
     fase_minima: 3
     impacto: medio
     nivel: avancado
+    de_pe: false
     regressao: flexao_inclinada_maos_proximas
     zonas: [ombros]
 
@@ -483,6 +523,7 @@ exercicios:
     fase_minima: 3
     impacto: baixo
     nivel: intermedio
+    de_pe: false
     regressao: prancha_lateral_joelhos
     zonas: [ombros, coluna]
 
@@ -494,6 +535,7 @@ exercicios:
     fase_minima: 4
     impacto: alto
     nivel: avancado
+    de_pe: true
     regressao: agachamento_elevacao_calcanhares
     zonas: [joelhos, ancas]
 
@@ -504,6 +546,7 @@ exercicios:
     fase_minima: 4
     impacto: medio
     nivel: intermedio
+    de_pe: true
     regressao: subida_degrau_apoio
     zonas: [joelhos, ancas]
 
@@ -514,6 +557,7 @@ exercicios:
     fase_minima: 4
     impacto: medio
     nivel: avancado
+    de_pe: false
     regressao: prancha_inclinada_toque_ombro
     zonas: [ombros, coluna]
 
@@ -525,6 +569,7 @@ exercicios:
     equipamento: [halteres]
     impacto: medio
     nivel: avancado
+    de_pe: false
     regressao: remada_unilateral_apoio
     zonas: [ombros, coluna]
 
@@ -536,6 +581,7 @@ exercicios:
     equipamento: [halteres]
     impacto: medio
     nivel: avancado
+    de_pe: true
     regressao: agachamento_prensa_ombros
     zonas: [joelhos, ancas, ombros]
 
@@ -546,5 +592,6 @@ exercicios:
     fase_minima: 4
     impacto: alto
     nivel: avancado
+    de_pe: false
     regressao: marcha_rapida_lugar
     zonas: [joelhos, ancas, ombros]
