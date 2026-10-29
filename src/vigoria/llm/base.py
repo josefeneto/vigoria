@@ -13,7 +13,14 @@ registo = logging.getLogger("vigoria.llm")
 
 
 class ErroLLM(Exception):
-    """Falha na chamada à LLM. A mensagem nunca inclui o conteúdo do pedido ou da resposta."""
+    """Falha na chamada à LLM. A mensagem nunca inclui o conteúdo do pedido ou da resposta.
+
+    `codigo` é o código HTTP devolvido pelo serviço (None: rede, tempo esgotado ou formato).
+    """
+
+    def __init__(self, mensagem: str, codigo: int | None = None) -> None:
+        super().__init__(mensagem)
+        self.codigo = codigo
 
 
 class Metricas(BaseModel):

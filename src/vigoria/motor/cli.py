@@ -2,18 +2,23 @@
 
 Uso: python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json
      python -m vigoria.motor.cli --so-pedido exemplos/persona_teste.json
---so-estrategia e --so-pedido correm sem LLM. A geração completa chama o Gemini e só o
-José a executa.
+     python -m vigoria.motor.cli --testar-ligacao
+--so-estrategia e --so-pedido correm sem LLM. --testar-ligacao e a geração completa
+chamam o Gemini e só o José os executa.
 """
 
 import argparse
 import io
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from pydantic import ValidationError
 
+from vigoria.config import Configuracao, obter_configuracao
+from vigoria.llm.base import ErroLLM
+from vigoria.llm.gemini import TIMEOUT_TESTE_S, ProvedorGemini
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
@@ -34,7 +39,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m vigoria.motor.cli", description="Gera a estratégia a partir de um JSON."
     )
-    parser.add_argument("questionario", type=Path, help="ficheiro JSON com o questionário")
+    parser.add_argument(
+        "questionario", type=Path, nargs="?", help="ficheiro JSON com o questionário"
+    )
     parser.add_argument(
         "--so-estrategia", action="store_true", help="só a estratégia, sem chamar a LLM"
     )
@@ -43,8 +50,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="mostra o pedido que seria enviado à LLM, sem a chamar",
     )
+    parser.add_argument(
+        "--testar-ligacao",
+        action="store_true",
+        help=f"envia «Responde só: ok» ao Gemini ({TIMEOUT_TESTE_S} s no máximo)",
+    )
     args = parser.parse_args(argv)
 
+    _consola_utf8()
+    if args.testar_ligacao:
+        return testar_ligacao()
+    if args.questionario is None:
+        parser.error("indique o ficheiro JSON com o questionário")
     if not (args.so_estrategia or args.so_pedido):
         print(
             "A geração completa do plano só chega com a verificação (Fase 4, parte 2). "
@@ -62,9 +79,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Questionário inválido:\n{erro}")
         return 1
 
-    # Fora de uma consola interativa, o Windows usaria cp1252 e estragaria os acentos.
-    if isinstance(sys.stdout, io.TextIOWrapper):
-        sys.stdout.reconfigure(encoding="utf-8")
     estrategia = gerar_estrategia(q)
     if args.so_estrategia:
         print(formatar_estrategia(estrategia, args.questionario.name))
@@ -79,6 +93,50 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== PEDIDO ===\n")
     print(pedido.conteudo)
     return 0
+
+
+def _consola_utf8() -> None:
+    """Fora de uma consola interativa, o Windows usaria cp1252 e estragaria os acentos."""
+    for fluxo in (sys.stdout, sys.stderr):
+        if isinstance(fluxo, io.TextIOWrapper):
+            fluxo.reconfigure(encoding="utf-8")
+
+
+def testar_ligacao(
+    config: Configuracao | None = None,
+    criar_provedor: Callable[[], ProvedorGemini] | None = None,
+) -> int:
+    """Confirma chave, modelo e rede com uma pergunta mínima. Nunca mostra a chave."""
+    config = obter_configuracao() if config is None else config
+    print(f"Chave (GEMINI_API_KEY): {'definida' if config.gemini_api_key else 'em falta'}")
+    print(f"Modelo (GEMINI_MODEL): {config.gemini_model or 'em falta'}")
+    if config.gemini_api_key is None or not config.gemini_model:
+        print("Falta configuração: veja o .env.example.")
+        return 1
+    try:
+        provedor = (criar_provedor or ProvedorGemini)()
+        resposta = provedor.testar_ligacao()
+    except ErroLLM as erro:
+        print(f"Falhou: {erro}")
+        print(f"Diagnóstico: {_diagnostico(erro.codigo, config.gemini_model)}")
+        return 1
+    print(f"Resposta do modelo: «{resposta[:40]}»")
+    print("Chave, modelo e rede: a funcionar.")
+    return 0
+
+
+def _diagnostico(codigo: int | None, modelo: str) -> str:
+    match codigo:
+        case None:
+            return "rede ou tempo esgotado (a chave e o modelo não chegaram a ser verificados)."
+        case 400 | 401 | 403:
+            return "a chave foi recusada; confirme o GEMINI_API_KEY."
+        case 404:
+            return f"o modelo «{modelo}» não existe ou não está disponível para esta chave."
+        case 429:
+            return "a chave e o modelo funcionam, mas a quota está esgotada."
+        case _:
+            return "erro do lado do serviço; tente mais tarde."
 
 
 def formatar_estrategia(e: Estrategia, origem: str = "") -> str:
