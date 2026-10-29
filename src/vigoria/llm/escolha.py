@@ -13,10 +13,12 @@ from vigoria.config import Configuracao, NomeProvedor, obter_configuracao
 from vigoria.llm.base import ErroLLM, Progresso, ProvedorLLM, RespostaTeste, progresso_stderr
 from vigoria.llm.gemini import ProvedorGemini
 from vigoria.llm.groq import ProvedorGroq
+from vigoria.llm.mistral import ProvedorMistral
 
 FORNECEDORES: dict[str, Callable[[Configuracao], ProvedorLLM]] = {
     "gemini": lambda config: ProvedorGemini(config=config),
     "groq": lambda config: ProvedorGroq(config=config),
+    "mistral": lambda config: ProvedorMistral(config=config),
 }
 
 

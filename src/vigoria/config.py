@@ -11,7 +11,7 @@ from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Fornecedores de LLM: cada um tem <nome>_api_key e <nome>_model (llm/escolha.py).
-NomeProvedor = Literal["gemini", "groq"]
+NomeProvedor = Literal["gemini", "groq", "mistral"]
 
 
 class Configuracao(BaseSettings):
@@ -25,6 +25,8 @@ class Configuracao(BaseSettings):
     gemini_model: str = ""
     groq_api_key: SecretStr | None = None
     groq_model: str = ""
+    mistral_api_key: SecretStr | None = None
+    mistral_model: str = ""
     database_url: str = "sqlite:///vigoria_local.db"
     brevo_api_key: SecretStr | None = None
     email_remetente: str = ""

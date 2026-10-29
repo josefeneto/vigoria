@@ -3,8 +3,9 @@
 Uso: python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json
      python -m vigoria.motor.cli --so-pedido exemplos/persona_teste.json
      python -m vigoria.motor.cli --testar-ligacao
---so-estrategia e --so-pedido correm sem LLM. --testar-ligacao e a geração completa
-chamam a LLM (Gemini, Groq) e só o José os executa.
+     python -m vigoria.motor.cli --comparar gemini,mistral exemplos/persona_teste.json
+--so-estrategia e --so-pedido correm sem LLM. --testar-ligacao, --comparar e a geração
+completa chamam a LLM (Gemini, Groq, Mistral) e só o José os executa.
 """
 
 import argparse
@@ -18,9 +19,11 @@ from pydantic import ValidationError
 
 from vigoria.config import Configuracao, NomeProvedor, obter_configuracao
 from vigoria.llm.base import TIMEOUT_TESTE_S, ErroLLM, ProvedorLLM
-from vigoria.llm.escolha import criar_fornecedor
+from vigoria.llm.escolha import FORNECEDORES, criar_fornecedor
 from vigoria.modelos.estrategia import Estrategia
+from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
+from vigoria.motor.comparacao import PASTA_SAIDAS, comparar, formatar_comparacao
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import ErroGeracao, montar_pedido
 from vigoria.regras.calculos import ClasseImc
@@ -56,6 +59,11 @@ def main(argv: list[str] | None = None) -> int:
         help=f"envia «Responde só: ok» ao fornecedor principal e à reserva "
         f"({TIMEOUT_TESTE_S} s no máximo cada)",
     )
+    parser.add_argument(
+        "--comparar",
+        metavar="FORNECEDORES",
+        help="gera um plano com cada fornecedor (por exemplo «gemini,mistral») e compara-os",
+    )
     args = parser.parse_args(argv)
 
     _consola_utf8()
@@ -63,10 +71,15 @@ def main(argv: list[str] | None = None) -> int:
         return testar_ligacao()
     if args.questionario is None:
         parser.error("indique o ficheiro JSON com o questionário")
-    if not (args.so_estrategia or args.so_pedido):
+    if args.comparar:
+        nomes = [n.strip() for n in args.comparar.split(",") if n.strip()]
+        desconhecidos = [n for n in nomes if n not in FORNECEDORES]
+        if not nomes or desconhecidos:
+            parser.error(f"fornecedores possíveis: {', '.join(FORNECEDORES)}")
+    elif not (args.so_estrategia or args.so_pedido):
         print(
             "A geração completa do plano só chega com a verificação (Fase 4, parte 2). "
-            "Use --so-estrategia ou --so-pedido."
+            "Use --so-estrategia, --so-pedido ou --comparar."
         )
         return 2
 
@@ -81,6 +94,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     estrategia = gerar_estrategia(q)
+    if args.comparar:
+        return comparar_fornecedores(q, estrategia, nomes, args.questionario.stem)
     if args.so_estrategia:
         print(formatar_estrategia(estrategia, args.questionario.name))
         return 0
@@ -97,6 +112,39 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps(json.loads(corpo), ensure_ascii=False, indent=2))
     print(f"\nTamanho enviado: {len(pedido.sistema) + len(pedido.conteudo)} caracteres")
     return 0
+
+
+def comparar_fornecedores(
+    q: Questionario,
+    e: Estrategia,
+    nomes: list[NomeProvedor],
+    origem: str,
+    config: Configuracao | None = None,
+    criar: Callable[[NomeProvedor, Configuracao], ProvedorLLM] = criar_fornecedor,
+    pasta: Path = PASTA_SAIDAS,
+) -> int:
+    """Um plano por fornecedor (sem reserva), guardado em saidas/comparacao/, e a tabela."""
+    config = obter_configuracao() if config is None else config
+    try:
+        provedores = [criar(nome, config) for nome in nomes]
+    except ErroLLM as erro:
+        print(f"Falta configuração: {erro}")
+        return 1
+
+    def guardar(nome: str, plano: Plano) -> None:
+        pasta.mkdir(parents=True, exist_ok=True)
+        ficheiro = pasta / f"{origem}_{nome}.json"
+        ficheiro.write_text(plano.model_dump_json(indent=2), encoding="utf-8")
+        print(f"Plano de {nome} guardado em {ficheiro}")
+
+    try:
+        avaliacoes = comparar(q, e, provedores, guardar)
+    except ErroGeracao as erro:
+        print(erro)
+        return 1
+    print(f"\nCOMPARAÇÃO - {origem}\n")
+    print(formatar_comparacao(avaliacoes))
+    return 1 if any(a.erro for a in avaliacoes) else 0
 
 
 def _consola_utf8() -> None:

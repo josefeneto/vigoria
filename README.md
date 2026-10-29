@@ -32,13 +32,20 @@ diária esgotada ou pedido demasiado grande (413). O plano guarda qual dos dois 
 (`Plano.provedor`). Cada fornecedor precisa de `<NOME>_API_KEY` e `<NOME>_MODEL` no
 `.env` (ver `.env.example`).
 
-Confirmar chaves, modelos e rede (faz uma chamada mínima a cada fornecedor; na Groq
-mostra também os limites da conta):
+Confirmar chaves, modelos e rede (faz uma chamada mínima a cada fornecedor; na Groq e
+na Mistral mostra também os limites da conta):
 
 ```powershell
 python -m vigoria.motor.cli --testar-ligacao
 ```
 
-Para acrescentar outro fornecedor com API compatível com a OpenAI (por exemplo, Mistral):
+Comparar fornecedores com o mesmo pedido (um plano por fornecedor, sem reserva; os planos
+ficam em `saidas/comparacao/` e a CLI mostra tempo, tokens e uma pré-verificação):
+
+```powershell
+python -m vigoria.motor.cli --comparar gemini,mistral exemplos/persona_teste.json
+```
+
+Para acrescentar outro fornecedor com API compatível com a OpenAI (como `llm/mistral.py`):
 uma subclasse de `ProvedorCompativelOpenAI` em `src/vigoria/llm/`, o nome em
 `NomeProvedor` e as duas variáveis em `config.py`, e uma entrada em `llm/escolha.py`.

@@ -153,6 +153,7 @@ class ProvedorBase:
         self.modelo = modelo
         self.timeout_s = timeout_s
         self.ultimo_provedor: str | None = None
+        self.ultimas_metricas: Metricas | None = None
         self._dormir = dormir
         self._progresso = progresso
 
@@ -221,16 +222,15 @@ class ProvedorBase:
 
         segundos = round(time.perf_counter() - inicio, 3)
         entrada, saida = self._tokens(resposta)
-        registar_metricas(
-            Metricas(
-                provedor=self.nome,
-                modelo=self.modelo,
-                segundos=segundos,
-                tentativas=numero,
-                tokens_entrada=entrada,
-                tokens_saida=saida,
-            )
+        self.ultimas_metricas = Metricas(
+            provedor=self.nome,
+            modelo=self.modelo,
+            segundos=segundos,
+            tentativas=numero,
+            tokens_entrada=entrada,
+            tokens_saida=saida,
         )
+        registar_metricas(self.ultimas_metricas)
         self._progresso(
             f"{self.nome}: chamada concluída em {segundos:.1f} s (tentativa {numero}; "
             f"tokens: {entrada} de entrada, {saida} de saída)"
