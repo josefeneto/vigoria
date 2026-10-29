@@ -22,3 +22,23 @@ Aplicação web que gera planos pessoais de saúde e vitalidade — perda de gor
 python -m pip install -r requirements-dev.txt
 python -m streamlit run app.py
 ```
+
+## Fornecedores de LLM
+
+O plano é gerado pelo fornecedor de `VIGORIA_PROVEDOR_LLM` (`gemini` por omissão). Com
+`VIGORIA_PROVEDOR_RESERVA` definido (por exemplo, `groq`), a reserva só entra quando o
+principal falha de vez: 503/504 depois de 3 tentativas, sem resposta em 120 s, quota
+diária esgotada ou pedido demasiado grande (413). O plano guarda qual dos dois o gerou
+(`Plano.provedor`). Cada fornecedor precisa de `<NOME>_API_KEY` e `<NOME>_MODEL` no
+`.env` (ver `.env.example`).
+
+Confirmar chaves, modelos e rede (faz uma chamada mínima a cada fornecedor; na Groq
+mostra também os limites da conta):
+
+```powershell
+python -m vigoria.motor.cli --testar-ligacao
+```
+
+Para acrescentar outro fornecedor com API compatível com a OpenAI (por exemplo, Mistral):
+uma subclasse de `ProvedorCompativelOpenAI` em `src/vigoria/llm/`, o nome em
+`NomeProvedor` e as duas variáveis em `config.py`, e uma entrada em `llm/escolha.py`.

@@ -13,10 +13,8 @@ from google.genai import errors
 from pydantic import SecretStr
 
 from vigoria.config import Configuracao
-from vigoria.llm.base import ErroLLM
+from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM
 from vigoria.llm.gemini import (
-    MAX_TENTATIVAS,
-    PERGUNTA_TESTE,
     QUOTA_DIARIA,
     ProvedorGemini,
     e_quota_diaria,
@@ -221,17 +219,51 @@ def test_quota_diaria_nao_repete() -> None:
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert QUOTA_DIARIA == "quota diária esgotada, tenta depois das 8h00"
     assert QUOTA_DIARIA in str(erro.value)
+    assert erro.value.permite_reserva
     assert len(modelos.chamadas) == 1
     assert registo.esperas == []
 
 
-@pytest.mark.parametrize("codigo", [400, 403, 404, 500, 503])
+@pytest.mark.parametrize("codigo", [503, 504])
+def test_indisponivel_repete_e_recupera(codigo: int) -> None:
+    provedor, modelos, registo = _provedor(_erro(codigo), _resposta())
+    assert isinstance(provedor.gerar_json("s", PEDIDO, PlanoGerado), PlanoGerado)
+    assert len(modelos.chamadas) == 2
+    assert registo.esperas == [2.0]
+    assert f"serviço indisponível ({codigo})" in registo.progresso[1]
+
+
+def test_indisponivel_desiste_e_permite_reserva() -> None:
+    provedor, modelos, _ = _provedor(*[_erro(503)] * 5)
+    with pytest.raises(ErroLLM, match="indisponível") as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert len(modelos.chamadas) == MAX_TENTATIVAS
+    assert erro.value.codigo == 503
+    assert erro.value.permite_reserva
+
+
+def test_429_por_minuto_nao_permite_reserva() -> None:
+    provedor, _, _ = _provedor(*[_quota(POR_MINUTO)] * 3)
+    with pytest.raises(ErroLLM) as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert not erro.value.permite_reserva
+
+
+def test_tempo_esgotado_permite_reserva() -> None:
+    provedor, _, _ = _provedor(httpx.ReadTimeout("x"))
+    with pytest.raises(ErroLLM) as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert erro.value.permite_reserva
+
+
+@pytest.mark.parametrize("codigo", [400, 403, 404, 500])
 def test_outros_erros_nao_repetem(codigo: int) -> None:
     provedor, modelos, _ = _provedor(_erro(codigo), _resposta())
     with pytest.raises(ErroLLM, match=f"código {codigo}") as erro:
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert len(modelos.chamadas) == 1
     assert erro.value.codigo == codigo
+    assert not erro.value.permite_reserva
     assert "hipertensão" not in str(erro.value)  # a mensagem do serviço não passa
     assert erro.value.__cause__ is None
 
@@ -263,7 +295,7 @@ def test_sem_modelo_da_erro() -> None:
 
 def test_testar_ligacao_pergunta_minima_com_30_s() -> None:
     provedor, modelos, _ = _provedor(_resposta(" ok \n"))
-    assert provedor.testar_ligacao() == "ok"
+    assert provedor.testar_ligacao().texto == "ok"
     (chamada,) = modelos.chamadas
     assert chamada["contents"] == PERGUNTA_TESTE == "Responde só: ok"
     assert chamada["config"].http_options.timeout == 30_000
@@ -289,13 +321,14 @@ def _cli_testar(config: Configuracao, *respostas: Any) -> tuple[int, str]:
     provedor, _, _ = _provedor(*respostas)
     saida = io.StringIO()
     with contextlib.redirect_stdout(saida):
-        codigo = cli.testar_ligacao(config, lambda: provedor)
+        codigo = cli.testar_ligacao(config, lambda nome, c: provedor)
     return codigo, saida.getvalue()
 
 
 def test_cli_testar_ligacao_ok() -> None:
     codigo, saida = _cli_testar(_config(), _resposta("ok"))
     assert codigo == 0
+    assert saida.startswith("== gemini (principal) ==")
     assert "Chave (GEMINI_API_KEY): definida" in saida
     assert "Modelo (GEMINI_MODEL): modelo-x" in saida
     assert "a funcionar" in saida

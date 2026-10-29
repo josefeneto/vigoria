@@ -132,6 +132,7 @@ class Plano(_Modelo):
     """Plano final: o que a interface mostra e a verificação confirma."""
 
     versao_prompt: str
+    provedor: str  # fornecedor que gerou o plano («gemini», «groq»)
     resumo: str
     marcos: tuple[MarcoPlano, ...]
     semana_tipo: list[SessaoDia]

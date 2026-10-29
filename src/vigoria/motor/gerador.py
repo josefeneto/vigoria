@@ -1,8 +1,9 @@
 """Gerador (papel 3, LLM): monta o pedido, chama o provedor e monta o Plano.
 
 O pedido leva só o necessário: a estratégia, o questionário sem identificadores nem
-consentimentos, os exercícios permitidos por fase (motor/selecao.py) e o excerto
-relevante de fases.yaml e alimentacao.yaml. Os números do plano vêm da Estrategia.
+consentimentos, o catálogo dos exercícios permitidos (cada um uma só vez), os ids
+permitidos por fase (motor/selecao.py) e o excerto relevante de fases.yaml e
+alimentacao.yaml, em JSON compacto. Os números do plano vêm da Estrategia.
 """
 
 import json
@@ -138,18 +139,32 @@ def limpar_texto_livre(texto: str) -> str:
     return _TELEFONE.sub(REMOVIDO, texto).strip()
 
 
-def _exercicio_para_pedido(p: ExercicioPermitido, tem_halteres: bool) -> dict[str, Any]:
-    ex = carregar_exercicios()[p.id]
-    item: dict[str, Any] = {
-        "id": ex.id,
-        "nome": ex.nome,
-        "descricao": ex.descricao,
-        "grupo": str(ex.grupo),
-    }
-    if ex.equipamento:
-        item["equipamento"] = [str(e) for e in ex.equipamento]
-    if ex.variante_halteres and tem_halteres:
-        item["variante_halteres"] = ex.variante_halteres
+def _catalogo_exercicios(
+    permitidos: dict[int, tuple[ExercicioPermitido, ...]], tem_halteres: bool
+) -> dict[str, dict[str, Any]]:
+    """Descrição de cada exercício permitido, uma só vez (pela ordem em que aparece)."""
+    catalogo: dict[str, dict[str, Any]] = {}
+    for lista in permitidos.values():
+        for p in lista:
+            if p.id in catalogo:
+                continue
+            ex = carregar_exercicios()[p.id]
+            item: dict[str, Any] = {
+                "nome": ex.nome,
+                "descricao": ex.descricao,
+                "grupo": str(ex.grupo),
+            }
+            if ex.equipamento:
+                item["equipamento"] = [str(e) for e in ex.equipamento]
+            if ex.variante_halteres and tem_halteres:
+                item["variante_halteres"] = ex.variante_halteres
+            catalogo[p.id] = item
+    return catalogo
+
+
+def _permitido_na_fase(p: ExercicioPermitido) -> dict[str, Any]:
+    """O id e o que muda de fase para fase (substituições, esforço máximo, notas)."""
+    item: dict[str, Any] = {"id": p.id}
     if p.substitui:
         item["substitui"] = list(p.substitui)
     if p.esforco_max is not None:
@@ -232,8 +247,9 @@ def conteudo_pedido(q: Questionario, e: Estrategia) -> dict[str, Any]:
     return {
         "estrategia": e.model_dump(mode="json", exclude={"pode_gerar_plano"}),
         "questionario": dados_questionario(q),
+        "catalogo_exercicios": _catalogo_exercicios(permitidos, tem_halteres),
         "exercicios_permitidos": {
-            f"fase_{fase}": [_exercicio_para_pedido(p, tem_halteres) for p in lista]
+            f"fase_{fase}": [_permitido_na_fase(p) for p in lista]
             for fase, lista in permitidos.items()
         },
         "fases": _fases_para_pedido(permitidos),
@@ -246,9 +262,9 @@ def conteudo_pedido(q: Questionario, e: Estrategia) -> dict[str, Any]:
 
 
 def montar_pedido(q: Questionario, e: Estrategia) -> Pedido:
-    """Prompt de sistema e pedido em JSON, prontos a enviar."""
+    """Prompt de sistema e pedido em JSON compacto (sem indentação), prontos a enviar."""
     prompt = carregar_prompt_sistema()
-    conteudo = json.dumps(conteudo_pedido(q, e), ensure_ascii=False, indent=2)
+    conteudo = json.dumps(conteudo_pedido(q, e), ensure_ascii=False, separators=(",", ":"))
     return Pedido(
         versao_prompt=prompt.versao,
         sistema=prompt.texto,
@@ -259,7 +275,7 @@ def montar_pedido(q: Questionario, e: Estrategia) -> Pedido:
 # ---------------------------------------------------------------- Plano
 
 
-def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str) -> Plano:
+def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str, provedor: str) -> Plano:
     """Junta à resposta da LLM os números da Estrategia e os avisos fixos."""
     if e.indicadores is None:
         raise ErroGeracao("A estratégia não tem indicadores: não é possível montar o plano.")
@@ -281,6 +297,7 @@ def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str) -> Plan
     )
     return Plano(
         versao_prompt=versao_prompt,
+        provedor=provedor,
         resumo=gerado.resumo,
         marcos=marcos,
         semana_tipo=gerado.semana_tipo,
@@ -299,4 +316,5 @@ def gerar_plano(q: Questionario, e: Estrategia, provedor: ProvedorLLM) -> Plano:
     """Uma chamada à LLM. A verificação e a regeneração são o papel 4 (motor/verificacao.py)."""
     pedido = montar_pedido(q, e)
     gerado = provedor.gerar_json(pedido.sistema, pedido.conteudo, PlanoGerado)
-    return montar_plano(gerado, e, pedido.versao_prompt)
+    usado = provedor.ultimo_provedor or provedor.nome
+    return montar_plano(gerado, e, pedido.versao_prompt, usado)

@@ -1,4 +1,4 @@
-<!-- versao: 1 | data: 29/10/2026 | papel: gerador (motor/gerador.py) -->
+<!-- versao: 2 | data: 29/10/2026 | papel: gerador (motor/gerador.py) -->
 
 # Papel
 
@@ -7,7 +7,8 @@
 O teu trabalho é **personalizar**, não inventar. Recebes um pedido em JSON com:
 - `estrategia`: tudo o que o motor já decidiu e calculou (modo, intensidade efetiva, restrições, indicadores, marcos de peso, avisos);
 - `questionario`: as respostas da pessoa, sem dados identificativos;
-- `exercicios_permitidos`: para cada fase, os únicos exercícios que podes usar;
+- `catalogo_exercicios`: o nome, a descrição, o grupo e o equipamento de cada exercício, indexados pelo id;
+- `exercicios_permitidos`: para cada fase, os únicos exercícios que podes usar (o `id` e, nessa fase, `substitui`, `esforco_max` e `notas`, quando os houver);
 - `fases`: o programa editorial das 4 fases (foco, esforço, exercícios de referência, foco alimentar);
 - `estrutura_sessao` e `alimentacao`: o conteúdo editorial em que te deves apoiar.
 

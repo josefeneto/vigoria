@@ -4,7 +4,7 @@ Uso: python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json
      python -m vigoria.motor.cli --so-pedido exemplos/persona_teste.json
      python -m vigoria.motor.cli --testar-ligacao
 --so-estrategia e --so-pedido correm sem LLM. --testar-ligacao e a geração completa
-chamam o Gemini e só o José os executa.
+chamam a LLM (Gemini, Groq) e só o José os executa.
 """
 
 import argparse
@@ -16,9 +16,9 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from vigoria.config import Configuracao, obter_configuracao
-from vigoria.llm.base import ErroLLM
-from vigoria.llm.gemini import TIMEOUT_TESTE_S, ProvedorGemini
+from vigoria.config import Configuracao, NomeProvedor, obter_configuracao
+from vigoria.llm.base import TIMEOUT_TESTE_S, ErroLLM, ProvedorLLM
+from vigoria.llm.escolha import criar_fornecedor
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
@@ -53,7 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--testar-ligacao",
         action="store_true",
-        help=f"envia «Responde só: ok» ao Gemini ({TIMEOUT_TESTE_S} s no máximo)",
+        help=f"envia «Responde só: ok» ao fornecedor principal e à reserva "
+        f"({TIMEOUT_TESTE_S} s no máximo cada)",
     )
     args = parser.parse_args(argv)
 
@@ -90,8 +91,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(f"=== PROMPT DE SISTEMA (versão {pedido.versao_prompt}) ===\n")
     print(pedido.sistema)
-    print("\n=== PEDIDO ===\n")
-    print(pedido.conteudo)
+    print("\n=== PEDIDO (indentado para leitura; segue em JSON compacto) ===\n")
+    cabecalho, corpo = pedido.conteudo.split("\n", 1)
+    print(cabecalho)
+    print(json.dumps(json.loads(corpo), ensure_ascii=False, indent=2))
+    print(f"\nTamanho enviado: {len(pedido.sistema) + len(pedido.conteudo)} caracteres")
     return 0
 
 
@@ -104,33 +108,52 @@ def _consola_utf8() -> None:
 
 def testar_ligacao(
     config: Configuracao | None = None,
-    criar_provedor: Callable[[], ProvedorGemini] | None = None,
+    criar: Callable[[NomeProvedor, Configuracao], ProvedorLLM] = criar_fornecedor,
 ) -> int:
-    """Confirma chave, modelo e rede com uma pergunta mínima. Nunca mostra a chave."""
+    """Testa o fornecedor principal e, se houver, a reserva. Nunca mostra as chaves."""
     config = obter_configuracao() if config is None else config
-    print(f"Chave (GEMINI_API_KEY): {'definida' if config.gemini_api_key else 'em falta'}")
-    print(f"Modelo (GEMINI_MODEL): {config.gemini_model or 'em falta'}")
-    if config.gemini_api_key is None or not config.gemini_model:
+    fornecedores: list[tuple[str, NomeProvedor]] = [("principal", config.vigoria_provedor_llm)]
+    if config.vigoria_provedor_reserva:
+        fornecedores.append(("reserva", config.vigoria_provedor_reserva))
+    falhas = 0
+    for n, (papel, nome) in enumerate(fornecedores):
+        print(f"{'\n' if n else ''}== {nome} ({papel}) ==")
+        falhas += _testar_fornecedor(nome, config, criar)
+    return 1 if falhas else 0
+
+
+def _testar_fornecedor(
+    nome: NomeProvedor,
+    config: Configuracao,
+    criar: Callable[[NomeProvedor, Configuracao], ProvedorLLM],
+) -> int:
+    variavel = nome.upper()
+    chave = getattr(config, f"{nome}_api_key")
+    modelo = getattr(config, f"{nome}_model")
+    print(f"Chave ({variavel}_API_KEY): {'definida' if chave else 'em falta'}")
+    print(f"Modelo ({variavel}_MODEL): {modelo or 'em falta'}")
+    if chave is None or not modelo:
         print("Falta configuração: veja o .env.example.")
         return 1
     try:
-        provedor = (criar_provedor or ProvedorGemini)()
-        resposta = provedor.testar_ligacao()
+        resposta = criar(nome, config).testar_ligacao()
     except ErroLLM as erro:
         print(f"Falhou: {erro}")
-        print(f"Diagnóstico: {_diagnostico(erro.codigo, config.gemini_model)}")
+        print(f"Diagnóstico: {_diagnostico(erro.codigo, modelo, variavel)}")
         return 1
-    print(f"Resposta do modelo: «{resposta[:40]}»")
+    print(f"Resposta do modelo: «{resposta.texto[:40]}»")
+    for linha in resposta.limites:
+        print(f"  {linha}")
     print("Chave, modelo e rede: a funcionar.")
     return 0
 
 
-def _diagnostico(codigo: int | None, modelo: str) -> str:
+def _diagnostico(codigo: int | None, modelo: str, variavel: str) -> str:
     match codigo:
         case None:
             return "rede ou tempo esgotado (a chave e o modelo não chegaram a ser verificados)."
         case 400 | 401 | 403:
-            return "a chave foi recusada; confirme o GEMINI_API_KEY."
+            return f"a chave foi recusada; confirme o {variavel}_API_KEY."
         case 404:
             return f"o modelo «{modelo}» não existe ou não está disponível para esta chave."
         case 429:

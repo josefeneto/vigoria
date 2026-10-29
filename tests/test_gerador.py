@@ -9,8 +9,10 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
+from vigoria.conteudo.carregar import carregar_exercicios
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import PlanoGerado
+from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor import cli
 from vigoria.motor.estrategia import gerar_estrategia
@@ -43,8 +45,12 @@ def _persona(ficheiro: str = "persona_teste.json") -> tuple[Questionario, Estrat
 class ProvedorFalso:
     """Devolve sempre a mesma resposta JSON e guarda o que recebeu."""
 
-    def __init__(self, resposta: str = RESPOSTA) -> None:
+    nome = "falso"
+    modelo = "modelo-falso"
+
+    def __init__(self, resposta: str = RESPOSTA, ultimo: str | None = None) -> None:
         self.resposta = resposta
+        self.ultimo_provedor = ultimo
         self.chamadas: list[tuple[str, str, type[BaseModel]]] = []
 
     def gerar_json[M: BaseModel](self, sistema: str, pedido: str, schema: type[M]) -> M:
@@ -57,7 +63,7 @@ class ProvedorFalso:
 
 def test_prompt_versao_e_texto() -> None:
     prompt = carregar_prompt_sistema()
-    assert prompt.versao == "1"
+    assert prompt.versao == "2"
     assert not prompt.texto.startswith("<!--")
     assert prompt.texto.startswith("# Papel")
     for essencial in ("exercicios_permitidos", "nunca em meses", "sem_intervalos", "Texto livre"):
@@ -72,6 +78,7 @@ def test_pedido_partes() -> None:
     assert set(c) == {
         "estrategia",
         "questionario",
+        "catalogo_exercicios",
         "exercicios_permitidos",
         "fases",
         "estrutura_sessao",
@@ -161,15 +168,100 @@ def test_osteoporose_bird_dog_em_vez_de_crunch() -> None:
 
 
 def test_variante_halteres_so_com_halteres() -> None:
-    com = conteudo_pedido(*_persona())["exercicios_permitidos"]["fase_1"]
-    sem = conteudo_pedido(*_persona("persona_osteoporose.json"))["exercicios_permitidos"]["fase_1"]
+    com = conteudo_pedido(*_persona())["catalogo_exercicios"].values()
+    sem = conteudo_pedido(*_persona("persona_osteoporose.json"))["catalogo_exercicios"].values()
     assert any("variante_halteres" in x for x in com)
     assert not any("variante_halteres" in x for x in sem)
 
 
+def test_catalogo_so_com_os_permitidos_uma_vez() -> None:
+    c = conteudo_pedido(*_persona())
+    ids = [x["id"] for lista in c["exercicios_permitidos"].values() for x in lista]
+    assert list(c["catalogo_exercicios"]) == list(dict.fromkeys(ids))
+    for lista in c["exercicios_permitidos"].values():
+        for x in lista:
+            assert set(x) <= {"id", "substitui", "esforco_max", "notas"}
+
+
+# ---------------------------------------------------------------- Pedido reduzido
+# A versão anterior (até 29/10/2026) repetia a descrição de cada exercício em todas as
+# fases e era JSON indentado. A nova tem de levar exatamente a mesma informação.
+
+
+def _exercicios_permitidos_antigo(e: Estrategia) -> dict[str, list[dict[str, Any]]]:
+    """Cópia do código antigo (_exercicio_para_pedido), calculada à parte."""
+    tem_halteres = EquipamentoDeclarado.HALTERES in e.restricoes.equipamento
+    antigo = {}
+    for fase in (1, 2, 3, 4):
+        lista = []
+        for p in selecionar_exercicios(e, fase):
+            ex = carregar_exercicios()[p.id]
+            item: dict[str, Any] = {
+                "id": ex.id,
+                "nome": ex.nome,
+                "descricao": ex.descricao,
+                "grupo": str(ex.grupo),
+            }
+            if ex.equipamento:
+                item["equipamento"] = [str(x) for x in ex.equipamento]
+            if ex.variante_halteres and tem_halteres:
+                item["variante_halteres"] = ex.variante_halteres
+            if p.substitui:
+                item["substitui"] = list(p.substitui)
+            if p.esforco_max is not None:
+                item["esforco_max"] = p.esforco_max
+            if p.notas:
+                item["notas"] = list(p.notas)
+            lista.append(item)
+        antigo[f"fase_{fase}"] = lista
+    return antigo
+
+
+def _reconstruir_antigo(novo: dict[str, Any]) -> dict[str, Any]:
+    """Volta a juntar o catálogo a cada exercício de cada fase (formato antigo)."""
+    antigo = dict(novo)
+    catalogo = antigo.pop("catalogo_exercicios")
+    antigo["exercicios_permitidos"] = {
+        fase: [
+            {"id": x["id"], **catalogo[x["id"]], **{k: v for k, v in x.items() if k != "id"}}
+            for x in lista
+        ]
+        for fase, lista in novo["exercicios_permitidos"].items()
+    }
+    return antigo
+
+
+@pytest.mark.parametrize(
+    "ficheiro",
+    [
+        "persona_teste.json",
+        "persona_osteoporose.json",
+        "persona_renal.json",
+        "persona_imc36.json",
+        "persona_50_alta.json",
+    ],
+)
+def test_pedido_reduzido_tem_o_mesmo_conteudo(ficheiro: str) -> None:
+    q, e = _persona(ficheiro)
+    novo = json.loads(montar_pedido(q, e).conteudo.split("\n", 1)[1])
+    antigo = _reconstruir_antigo(novo)
+    permitidos = _exercicios_permitidos_antigo(e)
+    # Mesmo conteúdo e mesma ordem de chaves que a versão antiga.
+    assert antigo["exercicios_permitidos"] == permitidos
+    assert json.dumps(antigo["exercicios_permitidos"]) == json.dumps(permitidos)
+    # O resto do pedido passa sem alterações pelo JSON compacto.
+    assert novo == conteudo_pedido(q, e)
+
+
+def test_pedido_em_json_compacto() -> None:
+    corpo = montar_pedido(*_persona()).conteudo.split("\n", 1)[1]
+    assert "\n" not in corpo
+    assert corpo == json.dumps(json.loads(corpo), ensure_ascii=False, separators=(",", ":"))
+
+
 def test_pedido_em_texto() -> None:
     pedido = montar_pedido(*_persona())
-    assert pedido.versao_prompt == "1"
+    assert pedido.versao_prompt == "2"
     assert pedido.sistema == carregar_prompt_sistema().texto
     json.loads(pedido.conteudo.split("\n", 1)[1])  # JSON válido depois da 1.ª linha
 
@@ -255,7 +347,8 @@ def test_gerar_plano_com_provedor_falso() -> None:
     assert pedido == montar_pedido(q, e).conteudo
     assert schema is PlanoGerado
 
-    assert plano.versao_prompt == "1"
+    assert plano.versao_prompt == "2"
+    assert plano.provedor == "falso"
     assert plano.avisos == e.avisos
     assert [m.semana for m in plano.marcos] == [4, 8, 12, 16]
     assert [m.peso_indicativo_kg for m in plano.marcos] == [92.5, 91.0, 89.5, 88.0]
@@ -288,8 +381,10 @@ def test_cli_so_pedido() -> None:
     with contextlib.redirect_stdout(saida):
         assert cli.main(["--so-pedido", str(RAIZ / "exemplos" / "persona_teste.json")]) == 0
     texto = saida.getvalue()
-    assert texto.startswith("=== PROMPT DE SISTEMA (versão 1) ===")
-    assert "=== PEDIDO ===" in texto
+    assert texto.startswith("=== PROMPT DE SISTEMA (versão 2) ===")
+    assert "=== PEDIDO (indentado para leitura; segue em JSON compacto) ===" in texto
+    assert '\n  "catalogo_exercicios": {' in texto  # indentado
+    assert "Tamanho enviado:" in texto
 
 
 def test_cli_sem_opcao_nao_chama_llm() -> None:

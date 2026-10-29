@@ -1,4 +1,6 @@
-"""Geração com o Gemini real. Só corre com VIGORIA_TESTES_LLM_REAIS=1 (só o José).
+"""Geração com a LLM real (VIGORIA_PROVEDOR_LLM e reserva).
+
+Só corre com VIGORIA_TESTES_LLM_REAIS=1 (só o José).
 
 Cada teste faz uma geração (uma chamada) e tem 300 s no máximo (conftest.py).
 O «-k persona» escolhe só o primeiro: os nomes dos outros não contêm «persona».
@@ -13,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from vigoria.llm.gemini import ProvedorGemini
+from vigoria.llm.escolha import criar_provedor
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
@@ -26,9 +28,10 @@ EXEMPLOS = Path(__file__).parent.parent / "exemplos"
 def _gerar_e_confirmar(ficheiro: str) -> Plano:
     q = Questionario.model_validate(json.loads((EXEMPLOS / ficheiro).read_text(encoding="utf-8")))
     e = gerar_estrategia(q)
-    plano = gerar_plano(q, e, ProvedorGemini())
+    plano = gerar_plano(q, e, criar_provedor())
 
     assert plano.avisos == e.avisos
+    assert plano.provedor in ("gemini", "groq")
     assert len(plano.semana_tipo) == 7
     for fase in (1, 2, 3, 4):
         permitidos = {p.id for p in selecionar_exercicios(e, fase)}
