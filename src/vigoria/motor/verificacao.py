@@ -1,14 +1,14 @@
 """Verificação (papel 4, determinístico): o que o plano tem de cumprir antes de ser mostrado.
 
-Verificações obrigatórias (.claude/rules/regras-e-motor.md e REGRAS_DOMINIO §5 a §8):
-avisos fixos presentes; exercícios da biblioteca, de nível base e permitidos para esta
-pessoa em cada fase (motor/selecao.py); números iguais aos da Estrategia e dentro dos
-limites (ritmo de perda de peso por idade, 0,5 kg de músculo por cada 4 semanas);
-semana-tipo dentro de dias_semana e minutos_dia; séries, repetições e descanso iguais
-aos do programa (fases.yaml); texto da LLM sem valores de peso, proteína, hidratação ou
-calorias (só o peso dos halteres: o menor entre o do programa e o declarado), sem outros
-números com unidade que não venham dos dados, sem termos da lista negra, sem promessas
-absolutas e sem brasileirismos.
+Fase 4C (30/10/2026): o treino, a semana-tipo, os hábitos e o acompanhamento são do motor
+e dos YAML; as regras de prescrição e de dias são testadas no motor (test_treino.py,
+test_semana.py). Aqui ficam dois grupos:
+- integridade do que o código monta (avisos obrigatórios, exercícios permitidos e de nível
+  base, números iguais aos da Estrategia e dentro das regras). Uma falha aqui é um erro do
+  código: o pipeline não regenera (TIPOS_DO_MOTOR);
+- texto da LLM: contagens pedidas, valores de peso, proteína, hidratação ou calorias (só o
+  peso dos halteres), outros números com unidade que não venham dos dados, lista negra,
+  promessas absolutas e brasileirismos. Uma falha aqui leva a uma regeneração.
 
 Os motivos são técnicos (ids, termos, valores) e nunca citam respostas de saúde: seguem
 no pedido de regeneração e aparecem na linha de comando.
@@ -31,7 +31,6 @@ from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
 from vigoria.modelos.questionario import Questionario
-from vigoria.motor.gerador import fases_para_pedido
 from vigoria.motor.selecao import selecionar_exercicios
 from vigoria.motor.voz import (
     detetar_brasileirismos,
@@ -46,7 +45,6 @@ from vigoria.regras.calculos import (
 )
 from vigoria.regras.textos import numero
 
-FASES = (1, 2, 3, 4)
 SEMANAS_POR_MARCO = 4
 TOLERANCIA_KG = 0.1  # arredondamento dos marcos a 0,1 kg
 # Valor numérico com unidade de peso, proteína, hidratação ou energia («80 kg», «1,5 litros»).
@@ -86,13 +84,18 @@ _NUMERO_COM_OUTRA_UNIDADE = re.compile(
 class TipoFalha(StrEnum):
     AVISO_EM_FALTA = "aviso_em_falta"
     EXERCICIO = "exercicio"
-    PRESCRICAO = "prescricao"
-    SEMANA = "semana"
     NUMEROS = "numeros"
+    CONTAGEM = "contagem"
     NUMERO_NO_TEXTO = "numero_no_texto"
     LISTA_NEGRA = "lista_negra"
     PROMESSA = "promessa"
     BRASILEIRISMO = "brasileirismo"
+
+
+# Falhas do que o código monta: não se corrigem a regenerar o texto da LLM.
+TIPOS_DO_MOTOR = frozenset({TipoFalha.AVISO_EM_FALTA, TipoFalha.EXERCICIO, TipoFalha.NUMEROS})
+PRIORIDADES_ALIMENTARES = 4  # uma por fase
+MAX_NOTAS = 3
 
 
 class Falha(BaseModel):
@@ -107,9 +110,8 @@ def verificar(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
     return [
         *_avisos(plano),
         *_exercicios(plano, e),
-        *_prescricao(plano, e),
-        *_semana(plano, q),
         *_numeros(plano, e, q),
+        *_contagens(plano),
         *_texto(plano, e, q),
     ]
 
@@ -132,10 +134,12 @@ def _avisos(plano: Plano) -> list[Falha]:
 def _exercicios(plano: Plano, e: Estrategia) -> list[Falha]:
     biblioteca = carregar_exercicios()
     falhas = []
-    for fase in FASES:
+    for treino_fase in plano.treino.fases:
+        fase = treino_fase.numero
         permitidos = {p.id for p in selecionar_exercicios(e, fase)}
-        for prescrito in getattr(plano.treino, f"fase_{fase}").exercicios:
-            id_ = prescrito.exercicio_id
+        cardio = (treino_fase.cardio_finalizador,) if treino_fase.cardio_finalizador else ()
+        for x in (*treino_fase.forca, *cardio, *treino_fase.mobilidade_equilibrio):
+            id_ = x.id
             if id_ in permitidos:
                 continue
             ex = biblioteca.get(id_)
@@ -149,66 +153,6 @@ def _exercicios(plano: Plano, e: Estrategia) -> list[Falha]:
                 razao = "não está na lista de exercícios permitidos desta fase"
             falhas.append(Falha(tipo=TipoFalha.EXERCICIO, motivo=f"Fase {fase}: «{id_}» {razao}."))
     return falhas
-
-
-def _prescricao(plano: Plano, e: Estrategia) -> list[Falha]:
-    """Exercícios de referência: séries, repetições e descanso iguais aos de fases.yaml."""
-    permitidos = {fase: selecionar_exercicios(e, fase) for fase in FASES}
-    falhas = []
-    for fase in fases_para_pedido(permitidos):
-        referencia: dict[str, list[tuple[int, str, str]]] = {}
-        for item in fase["exercicios_referencia"]:
-            valores = (item["series"], item["repeticoes"], item["descanso_s"])
-            for id_ in (item["id"], *item.get("alternativas", [])):
-                referencia.setdefault(id_, []).append(valores)
-        numero_fase = fase["numero"]
-        for x in getattr(plano.treino, f"fase_{numero_fase}").exercicios:
-            certos = referencia.get(x.exercicio_id)
-            if not certos or any(
-                x.series == series
-                and _normalizar(x.repeticoes) == _normalizar(repeticoes)
-                and _algarismos(x.descanso) == _algarismos(descanso)
-                for series, repeticoes, descanso in certos
-            ):
-                continue
-            series, repeticoes, descanso = certos[0]
-            falhas.append(
-                Falha(
-                    tipo=TipoFalha.PRESCRICAO,
-                    motivo=f"Fase {numero_fase}: «{x.exercicio_id}» tem de seguir o programa: "
-                    f"{series} séries de {repeticoes}, descanso de {descanso} s.",
-                )
-            )
-    return falhas
-
-
-def _normalizar(texto: str) -> str:
-    return re.sub(r"\s+", "", texto).lower()
-
-
-def _algarismos(texto: str) -> list[int]:
-    return [int(n) for n in re.findall(r"\d+", texto)]
-
-
-# ---------------------------------------------------------------- Semana-tipo
-
-
-def _semana(plano: Plano, q: Questionario) -> list[Falha]:
-    """Dias com sessão (duração > 0) até dias_semana; cada sessão até minutos_dia."""
-    dias = carregar_avisos().rotulos.dias
-    ativos = [s for s in plano.semana_tipo if s.duracao_min > 0]
-    falhas = []
-    if len(ativos) > q.dias_semana:
-        falhas.append(
-            f"A semana-tipo tem {len(ativos)} dias com sessão, mas a disponibilidade é de "
-            f"{q.dias_semana} dias (os outros dias ficam com duração 0)."
-        )
-    falhas += [
-        f"{dias[s.dia]}: sessão de {s.duracao_min} min, acima dos {q.minutos_dia} min disponíveis."
-        for s in ativos
-        if s.duracao_min > q.minutos_dia
-    ]
-    return [Falha(tipo=TipoFalha.SEMANA, motivo=m) for m in falhas]
 
 
 # ---------------------------------------------------------------- Números
@@ -252,6 +196,20 @@ def _numeros(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
 
 
 # ---------------------------------------------------------------- Texto da LLM
+
+
+def _contagens(plano: Plano) -> list[Falha]:
+    falhas = []
+    prioridades = len(plano.alimentacao.prioridades_por_fase)
+    if prioridades != PRIORIDADES_ALIMENTARES:
+        falhas.append(
+            f"As prioridades alimentares têm de ser {PRIORIDADES_ALIMENTARES}, uma por fase "
+            f"(vieram {prioridades})."
+        )
+    notas = len(plano.notas_personalizadas)
+    if notas > MAX_NOTAS:
+        falhas.append(f"No máximo {MAX_NOTAS} notas personalizadas (vieram {notas}).")
+    return [Falha(tipo=TipoFalha.CONTAGEM, motivo=m) for m in falhas]
 
 
 def pesos_halteres_permitidos(q: Questionario) -> frozenset[float]:

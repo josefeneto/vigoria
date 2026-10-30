@@ -200,6 +200,12 @@ Regra completa:
 
 Seleção dos exercícios permitidos por fase (`motor/selecao.py`, decisão de 29/10/2026), por esta ordem: só `nivel: base`; sem impacto médio ou alto; sem os que exigem equipamento não declarado (halteres, passadeira, elíptica; cadeira, parede, bancada e degrau contam como existentes em casa); sem os contraindicados (condições e zonas escolhidas no questionário); sem flexão do tronco com carga quando aplicável (passa à regressão); regressão por zona (regra completa ou ligeira); nota «Sempre com apoio por perto» em todos os exercícios de pé (`de_pe`) e de equilíbrio, quando o equilíbrio com apoio se aplica (tabela 1.1). A «regressão geral» (dor articular em «outra» articulação, tabela 1.1) desce um passo na cadeia em todos os exercícios que tenham regressão, sem limite de esforço adicional. A regressão escolhida tem de cumprir os mesmos filtros (exceto a fase); se não cumprir, o exercício sai da lista.
 
+
+Treino construído pelo motor (`motor/treino.py`, decisão de 30/10/2026). Em cada fase, as posições de força de `fases.yaml`, cada uma resolvida pela seleção (o exercício, o que o substitui ou o primeiro permitido na cadeia de regressões); o cardio finalizador (passadeira ou elíptica se declaradas, senão marcha rápida no lugar, senão caminhada; 10 a 15 min; com `sem_intervalos`, ritmo contínuo); a mobilidade e o equilíbrio permitidos, sem séries. Regras:
+- um exercício **substituto por regressão** mantém as séries e o descanso da posição, mas usa as repetições da **sua própria posição** no programa (na mesma fase; senão, na fase anterior mais próxima; senão, na seguinte). Se não tiver posição no programa, usa as do original sem «(por perna)» nem «(por braço)». Não herda o «por perna» / «por braço» do original;
+- o **mesmo exercício nunca aparece duas vezes na mesma fase**: se a regressão já estiver na fase, segue a cadeia; se a cadeia acabar, a posição sai;
+- variante com halteres só se declarados, com cada peso limitado ao declarado (`halteres_kg`).
+
 ## 7. Textos obrigatórios (fixos, nunca gerados pela LLM)
 
 **Sinais para interromper imediatamente** (Vol. 1 e 2): dor no peito, falta de ar invulgar ou desproporcionada, desmaio ou sensação de desmaio, confusão, palpitações preocupantes, tonturas, dor articular aguda. Procurar avaliação adequada.
@@ -221,6 +227,8 @@ Aplicação (decisão de 28/10/2026):
 - **Ortografia** (decisão de 30/10/2026): o texto da LLM é verificado com o dicionário Hunspell pt_PT AO90 (LibreOffice/Natura); por agora as palavras desconhecidas são só aviso e não obrigam a regenerar.
 
 ## 9. Acompanhamento e lembretes
+
+- Os indicadores, as perguntas de revisão, os hábitos (V3, «Sono, sedentarismo e outros hábitos») e as dicas de hidratação (V3, «Água e hidratação») são texto fixo em `conteudo/alimentacao.yaml` (decisão de 30/10/2026); com doença renal, sem dicas de hidratação.
 
 - Indicadores semanais (Vol. 1, Anexo B): peso, cintura, sessões feitas, minutos de cardio, força, mobilidade/equilíbrio, sono médio, energia 0–10, esforço 0–10, observações, reflexão («o que correu bem? o que ajustar?»).
 - Indicadores de 4 em 4 semanas (Vol. 3): peso, cintura, energia, regularidade do treino, regularidade alimentar, sono, observações + perguntas de revisão.
@@ -250,3 +258,4 @@ Não há decisões de domínio pendentes.
 - 29/10/2026 — Fase 4, seleção de exercícios: uma regressão pode ser usada em qualquer fase, mesmo com `fase_minima` posterior (§6.6, ponto 4); ordem dos filtros, filtro de equipamento e «regressão geral» = um passo na cadeia (§6.6).
 - 29/10/2026 — Revisão da Fase 4, parte 1: regra das zonas por gravidade (§6.6, «A CONFIRMAR»): limitação ligeira com no máximo um passo, só nos exercícios de fase 2 a 4; fase 1 e cardio mantêm-se com «amplitude confortável, sem dor»; dor articular persistente e limitação importante com a regra completa. Campo `de_pe` (§6.1): com equilíbrio com apoio, a nota de apoio por perto vai para todos os exercícios de pé.
 - 30/10/2026 — Revisão dos planos reais da Fase 4: promessas absolutas e «aeróbico» (§8); números no texto só dos dados e halteres = menor entre o programa e o declarado (§8); semana-tipo dentro de `dias_semana` e `minutos_dia` e prescrição igual a `fases.yaml` (§8); ortografia pt_PT como aviso (§8).
+- 30/10/2026 — Fase 4C: treino, semana-tipo, hábitos, hidratação e acompanhamento passam a ser do motor e dos YAML; a LLM só escreve o resumo, os marcos de força, a alimentação e as notas. Regras novas do treino (§6.6): repetições do substituto pela sua própria posição e nenhum exercício repetido na mesma fase. Semana-tipo: força em 1 / 2 / 3 dias (1 / 2–4 / 5–7 dias por semana), nunca seguidos, a partir da semana-base do V1.

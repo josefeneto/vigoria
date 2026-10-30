@@ -1,4 +1,7 @@
-"""Pipeline de geração: estratégia → gerador → voz → verificação, e uma regeneração se preciso.
+"""Pipeline de geração: estratégia → treino e semana (motor) → gerador → voz → verificação.
+
+Só o texto da LLM pode levar a uma regeneração; uma falha do que o motor monta é um
+erro do código (ErroMotor), sem nova chamada.
 
 No máximo 3 chamadas à LLM por plano (CLAUDE.md): geração, revisão crítica (ainda por
 fazer) e uma única regeneração com os motivos da verificação. Se a regeneração também
@@ -17,7 +20,7 @@ from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import ErroGeracao, gerar_plano
 from vigoria.motor.ortografia import palavras_desconhecidas
-from vigoria.motor.verificacao import Falha, verificar
+from vigoria.motor.verificacao import TIPOS_DO_MOTOR, Falha, verificar
 from vigoria.motor.voz import aplicar_voz
 from vigoria.regras import textos
 
@@ -71,13 +74,13 @@ def gerar_plano_verificado(
     contado = _ProvedorContado(provedor)
 
     plano = _gerar(q, e, contado, ())
-    falhas = verificar(plano, e, q)
+    falhas = _verificar(plano, e, q)
     motivos: tuple[str, ...] = ()
     if falhas:
         progresso(f"verificação: {_resumo(falhas)}; uma regeneração com os motivos")
         motivos = tuple(f.motivo for f in falhas)
         plano = _gerar(q, e, contado, motivos)
-        falhas = verificar(plano, e, q)
+        falhas = _verificar(plano, e, q)
         if falhas:
             progresso(f"verificação depois da regeneração: {_resumo(falhas)}; plano recusado")
             raise ErroVerificacao(tuple(f.motivo for f in falhas))
@@ -95,6 +98,23 @@ def gerar_plano_verificado(
         motivos_regeneracao=motivos,
         palavras_desconhecidas=desconhecidas,
     )
+
+
+class ErroMotor(ErroGeracao):
+    """Falhou uma verificação do que o próprio código monta: é um erro do código."""
+
+    def __init__(self, motivos: tuple[str, ...]) -> None:
+        super().__init__(textos.PLANO_NAO_VERIFICADO)
+        self.motivos = motivos
+
+
+def _verificar(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
+    """Falhas do texto da LLM (regeneráveis). Uma falha do motor interrompe logo."""
+    falhas = verificar(plano, e, q)
+    do_motor = tuple(f.motivo for f in falhas if f.tipo in TIPOS_DO_MOTOR)
+    if do_motor:
+        raise ErroMotor(do_motor)
+    return falhas
 
 
 def _gerar(

@@ -1,9 +1,10 @@
-"""Modelos do plano (REGRAS_DOMINIO §5 a §7).
+"""Modelos do plano (REGRAS_DOMINIO §5 a §9).
 
-Dois níveis:
-- `PlanoGerado` é o que a LLM devolve (schema da saída JSON). Não tem campos para
-  números de peso, proteína ou hidratação: esses vêm calculados da Estrategia.
-- `Plano` é o plano final, montado pelo código: PlanoGerado + números + avisos fixos.
+Dois níveis (Fase 4C, 30/10/2026):
+- `PlanoGerado` é o que a LLM devolve (schema da saída JSON): só texto de personalização
+  (resumo, marcos de força, alimentação, notas). Sem números, treino ou semana.
+- `Plano` é o plano final, montado pelo código: PlanoGerado + treino e semana-tipo
+  (motor/treino.py e motor/semana.py) + números da Estrategia + textos fixos dos YAML.
 """
 
 from enum import StrEnum
@@ -38,40 +39,8 @@ class Refeicao(StrEnum):
 # ---------------------------------------------------------------- Saída da LLM
 
 
-class SessaoDia(_Modelo):
-    """Um dia da semana-tipo (Vol. 1, ajustada aos dias declarados)."""
-
-    dia: DiaSemana
-    atividade: str  # por exemplo, «Força A + mobilidade» ou «Descanso»
-    duracao_min: int  # 0 nos dias de descanso
-    descricao: str
-
-
-class ExercicioPrescrito(_Modelo):
-    """Um exercício da lista permitida, identificado só pelo id da biblioteca."""
-
-    exercicio_id: str
-    series: int
-    repeticoes: str  # «12-15», «30-45s», «10 (por perna)»
-    descanso: str  # «45 a 60 s»
-    adaptacao: str  # vazio se não houver adaptação pessoal
-
-
-class TreinoFase(_Modelo):
-    foco: str
-    exercicios: list[ExercicioPrescrito]
-    progressao: str  # uma variável de cada vez (§5)
-
-
-class TreinoPorFase(_Modelo):
-    fase_1: TreinoFase
-    fase_2: TreinoFase
-    fase_3: TreinoFase
-    fase_4: TreinoFase
-
-
 class MarcosForca(_Modelo):
-    """Marcos de força ou resistência, escritos pela LLM (decisão de 28/10/2026)."""
+    """Marcos de força ou resistência: uma frase curta por marco, ligada ao treino."""
 
     semana_4: str
     semana_8: str
@@ -84,30 +53,63 @@ class AjusteRefeicao(_Modelo):
     sugestao: str
 
 
-class OrientacaoAlimentar(_Modelo):
-    resumo: str
+class PlanoGerado(_Modelo):
+    """Schema da resposta JSON do gerador (prompt v4). Contagens: verificação."""
+
+    resumo: str  # 3 a 5 frases
+    marcos_forca: MarcosForca
     ajustes_refeicoes: list[AjusteRefeicao]
     bebidas_e_alcool: str
-    prioridades_por_fase: list[str]  # quatro entradas, uma por fase (Vol. 3)
+    prioridades_alimentares: list[str]  # 4, uma por fase
+    notas_personalizadas: list[str]  # no máximo 3
 
 
-class Habito(_Modelo):
-    titulo: str
+# ---------------------------------------------------------------- Treino e semana (motor)
+
+
+class SessaoDia(_Modelo):
+    """Um dia da semana-tipo (motor/semana.py)."""
+
+    dia: DiaSemana
+    atividade: str
+    duracao_min: int  # 0 nos dias sem sessão
     descricao: str
 
 
-class PlanoGerado(_Modelo):
-    """Schema da resposta JSON do gerador."""
+class ExercicioPlano(_Modelo):
+    """Exercício do treino, já resolvido pelo motor (biblioteca + fases.yaml + seleção)."""
 
-    resumo: str
-    marcos_forca: MarcosForca
-    semana_tipo: list[SessaoDia]
-    treino: TreinoPorFase
-    alimentacao: OrientacaoAlimentar
-    hidratacao_dicas: list[str]
-    habitos: list[Habito]
-    indicadores_acompanhamento: list[str]
-    notas_personalizadas: list[str]
+    id: str
+    nome: str
+    descricao: str
+    series: int | None = None  # None na mobilidade e no equilíbrio
+    repeticoes: str | None = None
+    descanso_s: tuple[int, int] | None = None  # (mínimo, máximo)
+    em_vez_de: str | None = None  # id do exercício do programa trocado por regressão
+    notas: tuple[str, ...] = ()
+
+
+class EstruturaSessao(_Modelo):
+    aquecimento: str
+    bloco_principal: str
+    cardio_finalizador: str
+    retorno_calma: str
+
+
+class TreinoFase(_Modelo):
+    numero: int
+    nome: str
+    foco: str
+    esforco: tuple[int, int]  # esforço percebido (mínimo, máximo), escala de 0 a 10
+    forca: tuple[ExercicioPlano, ...]
+    cardio_finalizador: ExercicioPlano | None
+    cardio_duracao_min: tuple[int, int]
+    mobilidade_equilibrio: tuple[ExercicioPlano, ...]
+
+
+class Treino(_Modelo):
+    estrutura_sessao: EstruturaSessao
+    fases: tuple[TreinoFase, ...]
 
 
 # ---------------------------------------------------------------- Plano final
@@ -123,24 +125,43 @@ class MarcoPlano(_Modelo):
     forca_resistencia: str
 
 
+class OrientacaoAlimentar(_Modelo):
+    ajustes_refeicoes: tuple[AjusteRefeicao, ...]
+    bebidas_e_alcool: str
+    prioridades_por_fase: tuple[str, ...]
+
+
 class HidratacaoPlano(_Modelo):
     valores: Hidratacao  # da Estrategia; sem ml com doença renal
-    dicas: list[str]
+    dicas: tuple[str, ...]  # texto fixo (alimentacao.yaml); vazio com doença renal
+
+
+class Habito(_Modelo):
+    titulo: str
+    descricao: str
+
+
+class Acompanhamento(_Modelo):
+    """O que registar, conforme a frequência escolhida (REGRAS §9)."""
+
+    frequencia: str  # «semanal» ou «a_cada_4_semanas»
+    indicadores: tuple[str, ...]
+    perguntas_revisao: tuple[str, ...] = ()
 
 
 class Plano(_Modelo):
     """Plano final: o que a interface mostra e a verificação confirma."""
 
     versao_prompt: str
-    provedor: str  # fornecedor que gerou o plano («gemini», «groq»)
+    provedor: str  # fornecedor que gerou o texto («gemini», «groq», «mistral»)
     resumo: str
     marcos: tuple[MarcoPlano, ...]
-    semana_tipo: list[SessaoDia]
-    treino: TreinoPorFase
+    semana_tipo: tuple[SessaoDia, ...]
+    treino: Treino
     alimentacao: OrientacaoAlimentar
     proteina: Proteina  # da Estrategia; sem valores com doença renal
     hidratacao: HidratacaoPlano
-    habitos: list[Habito]
-    indicadores_acompanhamento: list[str]
-    notas_personalizadas: list[str]
+    habitos: tuple[Habito, ...]
+    acompanhamento: Acompanhamento
+    notas_personalizadas: tuple[str, ...]
     avisos: tuple[str, ...]  # textos fixos (§7) e condicionais, inseridos pelo código

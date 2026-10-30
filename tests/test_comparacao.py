@@ -17,7 +17,7 @@ from vigoria.motor import cli
 from vigoria.motor.comparacao import avaliar_plano, comparar, formatar_comparacao
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import gerar_plano
-from vigoria.motor.voz import textos_da_llm
+from vigoria.motor.voz import aplicar_voz, textos_da_llm
 
 RAIZ = Path(__file__).parent.parent
 RESPOSTA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
@@ -72,32 +72,23 @@ def _resposta_com(extra: str) -> str:
 
 def test_plano_de_referencia_sem_problemas() -> None:
     q, e = _persona()
-    plano = gerar_plano(q, e, _Falso("gemini"))
-    a = avaliar_plano(plano, e, None)
+    plano = aplicar_voz(gerar_plano(q, e, _Falso("gemini")), e)
+    a = avaliar_plano(plano, e, q, None)
     assert a.provedor == "gemini"
-    assert len(a.exercicios_por_fase) == 4 and all(a.exercicios_por_fase)
-    assert a.ids_fora_da_lista == ()
+    assert a.falhas == ()
     assert a.mencoes_meses == 0
-    assert a.brasileirismos == () and a.lista_negra == ()
+    assert a.palavras_desconhecidas == ()
     assert a.caracteres_texto > 1000
 
 
-def test_deteta_meses_brasileirismos_e_lista_negra() -> None:
+def test_deteta_falhas_meses_e_ortografia() -> None:
     q, e = _persona()
-    resposta = _resposta_com("Em 3 meses, veja no celular. Evite o chá detox. Daqui a um mês.")
-    plano = gerar_plano(q, e, _Falso("mistral", resposta))
-    a = avaliar_plano(plano, e, None)
-    assert a.mencoes_meses == 2
-    assert a.brasileirismos == ("celular",)
-    assert a.lista_negra == ("detox",)
-
-
-def test_deteta_ids_fora_da_lista() -> None:
-    q, e = _persona()
-    dados = json.loads(RESPOSTA)
-    dados["treino"]["fase_2"]["exercicios"][0]["exercicio_id"] = "burpee_inventado"
-    plano = gerar_plano(q, e, _Falso("mistral", json.dumps(dados, ensure_ascii=False)))
-    assert avaliar_plano(plano, e, None).ids_fora_da_lista == ("fase 2: burpee_inventado",)
+    resposta = _resposta_com("Em 3 meses, veja no celular. Evite o chá detox. A durquetura.")
+    plano = aplicar_voz(gerar_plano(q, e, _Falso("mistral", resposta)), e)
+    a = avaliar_plano(plano, e, q, None)
+    assert a.mencoes_meses == 1
+    assert set(a.falhas) == {"lista_negra", "brasileirismo"}
+    assert a.palavras_desconhecidas == ("durquetura",)
 
 
 def test_textos_sem_avisos_fixos() -> None:

@@ -136,3 +136,60 @@ evolucao_abranda:
     conclusao:
       - Depois, observar.
       - Não mudar cinco coisas ao mesmo tempo.
+
+# ---------------------------------------------------------------- Textos fixos do plano (Fase 4C, 30/10/2026)
+# Antes escritos pela LLM; agora fixos, a partir dos volumes.
+
+# V3 «Água e hidratação», «Hábitos simples». Não se mostram com doença renal (§2):
+# aí só a nota da estratégia (líquidos definidos pelo médico ou nutricionista).
+hidratacao_dicas:
+  - Ter uma garrafa de água acessível.
+  - Beber regularmente ao longo do dia.
+  - Aumentar a atenção à hidratação em dias quentes.
+  - Beber antes, durante ou depois da atividade, conforme as necessidades individuais.
+  - Reduzir o consumo habitual de bebidas açucaradas.
+
+# V3 «Sono, sedentarismo e outros hábitos» (e V1 «Recuperação e hábitos»).
+habitos:
+  - titulo: Sono
+    descricao: >-
+      Procurar manter horários relativamente regulares. O objetivo não é uma rotina
+      perfeita: é evitar que noites muito irregulares se tornem a norma.
+  - titulo: Menos tempo sentado
+    descricao: >-
+      Pequenas interrupções ao longo do dia ajudam: levantar-se regularmente, caminhar
+      alguns minutos, fazer algumas tarefas em pé.
+  - titulo: Atividade para além do treino
+    descricao: >-
+      O treino é só uma parte da atividade diária. A caminhada e outras atividades do dia a
+      dia também contam, e são uma boa forma de recuperação ativa.
+
+# REGRAS §9: semanal (V1, Anexo B) ou a cada 4 semanas (V3 «Acompanhamento da evolução»).
+acompanhamento:
+  semanal:
+    - Peso
+    - Perímetro da cintura
+    - Sessões feitas
+    - Minutos de cardio
+    - Força
+    - Mobilidade e equilíbrio
+    - Sono médio
+    - Energia (0 a 10)
+    - Esforço (0 a 10)
+    - Observações
+    - "Reflexão: o que correu bem? O que ajustar?"
+  quatro_semanas:
+    - Peso
+    - Perímetro da cintura
+    - Energia (0 a 10)
+    - Regularidade do treino
+    - Regularidade alimentar
+    - Sono
+    - Observações
+  perguntas_revisao:
+    - O que correu bem?
+    - Que hábito consegui manter?
+    - Onde senti mais dificuldade?
+    - O treino está a ser acompanhado pela alimentação?
+    - Como está a energia?
+    - O que quero melhorar nas próximas quatro semanas?

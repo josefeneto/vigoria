@@ -27,21 +27,12 @@ def inserir_avisos(plano: Plano, e: Estrategia) -> Plano:
 
 
 def textos_da_llm(plano: Plano) -> list[str]:
-    """Só o texto escrito pela LLM (sem avisos fixos nem números da Estrategia)."""
+    """Só o texto escrito pela LLM (Fase 4C): resumo, marcos de força, alimentação e notas.
+    O treino, a semana, os hábitos e o acompanhamento são do motor e dos YAML."""
     escrito = plano.model_dump(
-        mode="json",
-        include={
-            "resumo",
-            "semana_tipo",
-            "treino",
-            "alimentacao",
-            "habitos",
-            "indicadores_acompanhamento",
-            "notas_personalizadas",
-        },
+        mode="json", include={"resumo", "alimentacao", "notas_personalizadas"}
     )
     escrito["forca"] = [m.forca_resistencia for m in plano.marcos]
-    escrito["dicas"] = plano.hidratacao.dicas
     return list(_cadeias(escrito))
 
 

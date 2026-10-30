@@ -1,8 +1,8 @@
-"""Verificações acrescentadas a 30/10/2026, depois dos primeiros planos reais.
+"""Verificações do texto da LLM acrescentadas a 30/10/2026 (revisão dos planos reais).
 
-Semana-tipo (dias e duração), prescrição igual ao programa, números com unidade só dos
-dados (também por extenso), cargas dos halteres, promessas absolutas, «aeróbico» e
-ortografia (só aviso).
+Números com unidade só dos dados (também por extenso), cargas dos halteres, promessas
+absolutas, «aeróbico», contagens do novo PlanoGerado (Fase 4C) e ortografia (só aviso).
+A semana-tipo e a prescrição passaram a ser do motor: test_semana.py e test_treino.py.
 """
 
 import json
@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 
-from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano, PlanoGerado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
@@ -35,15 +34,17 @@ def _resposta() -> dict[str, Any]:
     return json.loads(json.dumps(RESPOSTA))
 
 
-def _plano(resposta: dict[str, Any], e: Estrategia) -> Plano:
+def _plano(resposta: dict[str, Any], q: Questionario | None = None) -> Plano:
+    q = _q() if q is None else q
+    e = gerar_estrategia(q)
     gerado = PlanoGerado.model_validate(resposta)
-    return inserir_avisos(montar_plano(gerado, e, "3", "falso"), e)
+    return inserir_avisos(montar_plano(gerado, e, q, "4", "falso"), e)
 
 
 def _falhas(resposta: dict[str, Any], q: Questionario | None = None) -> list[tuple[str, str]]:
     q = _q() if q is None else q
     e = gerar_estrategia(q)
-    return [(f.tipo.value, f.motivo) for f in verificar(_plano(resposta, e), e, q)]
+    return [(f.tipo.value, f.motivo) for f in verificar(_plano(resposta, q), e, q)]
 
 
 def _com_texto(extra: str) -> dict[str, Any]:
@@ -56,58 +57,21 @@ def test_referencia_passa() -> None:
     assert _falhas(_resposta()) == []
 
 
-# ---------------------------------------------------------------- Semana-tipo
+# ---------------------------------------------------------------- Contagens
 
 
-def test_mais_dias_com_sessao_do_que_a_disponibilidade() -> None:
+def test_quatro_prioridades_alimentares() -> None:
     resposta = _resposta()
-    quinta = next(d for d in resposta["semana_tipo"] if d["dia"] == "quinta")
-    quinta |= {"atividade": "Caminhada", "duracao_min": 30}
+    resposta["prioridades_alimentares"] = resposta["prioridades_alimentares"][:3]
     assert _falhas(resposta) == [
-        (
-            "semana",
-            "A semana-tipo tem 6 dias com sessão, mas a disponibilidade é de 5 dias "
-            "(os outros dias ficam com duração 0).",
-        )
+        ("contagem", "As prioridades alimentares têm de ser 4, uma por fase (vieram 3).")
     ]
 
 
-def test_sessao_mais_longa_do_que_minutos_dia() -> None:
+def test_no_maximo_tres_notas() -> None:
     resposta = _resposta()
-    resposta["semana_tipo"][0]["duracao_min"] = 45
-    assert _falhas(resposta) == [
-        ("semana", "Segunda-feira: sessão de 45 min, acima dos 30 min disponíveis.")
-    ]
-
-
-def test_dias_sem_sessao_com_duracao_zero_nao_contam() -> None:
-    resposta = _resposta()
-    quinta = next(d for d in resposta["semana_tipo"] if d["dia"] == "quinta")
-    quinta |= {"atividade": "Caminhada livre", "duracao_min": 0}
-    assert _falhas(resposta) == []
-
-
-# ---------------------------------------------------------------- Prescrição
-
-
-def test_series_repeticoes_e_descanso_iguais_ao_programa() -> None:
-    resposta = _resposta()
-    ponte = resposta["treino"]["fase_1"]["exercicios"][0]
-    assert ponte["exercicio_id"] == "ponte_gluteos"
-    ponte |= {"repeticoes": "12", "descanso": "30 s"}
-    assert _falhas(resposta) == [
-        (
-            "prescricao",
-            "Fase 1: «ponte_gluteos» tem de seguir o programa: 3 séries de 15, descanso de 45 s.",
-        )
-    ]
-
-
-@pytest.mark.parametrize("descanso", ["45 s", "45s", "45 segundos"])
-def test_descanso_escrito_de_varias_formas(descanso: str) -> None:
-    resposta = _resposta()
-    resposta["treino"]["fase_1"]["exercicios"][0]["descanso"] = descanso
-    assert _falhas(resposta) == []
+    resposta["notas_personalizadas"].append("Mais uma nota.")
+    assert _falhas(resposta) == [("contagem", "No máximo 3 notas personalizadas (vieram 4).")]
 
 
 # ---------------------------------------------------------------- Números com unidade
@@ -197,7 +161,7 @@ def test_palavras_parecidas_nao_sao_promessas() -> None:
     assert _falhas(_com_texto("A totalidade do treino é feita em casa.")) == []
 
 
-def test_aeroboco_e_brasileirismo() -> None:
+def test_aerobico_e_brasileirismo() -> None:
     falhas = _falhas(_com_texto("Exercício aeróbico ligeiro."))
     assert falhas == [
         ("brasileirismo", "O texto tem o brasileirismo «aeróbico»: use português europeu.")
@@ -205,20 +169,24 @@ def test_aeroboco_e_brasileirismo() -> None:
     assert _falhas(_com_texto("Exercício aeróbio ligeiro.")) == []
 
 
+def test_promessas_nos_outros_campos_da_llm() -> None:
+    resposta = _resposta()
+    resposta["prioridades_alimentares"][0] = "Fase 1: garantir refeições regulares."
+    assert [t for t, _ in _falhas(resposta)] == ["promessa"]
+
+
 # ---------------------------------------------------------------- Ortografia (só aviso)
 
 
 def test_ortografia_apanha_palavra_inventada() -> None:
-    e = gerar_estrategia(_q())
-    plano = _plano(_com_texto("Mantenha a durquetura e a acção."), e)
+    plano = _plano(_com_texto("Mantenha a durquetura e a acção."))
     assert palavras_desconhecidas(plano) == ("durquetura", "acção")  # «acção» é pré-AO90
 
 
 def test_ortografia_aceita_referencia_e_vocabulario_do_programa() -> None:
-    e = gerar_estrategia(_q())
-    assert palavras_desconhecidas(_plano(_resposta(), e)) == ()
-    texto = "Exercício aeróbio; bird-dog; ultraprocessados; Pequeno-almoço; unipodal."
-    assert palavras_desconhecidas(_plano(_com_texto(texto), e)) == ()
+    assert palavras_desconhecidas(_plano(_resposta())) == ()
+    texto = "Exercício aeróbio; bird-dog; ultraprocessados; Pequeno-almoço; unipodal; tónus."
+    assert palavras_desconhecidas(_plano(_com_texto(texto))) == ()
 
 
 def test_ortografia_nao_chumba_o_plano() -> None:

@@ -1,7 +1,8 @@
 """Comparação de fornecedores de LLM: o mesmo pedido, um plano por fornecedor (sem reserva).
 
-Só métricas e uma pré-verificação em código (ids fora da lista permitida, «mês/meses»,
-brasileirismos, termos da lista negra). Não substitui a verificação (papel 4).
+Fase 4C: o treino e a semana são do motor, por isso só se compara o texto da LLM:
+falhas da verificação desse texto (números, lista negra, promessas, brasileirismos,
+contagens), menções a meses e palavras que o dicionário pt_PT não conhece.
 Cada fornecedor faz uma chamada real: só o José corre a comparação.
 """
 
@@ -12,14 +13,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.llm.base import ErroLLM, Metricas, ProvedorLLM
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.gerador import gerar_plano
-from vigoria.motor.selecao import selecionar_exercicios
-from vigoria.motor.voz import encontrar_termos, textos_da_llm
+from vigoria.motor.ortografia import palavras_desconhecidas
+from vigoria.motor.verificacao import TIPOS_DO_MOTOR, verificar
+from vigoria.motor.voz import aplicar_voz, textos_da_llm
 
 PASTA_SAIDAS = Path("saidas") / "comparacao"  # saidas/ está no .gitignore
 _MESES = re.compile(r"\bm[eê]s(?:es)?\b", re.IGNORECASE)
@@ -35,40 +36,28 @@ class Avaliacao(BaseModel):
     segundos: float | None = None
     tokens_entrada: int | None = None
     tokens_saida: int | None = None
-    exercicios_por_fase: tuple[int, ...] = ()
-    ids_fora_da_lista: tuple[str, ...] = ()
+    falhas: tuple[str, ...] = ()  # tipos das falhas da verificação do texto da LLM
     mencoes_meses: int = 0
-    brasileirismos: tuple[str, ...] = ()
-    lista_negra: tuple[str, ...] = ()
+    palavras_desconhecidas: tuple[str, ...] = ()
     caracteres_texto: int = 0
     erro: str | None = None
 
 
-def avaliar_plano(plano: Plano, e: Estrategia, metricas: Metricas | None) -> Avaliacao:
-    """Métricas e pré-verificação de um plano."""
-    fora: list[str] = []
-    por_fase: list[int] = []
-    for fase in (1, 2, 3, 4):
-        permitidos = {p.id for p in selecionar_exercicios(e, fase)}
-        exercicios = getattr(plano.treino, f"fase_{fase}").exercicios
-        por_fase.append(len(exercicios))
-        fora += [
-            f"fase {fase}: {x.exercicio_id}" for x in exercicios if x.exercicio_id not in permitidos
-        ]
+def avaliar_plano(
+    plano: Plano, e: Estrategia, q: Questionario, metricas: Metricas | None
+) -> Avaliacao:
+    """Métricas e verificação do texto da LLM de um plano."""
     textos = textos_da_llm(plano)
-    tudo = "\n".join(textos)
-    avisos = carregar_avisos()
+    falhas = [f for f in verificar(plano, e, q) if f.tipo not in TIPOS_DO_MOTOR]
     return Avaliacao(
         provedor=plano.provedor,
         modelo=metricas.modelo if metricas else "",
         segundos=metricas.segundos if metricas else None,
         tokens_entrada=metricas.tokens_entrada if metricas else None,
         tokens_saida=metricas.tokens_saida if metricas else None,
-        exercicios_por_fase=tuple(por_fase),
-        ids_fora_da_lista=tuple(fora),
-        mencoes_meses=len(_MESES.findall(tudo)),
-        brasileirismos=encontrar_termos(avisos.brasileirismos, tudo),
-        lista_negra=encontrar_termos(avisos.lista_negra.termos, tudo),
+        falhas=tuple(f.tipo.value for f in falhas),
+        mencoes_meses=len(_MESES.findall("\n".join(textos))),
+        palavras_desconhecidas=palavras_desconhecidas(plano),
         caracteres_texto=sum(len(t) for t in textos),
     )
 
@@ -84,7 +73,7 @@ def comparar(
     for provedor in provedores:
         inicio = time.perf_counter()
         try:
-            plano = gerar_plano(q, e, provedor)
+            plano = aplicar_voz(gerar_plano(q, e, provedor), e)
         except ErroLLM as erro:
             avaliacoes.append(
                 Avaliacao(
@@ -97,7 +86,8 @@ def comparar(
             continue
         if guardar is not None:
             guardar(provedor.nome, plano)
-        avaliacoes.append(avaliar_plano(plano, e, getattr(provedor, "ultimas_metricas", None)))
+        metricas = getattr(provedor, "ultimas_metricas", None)
+        avaliacoes.append(avaliar_plano(plano, e, q, metricas))
     return avaliacoes
 
 
@@ -112,11 +102,9 @@ def formatar_comparacao(avaliacoes: list[Avaliacao]) -> str:
         ("Tempo (s)", lambda a: "-" if a.segundos is None else f"{a.segundos:.1f}"),
         ("Tokens de entrada", lambda a: str(a.tokens_entrada or "-")),
         ("Tokens de saída", lambda a: str(a.tokens_saida or "-")),
-        ("Exercícios por fase", lambda a: "/".join(map(str, a.exercicios_por_fase)) or "-"),
-        ("Ids fora da lista", lambda a: lista(a.ids_fora_da_lista)),
+        ("Falhas na verificação", lambda a: lista(a.falhas)),
         ("Menções a mês/meses", lambda a: str(a.mencoes_meses)),
-        ("Brasileirismos", lambda a: lista(a.brasileirismos)),
-        ("Lista negra", lambda a: lista(a.lista_negra)),
+        ("Palavras desconhecidas", lambda a: lista(a.palavras_desconhecidas)),
         ("Caracteres de texto", lambda a: str(a.caracteres_texto)),
     ]
     tabela = [["", *(a.provedor for a in avaliacoes)]]

@@ -18,7 +18,7 @@ from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import gerar_plano
-from vigoria.motor.selecao import selecionar_exercicios
+from vigoria.motor.treino import construir_treino
 
 EXEMPLOS = Path(__file__).parent.parent / "exemplos"
 
@@ -31,11 +31,9 @@ def _gerar_e_confirmar(ficheiro: str) -> Plano:
     assert plano.avisos == e.avisos
     assert plano.provedor in ("gemini", "groq", "mistral")
     assert len(plano.semana_tipo) == 7
-    for fase in (1, 2, 3, 4):
-        permitidos = {p.id for p in selecionar_exercicios(e, fase)}
-        treino = getattr(plano.treino, f"fase_{fase}")
-        assert treino.exercicios
-        assert {x.exercicio_id for x in treino.exercicios} <= permitidos
+    assert len(plano.alimentacao.prioridades_por_fase) == 4
+    assert len(plano.notas_personalizadas) <= 3
+    assert plano.treino == construir_treino(e, q)  # do motor, não da LLM
     return plano
 
 

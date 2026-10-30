@@ -1,94 +1,27 @@
 {
-  "resumo": "Este plano de 16 semanas procura reduzir gordura, sobretudo à volta da cintura, e ganhar força sem sobrecarregar os joelhos. A intensidade é Média: cinco sessões de 30 minutos por semana, com esforço moderado. O objetivo de peso que indicou pede mais tempo do que 16 semanas; o plano aponta para um alvo realista à semana 16 e mostra quando o objetivo completo é alcançável.",
+  "resumo": "Este plano de 16 semanas procura reduzir gordura, sobretudo à volta da cintura, e ganhar força e tónus, com treino em casa e sem impacto nas articulações. A intensidade é média: exigente o suficiente para notar diferença, sem pressa. O alvo realista para a semana 16 é mais modesto do que o peso que indicou, e o objetivo completo chega um pouco depois, ao mesmo ritmo seguro. A regularidade conta mais do que a perfeição.",
   "marcos_forca": {
-    "semana_4": "Fazer as 3 séries da ponte de glúteos e da flexão na parede com boa técnica e sem dor.",
-    "semana_8": "Completar a sessão de força sem pausas extra e com a respiração controlada.",
-    "semana_12": "Fazer a remada unilateral com apoio nas 3 séries, com o tronco estável.",
-    "semana_16": "Manter 3 sessões de força por semana e caminhar 30 minutos seguidos em ritmo vivo, a conseguir falar em frases curtas."
+    "semana_4": "Fazer o circuito completo da fase com boa técnica e sem dor nos joelhos.",
+    "semana_8": "Fazer as séries da remada e da prensa de ombros com o movimento controlado.",
+    "semana_12": "Manter a prancha lateral com joelhos apoiados de cada lado sem perder o alinhamento.",
+    "semana_16": "Completar o circuito da fase de integração e o cardio finalizador com energia para o resto do dia."
   },
-  "semana_tipo": [
-    {"dia": "segunda", "atividade": "Força A + mobilidade", "duracao_min": 30, "descricao": "Aquecimento curto, circuito de força da fase e alongamentos no fim."},
-    {"dia": "terca", "atividade": "Cardio + mobilidade", "duracao_min": 30, "descricao": "Caminhada ou passadeira em ritmo confortável, seguida de mobilidade."},
-    {"dia": "quarta", "atividade": "Força B + equilíbrio", "duracao_min": 30, "descricao": "Circuito de força com transferências de peso no fim."},
-    {"dia": "quinta", "atividade": "Descanso", "duracao_min": 0, "descricao": "Dia livre; uma caminhada curta é bem-vinda."},
-    {"dia": "sexta", "atividade": "Força A/B alternada", "duracao_min": 30, "descricao": "Alterne o circuito A e o B de semana para semana."},
-    {"dia": "sabado", "atividade": "Cardio", "duracao_min": 30, "descricao": "Caminhada um pouco mais rápida do que na terça."},
-    {"dia": "domingo", "atividade": "Descanso", "duracao_min": 0, "descricao": "Recuperação ativa: passeio calmo, se apetecer."}
+  "ajustes_refeicoes": [
+    {"refeicao": "pequeno_almoco", "sugestao": "Mantenha o café com leite e fique por uma torrada, juntando um iogurte natural ou um ovo para ter proteína logo de manhã."},
+    {"refeicao": "almoco", "sugestao": "Continue com a sopa e com a carne ou o peixe, e troque metade da batata ou do arroz por legumes."},
+    {"refeicao": "lanche", "sugestao": "A fruta está bem; junte um punhado pequeno de frutos secos nos dias de treino."},
+    {"refeicao": "jantar", "sugestao": "Siga a estrutura do almoço, com mais legumes e uma porção pequena de batata, arroz ou pão."}
   ],
-  "treino": {
-    "fase_1": {
-      "foco": "Aprender a técnica e criar a rotina.",
-      "exercicios": [
-        {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "15", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "flexao_parede", "series": 3, "repeticoes": "10-12", "descanso": "60 s", "adaptacao": ""},
-        {"exercicio_id": "remada_halteres", "series": 3, "repeticoes": "12", "descanso": "60 s", "adaptacao": "Com os halteres de 2 kg."},
-        {"exercicio_id": "elevacao_lateral", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "bird_dog", "series": 3, "repeticoes": "30-45s", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "caminhada", "series": 1, "repeticoes": "15 min", "descanso": "-", "adaptacao": "Esforço até 4, amplitude confortável, sem dor."}
-      ],
-      "progressao": "Só a técnica: mantenha as repetições até cada movimento sair controlado."
-    },
-    "fase_2": {
-      "foco": "Aumentar o volume de forma gradual.",
-      "exercicios": [
-        {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "15", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "flexao_inclinada_joelhos", "series": 3, "repeticoes": "12-15", "descanso": "45 s", "adaptacao": "Mãos numa bancada estável."},
-        {"exercicio_id": "remada_aberta", "series": 3, "repeticoes": "15", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "prensa_ombros", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "abdominal_crunch", "series": 3, "repeticoes": "20", "descanso": "30 s", "adaptacao": ""}
-      ],
-      "progressao": "Aumente primeiro a duração da caminhada; depois, as repetições."
-    },
-    "fase_3": {
-      "foco": "Mais força funcional, sempre com apoio disponível.",
-      "exercicios": [
-        {"exercicio_id": "peso_morto_romeno", "series": 3, "repeticoes": "12", "descanso": "60 s", "adaptacao": ""},
-        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12 (por braço)", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "elevacao_frontal", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "prancha_lateral_joelhos", "series": 3, "repeticoes": "30s (cada lado)", "descanso": "45 s", "adaptacao": ""}
-      ],
-      "progressao": "Aumente uma série ou algumas repetições, nunca as duas ao mesmo tempo."
-    },
-    "fase_4": {
-      "foco": "Consolidar hábitos e preparar a manutenção.",
-      "exercicios": [
-        {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "15", "descanso": "45-60 s", "adaptacao": ""},
-        {"exercicio_id": "prancha_inclinada_toque_ombro", "series": 3, "repeticoes": "10", "descanso": "45-60 s", "adaptacao": ""},
-        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12 (por braço)", "descanso": "45-60 s", "adaptacao": ""}
-      ],
-      "progressao": "Mantenha a carga e foque-se na regularidade."
-    }
-  },
-  "alimentacao": {
-    "resumo": "Pequenos ajustes, um de cada vez, a partir do que já come.",
-    "ajustes_refeicoes": [
-      {"refeicao": "pequeno_almoco", "sugestao": "Mantenha uma torrada e junte um iogurte natural ou um ovo."},
-      {"refeicao": "almoco", "sugestao": "Mantenha a sopa e encha metade do prato com legumes."},
-      {"refeicao": "jantar", "sugestao": "Sem pão ao jantar; prefira leguminosas algumas vezes por semana."}
-    ],
-    "bebidas_e_alcool": "Reduza o vinho para metade e faça da água a bebida habitual.",
-    "prioridades_por_fase": [
-      "Fase 1: refeições regulares e água como bebida habitual.",
-      "Fase 2: mais hortícolas e leguminosas.",
-      "Fase 3: observar as porções.",
-      "Fase 4: transformar os hábitos em rotina."
-    ]
-  },
-  "hidratacao_dicas": [
-    "Tenha uma garrafa de água à vista durante o dia.",
-    "Beba água a cada refeição."
-  ],
-  "habitos": [
-    {"titulo": "Sono", "descricao": "Procure deitar-se à mesma hora para dormir de forma mais regular."},
-    {"titulo": "Menos tempo sentado", "descricao": "Levante-se e caminhe uns minutos a cada hora."}
-  ],
-  "indicadores_acompanhamento": [
-    "Peso", "Cintura", "Sessões feitas", "Minutos de cardio", "Força", "Mobilidade e equilíbrio",
-    "Sono médio", "Energia (0 a 10)", "Esforço (0 a 10)", "Observações",
-    "O que correu bem? O que ajustar?"
+  "bebidas_e_alcool": "A água passa a ser a bebida habitual, ao longo do dia e às refeições. Reduza o vinho para metade, de preferência só às refeições.",
+  "prioridades_alimentares": [
+    "Fase 1: criar a rotina, com refeições regulares, água como bebida habitual e proteína nas refeições principais.",
+    "Fase 2: tornar os hábitos consistentes, com mais hortícolas, fruta e leguminosas e menos ultraprocessados.",
+    "Fase 3: observar as porções e os alimentos densos em energia, ajustando uma coisa de cada vez.",
+    "Fase 4: perceber que hábitos consegue manter depois das 16 semanas."
   ],
   "notas_personalizadas": [
-    "Os exercícios que carregam os joelhos foram trocados por versões mais suaves.",
-    "Como gosta de caminhar, a caminhada é a base do seu cardio."
+    "Como prefere caminhada e força, o cardio dos dias livres pode ser uma caminhada calma.",
+    "Com a hipertensão controlada, siga o esforço percebido e o teste da fala, e fale com o seu médico antes de intensificar o treino.",
+    "Os joelhos pedem cuidado: amplitude confortável e sem dor em todos os exercícios de pernas."
   ]
 }

@@ -116,7 +116,7 @@ def test_schema_estrito_sem_referencias_e_fechado() -> None:
         return proprios + [o for v in no.values() for o in objetos(v)]
 
     todos = objetos(schema)
-    assert len(todos) > 5
+    assert len(todos) >= 3  # PlanoGerado, MarcosForca e AjusteRefeicao
     for objeto in todos:
         assert objeto["additionalProperties"] is False
         assert objeto["required"] == list(objeto["properties"])

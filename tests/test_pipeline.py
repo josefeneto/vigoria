@@ -19,16 +19,24 @@ from vigoria.motor.pipeline import (
     _ProvedorContado,
     gerar_plano_verificado,
 )
+from vigoria.motor.verificacao import TipoFalha
 from vigoria.regras import textos
 
 RAIZ = Path(__file__).parent.parent
 BOA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text("utf-8")
 
 
+CINCO_KG = (
+    "O texto tem o valor «5 kg»: valores de peso, proteína, hidratação e calorias vêm só "
+    "da estratégia (pesos de halteres permitidos: 2 kg)."
+)
+
+
 def _ma(extra: str = "Um chá detox ajuda.") -> str:
+    """Resposta com falhas do texto da LLM: halteres de 5 kg (a persona tem 2) e `extra`."""
     dados = json.loads(BOA)
     dados["resumo"] += f" {extra}"
-    dados["treino"]["fase_2"]["exercicios"][0]["exercicio_id"] = "burpee_turbo"
+    dados["marcos_forca"]["semana_8"] = "Fazer a remada com halteres de 5 kg."
     return json.dumps(dados, ensure_ascii=False)
 
 
@@ -80,17 +88,18 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
     resultado, provedor, progresso = _correr(_ma(), BOA)
     assert resultado.chamadas == 2  # type: ignore[attr-defined]
     motivos = resultado.motivos_regeneracao  # type: ignore[attr-defined]
-    assert "Fase 2: «burpee_turbo» não existe na biblioteca." in motivos
+    assert CINCO_KG in motivos
     assert "O texto tem o termo proibido «detox»." in motivos
     primeiro, segundo = provedor.pedidos
     assert segundo.startswith(primeiro)
     assert "# Correção pedida" in segundo
-    assert "- Fase 2: «burpee_turbo» não existe na biblioteca." in segundo
+    assert f"- {CINCO_KG}" in segundo
     assert "{motivos}" not in segundo
     plano = resultado.plano  # type: ignore[attr-defined]
-    assert plano.versao_prompt == f"3 (correção {carregar_prompt_correcao().versao})"
+    assert plano.versao_prompt == f"4 (correção {carregar_prompt_correcao().versao})"
     assert progresso[0] == (
-        "verificação: 2 falha(s) (exercicio: 1, lista_negra: 1); uma regeneração com os motivos"
+        "verificação: 2 falha(s) (numero_no_texto: 1, lista_negra: 1); uma regeneração com os "
+        "motivos"
     )
     assert "detox" not in "\n".join(progresso)  # progresso só com metadados
 
@@ -158,14 +167,14 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 3)." in md
+    assert "Plano gerado com falso (prompt versão 4)." in md
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:
     codigo, saida = _cli_plano(tmp_path, _ma(), _ma())
     assert codigo == 1
     assert textos.PLANO_NAO_VERIFICADO in saida
-    assert "  - Fase 2: «burpee_turbo» não existe na biblioteca." in saida
+    assert f"  - {CINCO_KG}" in saida
     assert not (tmp_path / "plano_persona_teste.md").exists()
 
 
@@ -204,3 +213,16 @@ def test_ortografia_so_avisa(tmp_path: Path) -> None:
     codigo, saida = _cli_plano(tmp_path, resposta)
     assert codigo == 0
     assert "Ortografia (só aviso)" in saida and "durquetura" in saida
+
+
+def test_falha_do_motor_nao_regenera(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Um erro no que o código monta não se corrige a pedir outro texto à LLM."""
+    from vigoria.motor import pipeline
+
+    falha = pipeline.Falha(tipo=TipoFalha.EXERCICIO, motivo="Erro.")
+    monkeypatch.setattr(pipeline, "verificar", lambda plano, e, q: [falha])
+    provedor = _Sequencia(BOA, BOA)
+    with pytest.raises(pipeline.ErroMotor) as erro:
+        gerar_plano_verificado(_q(), provedor, lambda _: None)
+    assert erro.value.motivos == ("Erro.",)
+    assert len(provedor.pedidos) == 1

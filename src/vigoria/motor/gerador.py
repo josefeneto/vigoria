@@ -1,9 +1,10 @@
 """Gerador (papel 3, LLM): monta o pedido, chama o provedor e monta o Plano.
 
-O pedido leva só o necessário: a estratégia, o questionário sem identificadores nem
-consentimentos, o catálogo dos exercícios permitidos (cada um uma só vez), os ids
-permitidos por fase (motor/selecao.py) e o excerto relevante de fases.yaml e
-alimentacao.yaml, em JSON compacto. Os números do plano vêm da Estrategia.
+Fase 4C: o treino e a semana-tipo são do motor (motor/treino.py e motor/semana.py);
+os hábitos, a hidratação e o acompanhamento são texto fixo (alimentacao.yaml). A LLM só
+personaliza: resumo, marcos de força, alimentação e notas. O pedido leva a estratégia,
+o questionário sem identificadores nem consentimentos, os princípios alimentares, o foco
+alimentar de cada fase e um resumo do treino (só contexto), em JSON compacto.
 """
 
 import json
@@ -14,17 +15,22 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from vigoria.conteudo.carregar import (
-    carregar_alimentacao,
-    carregar_exercicios,
-    carregar_programa,
-)
+from vigoria.conteudo.carregar import carregar_alimentacao, carregar_programa
 from vigoria.llm.base import ProvedorLLM
 from vigoria.modelos.estrategia import Estrategia
-from vigoria.modelos.plano import HidratacaoPlano, MarcoPlano, Plano, PlanoGerado
-from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
-from vigoria.modelos.questionario import Questionario
-from vigoria.motor.selecao import ExercicioPermitido, selecionar_exercicios
+from vigoria.modelos.plano import (
+    Acompanhamento,
+    Habito,
+    HidratacaoPlano,
+    MarcoPlano,
+    OrientacaoAlimentar,
+    Plano,
+    PlanoGerado,
+    Treino,
+)
+from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
+from vigoria.motor.semana import construir_semana
+from vigoria.motor.treino import construir_treino
 
 PROMPTS = Path(__file__).resolve().parents[3] / "prompts"
 PROMPT_SISTEMA = PROMPTS / "gerador_sistema.md"
@@ -152,132 +158,41 @@ def limpar_texto_livre(texto: str) -> str:
     return _TELEFONE.sub(REMOVIDO, texto).strip()
 
 
-def _catalogo_exercicios(
-    permitidos: dict[int, tuple[ExercicioPermitido, ...]], tem_halteres: bool
-) -> dict[str, dict[str, Any]]:
-    """Descrição de cada exercício permitido, uma só vez (pela ordem em que aparece)."""
-    catalogo: dict[str, dict[str, Any]] = {}
-    for lista in permitidos.values():
-        for p in lista:
-            if p.id in catalogo:
-                continue
-            ex = carregar_exercicios()[p.id]
-            item: dict[str, Any] = {
-                "nome": ex.nome,
-                "descricao": ex.descricao,
-                "grupo": str(ex.grupo),
-            }
-            if ex.equipamento:
-                item["equipamento"] = [str(e) for e in ex.equipamento]
-            if ex.variante_halteres and tem_halteres:
-                item["variante_halteres"] = ex.variante_halteres
-            catalogo[p.id] = item
-    return catalogo
-
-
-def _permitido_na_fase(p: ExercicioPermitido) -> dict[str, Any]:
-    """O id e o que muda de fase para fase (substituições, esforço máximo, notas)."""
-    item: dict[str, Any] = {"id": p.id}
-    if p.substitui:
-        item["substitui"] = list(p.substitui)
-    if p.esforco_max is not None:
-        item["esforco_max"] = p.esforco_max
-    if p.notas:
-        item["notas"] = list(p.notas)
-    return item
-
-
-def _id_permitido(id_: str, permitidos: tuple[ExercicioPermitido, ...]) -> str | None:
-    """O próprio exercício, se permitido; senão, o que o substitui ou, para um exercício
-    retirado (por exemplo, contraindicado), o primeiro permitido na cadeia de regressões."""
-    ids_permitidos = {p.id for p in permitidos}
-    if id_ in ids_permitidos:
-        return id_
-    for p in permitidos:
-        if id_ in p.substitui:
-            return p.id
-    biblioteca = carregar_exercicios()
-    atual = biblioteca[id_].regressao
-    vistos = {id_}
-    while atual is not None and atual not in vistos:
-        if atual in ids_permitidos:
-            return atual
-        vistos.add(atual)
-        atual = biblioteca[atual].regressao
-    return None
-
-
-def fases_para_pedido(
-    permitidos: dict[int, tuple[ExercicioPermitido, ...]],
-) -> list[dict[str, Any]]:
-    """As 4 fases de fases.yaml, com os exercícios de referência já trocados pelos permitidos."""
-    fases = []
-    for fase in carregar_programa().fases:
-        referencia = []
-        for posicao in fase.exercicios:
-            ids = [
-                id_
-                for original in (posicao.id, *posicao.alternativas)
-                if (id_ := _id_permitido(original, permitidos[fase.numero])) is not None
-            ]
-            if not ids:
-                continue  # nem o exercício nem uma regressão são permitidos
-            item: dict[str, Any] = {
-                "id": ids[0],
-                "series": posicao.series,
-                "repeticoes": posicao.repeticoes,
-                "descanso_s": f"{posicao.descanso_s.min}-{posicao.descanso_s.max}"
-                if posicao.descanso_s.min != posicao.descanso_s.max
-                else str(posicao.descanso_s.min),
-            }
-            if ids[0] != posicao.id:
-                item["em_vez_de"] = posicao.id
-            if alternativas := [i for i in dict.fromkeys(ids[1:]) if i != ids[0]]:
-                item["alternativas"] = alternativas
-            referencia.append(item)
-        fases.append(
-            {
-                "numero": fase.numero,
-                "nome": fase.nome,
-                "semanas": f"{fase.semanas.min}-{fase.semanas.max}",
-                "foco_treino": fase.foco_treino,
-                "foco_estrategico": fase.foco_estrategico,
-                "foco_alimentar": fase.foco_alimentar.model_dump(mode="json"),
-                "esforco": f"{fase.esforco.min}-{fase.esforco.max}",
-                "exercicios_referencia": referencia,
-            }
-        )
-    return fases
-
-
-def conteudo_pedido(q: Questionario, e: Estrategia) -> dict[str, Any]:
-    """O pedido em estrutura Python (útil para testes e para o mostrar na CLI)."""
-    if not e.pode_gerar_plano:
-        raise ErroGeracao("A estratégia não permite gerar plano: " + " ".join(e.motivos))
-    tem_halteres = EquipamentoDeclarado.HALTERES in e.restricoes.equipamento
-    permitidos = {fase: selecionar_exercicios(e, fase) for fase in FASES}
-    alimentacao = carregar_alimentacao()
+def resumo_treino(treino: Treino) -> dict[str, Any]:
+    """Nomes dos exercícios por fase: só contexto para a LLM (o treino é do motor)."""
     return {
-        "estrategia": e.model_dump(mode="json", exclude={"pode_gerar_plano"}),
-        "questionario": dados_questionario(q),
-        "catalogo_exercicios": _catalogo_exercicios(permitidos, tem_halteres),
-        "exercicios_permitidos": {
-            f"fase_{fase}": [_permitido_na_fase(p) for p in lista]
-            for fase, lista in permitidos.items()
-        },
-        "fases": fases_para_pedido(permitidos),
-        "estrutura_sessao": carregar_programa().estrutura_sessao.model_dump(mode="json"),
-        "alimentacao": {
-            "principios": alimentacao.principios.model_dump(mode="json"),
-            "refeicao_simples": alimentacao.refeicao_simples.model_dump(mode="json"),
-        },
+        f"fase_{f.numero}": {
+            "nome": f.nome,
+            "forca": [x.nome for x in f.forca],
+            "cardio_finalizador": f.cardio_finalizador.nome if f.cardio_finalizador else None,
+        }
+        for f in treino.fases
     }
 
 
-def montar_pedido(q: Questionario, e: Estrategia) -> Pedido:
+def conteudo_pedido(q: Questionario, e: Estrategia, treino: Treino | None = None) -> dict[str, Any]:
+    """O pedido em estrutura Python (útil para testes e para o mostrar na CLI)."""
+    if not e.pode_gerar_plano:
+        raise ErroGeracao("A estratégia não permite gerar plano: " + " ".join(e.motivos))
+    treino = construir_treino(e, q) if treino is None else treino
+    return {
+        "estrategia": e.model_dump(mode="json", exclude={"pode_gerar_plano"}),
+        "questionario": dados_questionario(q),
+        "alimentacao": {
+            "principios": carregar_alimentacao().principios.model_dump(mode="json"),
+            "foco_por_fase": [
+                {"fase": f.numero, "nome": f.nome, **f.foco_alimentar.model_dump(mode="json")}
+                for f in carregar_programa().fases
+            ],
+        },
+        "treino_resumo": resumo_treino(treino),
+    }
+
+
+def montar_pedido(q: Questionario, e: Estrategia, treino: Treino | None = None) -> Pedido:
     """Prompt de sistema e pedido em JSON compacto (sem indentação), prontos a enviar."""
     prompt = carregar_prompt_sistema()
-    conteudo = json.dumps(conteudo_pedido(q, e), ensure_ascii=False, separators=(",", ":"))
+    conteudo = json.dumps(conteudo_pedido(q, e, treino), ensure_ascii=False, separators=(",", ":"))
     return Pedido(
         versao_prompt=prompt.versao,
         sistema=prompt.texto,
@@ -288,8 +203,16 @@ def montar_pedido(q: Questionario, e: Estrategia) -> Pedido:
 # ---------------------------------------------------------------- Plano
 
 
-def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str, provedor: str) -> Plano:
-    """Junta à resposta da LLM os números da Estrategia e os avisos fixos."""
+def montar_plano(
+    gerado: PlanoGerado,
+    e: Estrategia,
+    q: Questionario,
+    versao_prompt: str,
+    provedor: str,
+    treino: Treino | None = None,
+) -> Plano:
+    """Junta ao texto da LLM o treino e a semana do motor, os números da Estrategia e os
+    textos fixos (alimentacao.yaml e avisos)."""
     if e.indicadores is None:
         raise ErroGeracao("A estratégia não tem indicadores: não é possível montar o plano.")
     forca = {
@@ -308,19 +231,36 @@ def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str, provedo
         )
         for m in e.marcos
     )
+    alimentacao = carregar_alimentacao()
+    hidratacao = e.indicadores.hidratacao
+    # Com doença renal não há valores: nem dicas genéricas sobre beber mais (§2).
+    dicas = alimentacao.hidratacao_dicas if hidratacao.central_ml is not None else ()
+    a = alimentacao.acompanhamento
+    if q.frequencia_registo is FrequenciaRegisto.SEMANAL:
+        acompanhamento = Acompanhamento(frequencia=q.frequencia_registo, indicadores=a.semanal)
+    else:
+        acompanhamento = Acompanhamento(
+            frequencia=q.frequencia_registo,
+            indicadores=a.quatro_semanas,
+            perguntas_revisao=a.perguntas_revisao,
+        )
     return Plano(
         versao_prompt=versao_prompt,
         provedor=provedor,
         resumo=gerado.resumo,
         marcos=marcos,
-        semana_tipo=gerado.semana_tipo,
-        treino=gerado.treino,
-        alimentacao=gerado.alimentacao,
+        semana_tipo=construir_semana(e, q),
+        treino=construir_treino(e, q) if treino is None else treino,
+        alimentacao=OrientacaoAlimentar(
+            ajustes_refeicoes=tuple(gerado.ajustes_refeicoes),
+            bebidas_e_alcool=gerado.bebidas_e_alcool,
+            prioridades_por_fase=tuple(gerado.prioridades_alimentares),
+        ),
         proteina=e.indicadores.proteina,
-        hidratacao=HidratacaoPlano(valores=e.indicadores.hidratacao, dicas=gerado.hidratacao_dicas),
-        habitos=gerado.habitos,
-        indicadores_acompanhamento=gerado.indicadores_acompanhamento,
-        notas_personalizadas=gerado.notas_personalizadas,
+        hidratacao=HidratacaoPlano(valores=hidratacao, dicas=dicas),
+        habitos=tuple(Habito(titulo=h.titulo, descricao=h.descricao) for h in alimentacao.habitos),
+        acompanhamento=acompanhamento,
+        notas_personalizadas=tuple(gerado.notas_personalizadas),
         avisos=e.avisos,
     )
 
@@ -344,9 +284,12 @@ def gerar_plano(
 
     A verificação e a decisão de regenerar são do pipeline (motor/pipeline.py).
     """
-    pedido = montar_pedido(q, e)
+    if not e.pode_gerar_plano:
+        raise ErroGeracao("A estratégia não permite gerar plano: " + " ".join(e.motivos))
+    treino = construir_treino(e, q)
+    pedido = montar_pedido(q, e, treino)
     if motivos:
         pedido = montar_pedido_correcao(pedido, motivos)
     gerado = provedor.gerar_json(pedido.sistema, pedido.conteudo, PlanoGerado)
     usado = provedor.ultimo_provedor or provedor.nome
-    return montar_plano(gerado, e, pedido.versao_prompt, usado)
+    return montar_plano(gerado, e, q, pedido.versao_prompt, usado, treino)

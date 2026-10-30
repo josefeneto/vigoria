@@ -1,7 +1,8 @@
 """Seleção dos exercícios permitidos em cada fase (determinístico, REGRAS_DOMINIO §6).
 
-Recebe a Estrategia e o número da fase e devolve a lista que segue para a LLM.
-A LLM só pode escolher exercícios desta lista. Ordem dos filtros: §6.6.
+Recebe a Estrategia e o número da fase e devolve os exercícios permitidos, com que
+motor/treino.py constrói o treino (Fase 4C: a LLM já não escolhe exercícios). Ordem dos
+filtros: §6.6.
 """
 
 from collections.abc import Mapping

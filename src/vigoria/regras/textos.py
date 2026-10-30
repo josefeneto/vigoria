@@ -87,5 +87,8 @@ FASES = tuple(fase.nome for fase in carregar_fases())
 CINTURA_MEDIR = _T["cintura_medir"]
 CINTURA_MEDIR_COM_LIMIAR = _T["cintura_medir_com_limiar"]
 
+# Treino (motor/treino.py)
+CARDIO_RITMO_CONTINUO = _T["cardio_ritmo_continuo"]
+
 # Verificação (papel 4)
 PLANO_NAO_VERIFICADO = _T["plano_nao_verificado"]

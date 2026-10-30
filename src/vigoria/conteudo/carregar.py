@@ -119,6 +119,7 @@ class EstruturaSessao(_Conteudo):
     aquecimento: str
     bloco_principal: str
     cardio_finalizador: str
+    duracao_cardio_min: Intervalo
     retorno_calma: str
 
 
@@ -134,10 +135,16 @@ class _Biblioteca(_Conteudo):
 # ---------------------------------------------------------------- avisos.yaml (§7 e §8)
 
 
+class RotuloDia(_Conteudo):
+    atividade: str
+    descricao: str
+
+
 class Rotulos(_Conteudo):
     intensidade: dict[str, str]
     zonas_limitacao: dict[str, str]
     plano: dict[str, str]  # títulos do plano em Markdown
+    semana: dict[str, RotuloDia] = {}  # tipos de dia da semana-tipo (motor/semana.py)
     dias: dict[str, str]
     refeicoes: dict[str, str]
 
@@ -212,10 +219,25 @@ class EvolucaoAbranda(_Conteudo):
     ajustar: Ajuste
 
 
+class HabitoFixo(_Conteudo):
+    titulo: str
+    descricao: str
+
+
+class Acompanhamento(_Conteudo):
+    semanal: tuple[str, ...] = Field(min_length=1)
+    quatro_semanas: tuple[str, ...] = Field(min_length=1)
+    perguntas_revisao: tuple[str, ...] = ()
+
+
 class Alimentacao(_Conteudo):
     principios: Principios
     refeicao_simples: RefeicaoSimples
     evolucao_abranda: EvolucaoAbranda
+    # Textos fixos do plano (Fase 4C): já não são escritos pela LLM.
+    hidratacao_dicas: tuple[str, ...] = Field(min_length=1)
+    habitos: tuple[HabitoFixo, ...] = Field(min_length=1)
+    acompanhamento: Acompanhamento
 
 
 # ---------------------------------------------------------------- Carregamento

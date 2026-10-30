@@ -131,6 +131,9 @@ textos:
   cintura_medir_com_limiar: >-
     Medir e comparar com a medição inicial; referência: limiar de risco de {limiar} cm.
 
+  # ---------------------------------------------------------------- Treino (motor/treino.py, Fase 4C)
+  cardio_ritmo_continuo: Ritmo contínuo e confortável, sem alternar ritmos.
+
   # ---------------------------------------------------------------- Verificação (papel 4)
   plano_nao_verificado: >-
     Não foi possível preparar um plano que cumpra todas as regras de segurança da Vigoria.
@@ -170,6 +173,13 @@ rotulos:
     cardio_finalizador: Cardio finalizador
     retorno_calma: Retorno à calma
     esforco: "Esforço percebido: {min} a {max}, numa escala de 0 a 10."
+    forca_titulo: Circuito de força
+    cardio_duracao: "{min} a {max} min"
+    mobilidade_equilibrio: Mobilidade e equilíbrio
+    alternativa: "Alternativa: {nome}."
+    esforco_maximo: "Esforço percebido até {max}."
+    em_vez_de: "Em vez de: {nome}."
+    halteres: "Com halteres: {texto}"
     foco: Foco
     exercicio: Exercício
     series: Séries
@@ -190,6 +200,35 @@ rotulos:
     notas: Notas para si
     avisos: Avisos importantes
     gerado_por: "Plano gerado com {provedor} (prompt versão {versao})."
+  # Semana-tipo (motor/semana.py, Fase 4C): atividade e descrição de cada tipo de dia.
+  semana:
+    forca:
+      atividade: Força
+      descricao: Circuito de força da fase, com aquecimento, cardio finalizador e retorno à calma.
+    forca_equilibrio:
+      atividade: Força + equilíbrio
+      descricao: Circuito de força da fase e, no fim, os exercícios de equilíbrio.
+    cardio_mobilidade:
+      atividade: Cardio + mobilidade
+      descricao: Cardio de baixo impacto em ritmo confortável, seguido dos exercícios de mobilidade.
+    cardio_leve_mobilidade:
+      atividade: Cardio leve + mobilidade
+      descricao: Cardio mais calmo do que no outro dia, seguido dos exercícios de mobilidade.
+    cardio:
+      atividade: Cardio
+      descricao: Cardio de baixo impacto em ritmo confortável.
+    recuperacao_ativa:
+      atividade: Recuperação ativa
+      descricao: Passeio calmo e mobilidade suave.
+    caminhada_leve:
+      atividade: Caminhada leve (opcional)
+      descricao: Dia sem sessão. Uma caminhada leve, se apetecer.
+    caminhada_diaria:
+      atividade: Caminhada diária
+      descricao: Dia sem sessão. Uma caminhada para completar a atividade da semana.
+    descanso:
+      atividade: Descanso
+      descricao: Dia de descanso.
   dias:
     segunda: Segunda-feira
     terca: Terça-feira
@@ -285,3 +324,4 @@ ortografia_aceites:
   - aeróbias
   - anaeróbio
   - anaeróbia
+  - tónus
