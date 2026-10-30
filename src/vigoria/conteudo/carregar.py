@@ -155,12 +155,20 @@ class ListaNegra(_Conteudo):
     ideias: tuple[str, ...] = ()  # para a revisão crítica pela LLM
 
 
+class Estilo(_Conteudo):
+    """Correções de estilo feitas pelo motor (motor/voz.py), sem chamar a LLM."""
+
+    correcoes: dict[str, str] = {}  # de → para
+    sem_correcao: tuple[str, ...] = ()  # só aviso no progresso
+
+
 class Avisos(_Conteudo):
     obrigatorios: tuple[str, ...] = Field(min_length=1)
     textos: dict[str, str]
     rotulos: Rotulos
     lista_negra: ListaNegra
     brasileirismos: tuple[str, ...] = Field(min_length=1)
+    estilo: Estilo = Estilo()
     ortografia_aceites: tuple[str, ...] = ()
 
     @model_validator(mode="after")

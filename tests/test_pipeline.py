@@ -9,6 +9,7 @@ import pytest
 from pydantic import BaseModel
 
 from vigoria.llm.base import ErroLLM, RespostaTeste
+from vigoria.llm.escolha import ProvedorComReserva
 from vigoria.modelos.plano import PlanoGerado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor import cli
@@ -96,7 +97,7 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
     assert f"- {CINCO_KG}" in segundo
     assert "{motivos}" not in segundo
     plano = resultado.plano  # type: ignore[attr-defined]
-    assert plano.versao_prompt == f"4 (correção {carregar_prompt_correcao().versao})"
+    assert plano.versao_prompt == f"5 (correção {carregar_prompt_correcao().versao})"
     assert progresso[0] == (
         "verificação: 2 falha(s) (numero_no_texto: 1, lista_negra: 1); uma regeneração com os "
         "motivos"
@@ -106,10 +107,10 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
 
 def test_falha_duas_vezes_da_erro_claro() -> None:
     with pytest.raises(ErroVerificacao) as erro:
-        _correr(_ma(), _ma("Registe no celular."))
+        _correr(_ma(), _ma("Garantimos resultados."))
     assert str(erro.value) == textos.PLANO_NAO_VERIFICADO
     assert "Não foi possível preparar um plano" in str(erro.value)
-    assert "O texto tem o brasileirismo «celular»: use português europeu." in erro.value.motivos
+    assert any("«garantimos»" in m for m in erro.value.motivos)
     assert isinstance(erro.value, ErroGeracao)
 
 
@@ -167,7 +168,7 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 4)." in md
+    assert "Plano gerado com falso (prompt versão 5)." in md
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:
@@ -226,3 +227,77 @@ def test_falha_do_motor_nao_regenera(monkeypatch: pytest.MonkeyPatch) -> None:
         gerar_plano_verificado(_q(), provedor, lambda _: None)
     assert erro.value.motivos == ("Erro.",)
     assert len(provedor.pedidos) == 1
+
+
+# ---------------------------------------------------------------- Reserva na verificação
+
+
+def _com_reserva(
+    principal: _Sequencia, reserva: _Sequencia
+) -> tuple[ProvedorComReserva, list[str]]:
+    progresso: list[str] = []
+    return ProvedorComReserva(principal, reserva, lambda _: None), progresso
+
+
+def test_terceira_chamada_vai_para_a_reserva() -> None:
+    principal, reserva = _Sequencia(_ma(), _ma()), _Sequencia(BOA)
+    reserva.nome = "groq"
+    provedor, progresso = _com_reserva(principal, reserva)
+    resultado = gerar_plano_verificado(_q(), provedor, progresso.append)
+    assert resultado.chamadas == 3
+    assert resultado.reserva_na_verificacao
+    assert resultado.plano.provedor == "groq"
+    assert (len(principal.pedidos), len(reserva.pedidos)) == (2, 1)
+    assert "# Correção pedida" in reserva.pedidos[0]  # leva os motivos da 2.ª verificação
+    assert "terceira chamada para a reserva groq" in progresso[1]
+    assert progresso[2] == "verificação: aprovado na reserva"
+
+
+def test_reserva_tambem_falha_e_recusa() -> None:
+    principal, reserva = _Sequencia(_ma(), _ma()), _Sequencia(_ma())
+    provedor, _ = _com_reserva(principal, reserva)
+    with pytest.raises(ErroVerificacao):
+        gerar_plano_verificado(_q(), provedor, lambda _: None)
+    assert (len(principal.pedidos), len(reserva.pedidos)) == (2, 1)  # 3 chamadas no total
+
+
+def test_sem_reserva_recusa_depois_de_2_chamadas() -> None:
+    principal = _Sequencia(_ma(), _ma(), BOA)
+    provedor = ProvedorComReserva(principal, None, lambda _: None)
+    with pytest.raises(ErroVerificacao):
+        gerar_plano_verificado(_q(), provedor, lambda _: None)
+    assert len(principal.pedidos) == 2
+
+
+def test_reserva_nao_e_usada_se_a_regeneracao_passar() -> None:
+    principal, reserva = _Sequencia(_ma(), BOA), _Sequencia(BOA)
+    provedor, _ = _com_reserva(principal, reserva)
+    resultado = gerar_plano_verificado(_q(), provedor, lambda _: None)
+    assert resultado.chamadas == 2 and not resultado.reserva_na_verificacao
+    assert reserva.pedidos == []
+
+
+# ---------------------------------------------------------------- Estilo no pipeline
+
+
+def test_estilo_corrigido_sem_chamar_a_llm(tmp_path: Path) -> None:
+    dados = json.loads(BOA)
+    dados["resumo"] += " Vai garantir a regularidade, veja no celular. Recuperação total."
+    resposta = json.dumps(dados, ensure_ascii=False)
+    resultado, provedor, progresso = _correr(resposta)
+    assert resultado.chamadas == 1  # type: ignore[attr-defined]
+    plano = resultado.plano  # type: ignore[attr-defined]
+    assert "assegurar a regularidade, veja no telemóvel" in plano.resumo
+    assert resultado.correcoes_estilo == (  # type: ignore[attr-defined]
+        "garantir → assegurar",
+        "celular → telemóvel",
+    )
+    assert resultado.avisos_estilo == ("total",)  # type: ignore[attr-defined]
+    assert progresso[-1] == (
+        "estilo: 2 correção(ões) automática(s); 1 aviso(s) sem correção (não bloqueiam)"
+    )
+    assert "celular" not in "\n".join(progresso)  # só metadados
+    codigo, saida = _cli_plano(tmp_path, resposta)
+    assert codigo == 0
+    assert "Estilo corrigido pelo motor: garantir → assegurar; celular → telemóvel" in saida
+    assert "Estilo sem correção conhecida (só aviso): total" in saida

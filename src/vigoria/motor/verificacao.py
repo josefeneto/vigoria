@@ -6,9 +6,12 @@ test_semana.py). Aqui ficam dois grupos:
 - integridade do que o código monta (avisos obrigatórios, exercícios permitidos e de nível
   base, números iguais aos da Estrategia e dentro das regras). Uma falha aqui é um erro do
   código: o pipeline não regenera (TIPOS_DO_MOTOR);
-- texto da LLM: contagens pedidas, valores de peso, proteína, hidratação ou calorias (só o
-  peso dos halteres), outros números com unidade que não venham dos dados, lista negra,
-  promessas absolutas e brasileirismos. Uma falha aqui leva a uma regeneração.
+- segurança do texto da LLM (decisão de 30/10/2026): contagens pedidas, valores de peso,
+  proteína, hidratação ou calorias (só o peso dos halteres), outros números com unidade que
+  não venham dos dados, lista negra, promessas de resultados ou de segurança e o Tai Chi
+  sem a pessoa o praticar (REGRAS §3). Uma falha aqui leva a uma regeneração.
+O estilo (brasileirismos, grafia anterior ao AO90, «garantir») é corrigido em voz.py e
+não bloqueia.
 
 Os motivos são técnicos (ids, termos, valores) e nunca citam respostas de saúde: seguem
 no pedido de regeneração e aparecem na linha de comando.
@@ -30,10 +33,9 @@ from vigoria.conteudo.carregar import (
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
-from vigoria.modelos.questionario import Questionario
+from vigoria.modelos.questionario import Preferencia, Questionario
 from vigoria.motor.selecao import selecionar_exercicios
 from vigoria.motor.voz import (
-    detetar_brasileirismos,
     encontrar_termos,
     textos_da_llm,
     textos_obrigatorios,
@@ -89,10 +91,11 @@ class TipoFalha(StrEnum):
     NUMERO_NO_TEXTO = "numero_no_texto"
     LISTA_NEGRA = "lista_negra"
     PROMESSA = "promessa"
-    BRASILEIRISMO = "brasileirismo"
+    TAI_CHI = "tai_chi"
 
 
 # Falhas do que o código monta: não se corrigem a regenerar o texto da LLM.
+_TAI_CHI = re.compile(r"(?<!\w)tai[\s-]?chi(?!\w)", re.IGNORECASE)
 TIPOS_DO_MOTOR = frozenset({TipoFalha.AVISO_EM_FALTA, TipoFalha.EXERCICIO, TipoFalha.NUMEROS})
 PRIORIDADES_ALIMENTARES = 4  # uma por fase
 MAX_NOTAS = 3
@@ -330,15 +333,16 @@ def _texto(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
         falhas.append(
             Falha(
                 tipo=TipoFalha.PROMESSA,
-                motivo=f"O texto tem a promessa absoluta «{termo}»: não prometa resultados nem "
-                "segurança total; use linguagem prudente.",
+                motivo=f"O texto tem a promessa «{termo}»: não prometa resultados nem "
+                "segurança; use linguagem prudente.",
             )
         )
-    for termo in detetar_brasileirismos(plano):
+    if _TAI_CHI.search(tudo) and Preferencia.TAI_CHI not in q.preferencias:
         falhas.append(
             Falha(
-                tipo=TipoFalha.BRASILEIRISMO,
-                motivo=f"O texto tem o brasileirismo «{termo}»: use português europeu.",
+                tipo=TipoFalha.TAI_CHI,
+                motivo="O texto menciona o Tai Chi, que não está no programa: só pode ser "
+                "referido se a pessoa já o praticar (indicado nas preferências).",
             )
         )
     return falhas

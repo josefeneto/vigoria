@@ -17,7 +17,7 @@ from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import montar_plano
 from vigoria.motor.ortografia import palavras_desconhecidas
 from vigoria.motor.verificacao import TipoFalha, pesos_halteres_permitidos, verificar
-from vigoria.motor.voz import inserir_avisos
+from vigoria.motor.voz import inserir_avisos, rever_estilo
 
 RAIZ = Path(__file__).parent.parent
 RESPOSTA = json.loads(
@@ -140,39 +140,103 @@ def test_remada_com_5_kg_chumba_com_halteres_de_2_kg() -> None:
 @pytest.mark.parametrize(
     ("texto", "termo"),
     [
-        ("Vai garantir resultados.", "garantir"),
-        ("Garantindo o sucesso.", "garantindo"),
-        ("Recuperação total ao domingo.", "total"),
-        ("Fica totalmente seguro.", "totalmente"),
-        ("Executa perfeitamente.", "perfeitamente"),
-        ("Com segurança absoluta.", "absoluta"),
-        ("Um plano rigoroso.", "rigoroso"),
+        ("Garantimos resultados.", "garantimos"),
+        ("Tem resultados garantidos.", "resultados garantidos"),
+        ("Vai perder peso depressa.", "vai perder"),
         ("Exercícios sem risco.", "sem risco"),
         ("É risco zero.", "risco zero"),
+        ("Sucesso a 100 %.", "100 %"),
+        ("É totalmente seguro.", "totalmente seguro"),
     ],
 )
-def test_promessas_absolutas_chumbam(texto: str, termo: str) -> None:
-    (falha,) = _falhas(_com_texto(texto))
-    assert falha[0] == TipoFalha.PROMESSA.value
-    assert f"«{termo}»" in falha[1]
+def test_promessas_de_resultados_ou_seguranca_bloqueiam(texto: str, termo: str) -> None:
+    falhas = _falhas(_com_texto(texto))
+    promessas = [m for t, m in falhas if t == TipoFalha.PROMESSA.value]
+    assert any(f"«{termo}»" in m for m in promessas), falhas
 
 
 def test_palavras_parecidas_nao_sao_promessas() -> None:
     assert _falhas(_com_texto("A totalidade do treino é feita em casa.")) == []
 
 
-def test_aerobico_e_brasileirismo() -> None:
-    falhas = _falhas(_com_texto("Exercício aeróbico ligeiro."))
-    assert falhas == [
-        ("brasileirismo", "O texto tem o brasileirismo «aeróbico»: use português europeu.")
-    ]
-    assert _falhas(_com_texto("Exercício aeróbio ligeiro.")) == []
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "Vai garantir a regularidade.",
+        "Recuperação total ao domingo.",
+        "Executa perfeitamente.",
+        "Um plano rigoroso.",
+        "Exercício aeróbico ligeiro.",
+        "A acção conta.",
+    ],
+)
+def test_estilo_nao_bloqueia(texto: str) -> None:
+    assert _falhas(_com_texto(texto)) == []
+
+
+@pytest.mark.parametrize(
+    ("texto", "corrigido"),
+    [
+        ("Vai garantir a regularidade.", "Vai assegurar a regularidade."),
+        ("Garanta a técnica.", "Assegure a técnica."),
+        ("Isto garante energia.", "Isto assegura energia."),
+        ("Garantindo o descanso.", "Assegurando o descanso."),
+        ("Veja na tela do celular.", "Veja no ecrã do telemóvel."),
+        ("Vá à academia com o time.", "Vá ao ginásio com a equipa."),
+        ("Exercício aeróbico.", "Exercício aeróbio."),
+        ("A percepção da acção é óptima.", "A perceção da ação é ótima."),
+        ("O objectivo actual.", "O objetivo atual."),
+    ],
+)
+def test_estilo_corrigido_pelo_motor(texto: str, corrigido: str) -> None:
+    revisao = rever_estilo(_plano(_com_texto(texto)))
+    assert revisao.plano.resumo.endswith(corrigido)
+    assert revisao.correcoes
+
+
+def test_estilo_corrige_todos_os_campos_da_llm() -> None:
+    resposta = _resposta()
+    resposta["marcos_forca"]["semana_4"] = "Garantir a técnica."
+    resposta["ajustes_refeicoes"][0]["sugestao"] = "Ao café da manhã, fruta."
+    resposta["bebidas_e_alcool"] = "Água como bebida, sem registro."
+    resposta["prioridades_alimentares"][0] = "Fase 1: a acção."
+    resposta["notas_personalizadas"][0] = "Use o celular."
+    plano = rever_estilo(_plano(resposta)).plano
+    assert plano.marcos[0].forca_resistencia == "Assegurar a técnica."
+    assert plano.alimentacao.ajustes_refeicoes[0].sugestao == "Ao pequeno-almoço, fruta."
+    assert plano.alimentacao.bebidas_e_alcool == "Água como bebida, sem registo."
+    assert plano.alimentacao.prioridades_por_fase[0] == "Fase 1: a ação."
+    assert plano.notas_personalizadas[0] == "Use o telemóvel."
+
+
+def test_estilo_sem_correcao_fica_como_aviso() -> None:
+    revisao = rever_estilo(_plano(_com_texto("Recuperação total, execução perfeitamente lenta.")))
+    assert revisao.avisos == ("total", "perfeitamente")
+    assert revisao.plano.resumo.endswith("Recuperação total, execução perfeitamente lenta.")
 
 
 def test_promessas_nos_outros_campos_da_llm() -> None:
     resposta = _resposta()
-    resposta["prioridades_alimentares"][0] = "Fase 1: garantir refeições regulares."
-    assert [t for t, _ in _falhas(resposta)] == ["promessa"]
+    resposta["prioridades_alimentares"][0] = "Fase 1: resultados garantidos."
+    assert "promessa" in [t for t, _ in _falhas(resposta)]
+
+
+# ---------------------------------------------------------------- Tai Chi (REGRAS §3)
+
+
+def test_tai_chi_so_se_a_pessoa_o_pratica() -> None:
+    texto = "Pode manter o seu Tai Chi aos sábados."
+    assert _falhas(_com_texto(texto)) == []  # a persona tem «tai_chi» nas preferências
+    sem = _q(preferencias=["caminhada", "forca"])
+    falhas = _falhas(_com_texto(texto), sem)
+    assert falhas == [
+        (
+            "tai_chi",
+            "O texto menciona o Tai Chi, que não está no programa: só pode ser referido se a "
+            "pessoa já o praticar (indicado nas preferências).",
+        )
+    ]
+    assert [t for t, _ in _falhas(_com_texto("Faça tai-chi."), sem)] == ["tai_chi"]
 
 
 # ---------------------------------------------------------------- Ortografia (só aviso)

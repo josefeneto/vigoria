@@ -87,7 +87,7 @@ def test_deteta_falhas_meses_e_ortografia() -> None:
     plano = aplicar_voz(gerar_plano(q, e, _Falso("mistral", resposta)), e)
     a = avaliar_plano(plano, e, q, None)
     assert a.mencoes_meses == 1
-    assert set(a.falhas) == {"lista_negra", "brasileirismo"}
+    assert set(a.falhas) == {"lista_negra"}  # «celular» foi corrigido pela voz
     assert a.palavras_desconhecidas == ("durquetura",)
 
 

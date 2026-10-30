@@ -260,35 +260,31 @@ lista_negra:
     - termogénico
     - seca barriga
     - secante
-  # Promessas absolutas (decisão de 30/10/2026): procuradas como os termos; motivo próprio.
+  # Promessas de resultados ou de segurança (decisão de 30/10/2026): procuradas como os
+  # termos; bloqueiam e levam a regenerar. As palavras absolutas sem promessa («total»,
+  # «perfeitamente»...) passaram a estilo (só aviso) e «garantir» é corrigido (estilo).
   promessas:
-    - garantir
-    - garante
-    - garantem
+    - garantimos
     - garantido
     - garantida
     - garantidos
     - garantidas
-    - garantindo
-    - total
-    - totais
-    - totalmente
-    - perfeitamente
-    - perfeito
-    - perfeita
-    - absoluto
-    - absoluta
-    - absolutos
-    - absolutas
-    - absolutamente
-    - rigoroso
-    - rigorosa
-    - rigorosos
-    - rigorosas
+    - resultados garantidos
+    - vai perder
+    - vai emagrecer
+    - irá perder
+    - irá emagrecer
     - sem risco
     - sem riscos
     - risco zero
-    - 100 % seguro
+    - 100 %
+    - 100%
+    - totalmente seguro
+    - totalmente segura
+    - completamente seguro
+    - completamente segura
+    - absolutamente seguro
+    - absolutamente segura
   ideias:
     - jejum prolongado sem acompanhamento
     - dietas com menos de 1200 kcal
@@ -314,6 +310,112 @@ brasileirismos:
   - aeróbica
   - aeróbicos
   - aeróbicas
+
+# Estilo (motor/voz.py, decisão de 30/10/2026): corrigido pelo motor, sem chamar a LLM.
+# `correcoes`: de → para, como palavra ou expressão inteira, sem distinguir maiúsculas
+# (a maiúscula inicial mantém-se); as expressões mais longas aplicam-se primeiro, para
+# acertar o artigo quando o género muda («a tela» → «o ecrã»).
+# `sem_correcao`: só ficam registadas no progresso (não bloqueiam).
+estilo:
+  correcoes:
+    # Promessas suaves: «garantir» → «assegurar».
+    garantir: assegurar
+    garanta: assegure
+    garantam: assegurem
+    garante: assegura
+    garantem: asseguram
+    garantindo: assegurando
+    # Brasileirismos (lista acima) com alternativa conhecida.
+    a tela: o ecrã
+    na tela: no ecrã
+    da tela: do ecrã
+    pela tela: pelo ecrã
+    uma tela: um ecrã
+    tela: ecrã
+    usuário: utilizador
+    usuários: utilizadores
+    celular: telemóvel
+    celulares: telemóveis
+    café da manhã: pequeno-almoço
+    a academia: o ginásio
+    na academia: no ginásio
+    da academia: do ginásio
+    à academia: ao ginásio
+    academia: ginásio
+    arquivo: ficheiro
+    arquivos: ficheiros
+    salvar: guardar
+    baixar o ficheiro: descarregar o ficheiro
+    baixar a app: descarregar a app
+    o time: a equipa
+    no time: na equipa
+    do time: da equipa
+    ao time: à equipa
+    time: equipa
+    registro: registo
+    registros: registos
+    aeróbico: aeróbio
+    aeróbica: aeróbia
+    aeróbicos: aeróbios
+    aeróbicas: aeróbias
+    # Grafia anterior ao AO90.
+    acção: ação
+    acções: ações
+    actividade: atividade
+    actividades: atividades
+    activo: ativo
+    activa: ativa
+    activos: ativos
+    activas: ativas
+    actual: atual
+    actuais: atuais
+    actualmente: atualmente
+    óptimo: ótimo
+    óptima: ótima
+    objectivo: objetivo
+    objectivos: objetivos
+    direcção: direção
+    correcção: correção
+    protecção: proteção
+    selecção: seleção
+    colecção: coleção
+    percepção: perceção
+    recepção: receção
+    excepção: exceção
+    excepto: exceto
+    exacto: exato
+    exacta: exata
+    exactamente: exatamente
+    efectivo: efetivo
+    efectiva: efetiva
+    efectuar: efetuar
+    projecto: projeto
+    projectos: projetos
+    adopção: adoção
+    adoptar: adotar
+    reacção: reação
+    reacções: reações
+    contracção: contração
+    contracções: contrações
+    tracção: tração
+    respectivo: respetivo
+    respectiva: respetiva
+  sem_correcao:
+    - total
+    - totais
+    - totalmente
+    - perfeito
+    - perfeita
+    - perfeitamente
+    - absoluto
+    - absoluta
+    - absolutos
+    - absolutas
+    - absolutamente
+    - rigoroso
+    - rigorosa
+    - rigorosos
+    - rigorosas
 
 # Ortografia (motor/ortografia.py, decisão de 30/10/2026): palavras corretas que o
 # dicionário pt_PT não conhece. O vocabulário dos YAML editoriais já é aceite.

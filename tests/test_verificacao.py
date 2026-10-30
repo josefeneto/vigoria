@@ -16,7 +16,12 @@ from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import montar_plano
 from vigoria.motor.verificacao import TIPOS_DO_MOTOR, TipoFalha, verificar
-from vigoria.motor.voz import detetar_brasileirismos, inserir_avisos, textos_obrigatorios
+from vigoria.motor.voz import (
+    detetar_brasileirismos,
+    inserir_avisos,
+    rever_estilo,
+    textos_obrigatorios,
+)
 from vigoria.regras import textos
 
 RAIZ = Path(__file__).parent.parent
@@ -160,11 +165,12 @@ def test_chumba_termo_da_lista_negra() -> None:
     assert falhas == [(TipoFalha.LISTA_NEGRA, "O texto tem o termo proibido «detox».")]
 
 
-def test_chumba_brasileirismo() -> None:
-    falhas = _falhas(_plano(_com_resumo("Registe tudo no celular.")))
-    assert falhas == [
-        (TipoFalha.BRASILEIRISMO, "O texto tem o brasileirismo «celular»: use português europeu.")
-    ]
+def test_brasileirismo_nao_bloqueia_e_e_corrigido() -> None:
+    plano = _plano(_com_resumo("Registe tudo no celular."))
+    assert _falhas(plano) == []  # estilo: não bloqueia
+    revisao = rever_estilo(plano)
+    assert "Registe tudo no telemóvel." in revisao.plano.resumo
+    assert revisao.correcoes == ("celular → telemóvel",)
 
 
 def test_motivos_sem_dados_de_saude() -> None:
