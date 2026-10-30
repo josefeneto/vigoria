@@ -2,6 +2,8 @@
 
 Números com unidade só dos dados (também por extenso), cargas dos halteres, promessas
 absolutas, «aeróbico», contagens do novo PlanoGerado (Fase 4C) e ortografia (só aviso).
+Revisão do prompt v5: alternância de ritmos com «sem intervalos», promessas no futuro,
+«protege» (só aviso) e Tai Chi na ortografia.
 A semana-tipo e a prescrição passaram a ser do motor: test_semana.py e test_treino.py.
 """
 
@@ -16,7 +18,13 @@ from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import montar_plano
 from vigoria.motor.ortografia import palavras_desconhecidas
-from vigoria.motor.verificacao import TipoFalha, pesos_halteres_permitidos, verificar
+from vigoria.motor.verificacao import (
+    TIPOS_DO_MOTOR,
+    TipoFalha,
+    mencoes_de_intervalos,
+    pesos_halteres_permitidos,
+    verificar,
+)
 from vigoria.motor.voz import inserir_avisos, rever_estilo
 
 RAIZ = Path(__file__).parent.parent
@@ -25,8 +33,8 @@ RESPOSTA = json.loads(
 )
 
 
-def _q(**alteracoes: Any) -> Questionario:
-    dados = json.loads((RAIZ / "exemplos" / "persona_teste.json").read_text(encoding="utf-8"))
+def _q(ficheiro: str = "persona_teste.json", **alteracoes: Any) -> Questionario:
+    dados = json.loads((RAIZ / "exemplos" / ficheiro).read_text(encoding="utf-8"))
     return Questionario.model_validate(dados | alteracoes)
 
 
@@ -147,6 +155,14 @@ def test_remada_com_5_kg_chumba_com_halteres_de_2_kg() -> None:
         ("É risco zero.", "risco zero"),
         ("Sucesso a 100 %.", "100 %"),
         ("É totalmente seguro.", "totalmente seguro"),
+        ("Alcançará o seu objetivo.", "alcançará"),
+        ("Vai conseguir subir escadas.", "vai conseguir"),
+        ("Irá perder cintura.", "irá perder"),
+        ("Vai notar mais energia.", "vai notar"),
+        ("Verá resultados cedo.", "verá resultados"),
+        ("São exercícios seguros.", "exercícios seguros"),
+        ("Conseguirá fazer o circuito.", "conseguirá"),
+        ("Notará a diferença.", "notará"),
     ],
 )
 def test_promessas_de_resultados_ou_seguranca_bloqueiam(texto: str, termo: str) -> None:
@@ -157,6 +173,8 @@ def test_promessas_de_resultados_ou_seguranca_bloqueiam(texto: str, termo: str) 
 
 def test_palavras_parecidas_nao_sao_promessas() -> None:
     assert _falhas(_com_texto("A totalidade do treino é feita em casa.")) == []
+    # Os marcos de força no presente (prompt v6) não são promessas.
+    assert _falhas(_com_texto("Consegue fazer o circuito completo sem dor.")) == []
 
 
 @pytest.mark.parametrize(
@@ -215,6 +233,12 @@ def test_estilo_sem_correcao_fica_como_aviso() -> None:
     assert revisao.plano.resumo.endswith("Recuperação total, execução perfeitamente lenta.")
 
 
+def test_protege_fica_como_aviso_sem_bloquear() -> None:
+    texto = "O plano protege os joelhos e ajuda a proteger a tensão."
+    assert _falhas(_com_texto(texto)) == []
+    assert rever_estilo(_plano(_com_texto(texto))).avisos == ("protege", "proteger")
+
+
 def test_promessas_nos_outros_campos_da_llm() -> None:
     resposta = _resposta()
     resposta["prioridades_alimentares"][0] = "Fase 1: resultados garantidos."
@@ -239,6 +263,71 @@ def test_tai_chi_so_se_a_pessoa_o_pratica() -> None:
     assert [t for t, _ in _falhas(_com_texto("Faça tai-chi."), sem)] == ["tai_chi"]
 
 
+# ---------------------------------------------------------------- Sem intervalos (30/10/2026)
+
+
+def _imc36() -> Questionario:
+    return _q("persona_imc36.json")
+
+
+def test_imc36_plano_de_referencia_passa_sem_intervalos() -> None:
+    q = _imc36()
+    assert gerar_estrategia(q).restricoes.sem_intervalos
+    assert _falhas(_resposta(), q) == []
+
+
+@pytest.mark.parametrize(
+    ("texto", "termo"),
+    [
+        ("Na marcha, alternando 30 s mais vivos com 30 s calmos.", "alternando 30 s"),
+        ("Faça 30 s mais vivos.", "30 s mais vivos"),
+        ("Caminhe em ritmo vivo.", "ritmo vivo"),
+        ("Um treino intervalado leve.", "intervalado"),
+        ("Pode alternar ritmos na passadeira.", "alternar ritmos"),
+        ("Alternando 1 minuto rápido e 1 minuto lento.", "Alternando 1 minuto"),
+    ],
+)
+def test_alternancia_de_ritmos_bloqueia_com_sem_intervalos(texto: str, termo: str) -> None:
+    falhas = _falhas(_com_texto(texto), _imc36())
+    motivos = [m for t, m in falhas if t == TipoFalha.INTERVALOS.value]
+    assert any(f"«{termo}»" in m for m in motivos), falhas
+    assert TipoFalha.INTERVALOS not in TIPOS_DO_MOTOR  # leva a regenerar
+    # Sem a restrição, a mesma frase não é falha de intervalos.
+    assert TipoFalha.INTERVALOS.value not in [t for t, _ in _falhas(_com_texto(texto))]
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "Ritmo contínuo e confortável, sem alternar ritmos.",
+        "Suba o degrau alternando a perna.",
+        "Toque alternadamente no ombro oposto.",
+        "Sem alternância de ritmos.",
+    ],
+)
+def test_ritmo_continuo_e_alternar_pernas_passam(texto: str) -> None:
+    assert mencoes_de_intervalos(texto) == ()
+    assert _falhas(_com_texto(texto), _imc36()) == []
+
+
+def test_alternancia_no_texto_do_motor_e_erro_do_codigo() -> None:
+    q = _imc36()
+    e = gerar_estrategia(q)
+    plano = _plano(_resposta(), q)
+    v2 = plano.treino.estrutura_sessao.model_copy(
+        update={
+            "cardio_finalizador": "Marcha no lugar, alternando 30 s mais vivos com 30 s calmos."
+        }
+    )
+    plano = plano.model_copy(
+        update={"treino": plano.treino.model_copy(update={"estrutura_sessao": v2})}
+    )
+    falhas = verificar(plano, e, q)
+    assert {f.tipo for f in falhas} == {TipoFalha.INTERVALOS_NO_TREINO}
+    assert TipoFalha.INTERVALOS_NO_TREINO in TIPOS_DO_MOTOR
+    assert falhas[0].motivo.startswith("Estrutura da sessão: o texto do treino tem «")
+
+
 # ---------------------------------------------------------------- Ortografia (só aviso)
 
 
@@ -250,6 +339,12 @@ def test_ortografia_apanha_palavra_inventada() -> None:
 def test_ortografia_aceita_referencia_e_vocabulario_do_programa() -> None:
     assert palavras_desconhecidas(_plano(_resposta())) == ()
     texto = "Exercício aeróbio; bird-dog; ultraprocessados; Pequeno-almoço; unipodal; tónus."
+    assert palavras_desconhecidas(_plano(_com_texto(texto))) == ()
+
+
+def test_ortografia_aceita_tai_chi() -> None:
+    assert "tai_chi" in _q().preferencias  # a persona já pratica Tai Chi
+    texto = "Mantenha o seu Tai Chi; o tai-chi complementa o plano."
     assert palavras_desconhecidas(_plano(_com_texto(texto))) == ()
 
 

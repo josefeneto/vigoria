@@ -9,7 +9,10 @@ test_semana.py). Aqui ficam dois grupos:
 - segurança do texto da LLM (decisão de 30/10/2026): contagens pedidas, valores de peso,
   proteína, hidratação ou calorias (só o peso dos halteres), outros números com unidade que
   não venham dos dados, lista negra, promessas de resultados ou de segurança e o Tai Chi
-  sem a pessoa o praticar (REGRAS §3). Uma falha aqui leva a uma regeneração.
+  sem a pessoa o praticar (REGRAS §3) e, com «sem intervalos», a alternância de
+  ritmos. Uma falha aqui leva a uma regeneração.
+A alternância de ritmos no texto do motor (estrutura da sessão, exercícios) é também
+verificada, como erro do código.
 O estilo (brasileirismos, grafia anterior ao AO90, «garantir») é corrigido em voz.py e
 não bloqueia.
 
@@ -92,11 +95,20 @@ class TipoFalha(StrEnum):
     LISTA_NEGRA = "lista_negra"
     PROMESSA = "promessa"
     TAI_CHI = "tai_chi"
+    INTERVALOS = "intervalos"
+    INTERVALOS_NO_TREINO = "intervalos_no_treino"
 
 
 # Falhas do que o código monta: não se corrigem a regenerar o texto da LLM.
 _TAI_CHI = re.compile(r"(?<!\w)tai[\s-]?chi(?!\w)", re.IGNORECASE)
-TIPOS_DO_MOTOR = frozenset({TipoFalha.AVISO_EM_FALTA, TipoFalha.EXERCICIO, TipoFalha.NUMEROS})
+TIPOS_DO_MOTOR = frozenset(
+    {
+        TipoFalha.AVISO_EM_FALTA,
+        TipoFalha.EXERCICIO,
+        TipoFalha.NUMEROS,
+        TipoFalha.INTERVALOS_NO_TREINO,
+    }
+)
 PRIORIDADES_ALIMENTARES = 4  # uma por fase
 MAX_NOTAS = 3
 
@@ -114,6 +126,7 @@ def verificar(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
         *_avisos(plano),
         *_exercicios(plano, e),
         *_numeros(plano, e, q),
+        *_intervalos_no_treino(plano, e),
         *_contagens(plano),
         *_texto(plano, e, q),
     ]
@@ -156,6 +169,47 @@ def _exercicios(plano: Plano, e: Estrategia) -> list[Falha]:
                 razao = "não está na lista de exercícios permitidos desta fase"
             falhas.append(Falha(tipo=TipoFalha.EXERCICIO, motivo=f"Fase {fase}: «{id_}» {razao}."))
     return falhas
+
+
+# ---------------------------------------------------------------- Intervalos
+
+_ALTERNANDO_TEMPO = re.compile(
+    r"(?<!\w)altern\w*\s+(?:\d+|um|uma|dois|duas|trinta)\s*(?:s|seg|segundos?|min|minutos?)(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def mencoes_de_intervalos(texto: str) -> tuple[str, ...]:
+    """Menções à alternância de ritmos (avisos.yaml), sem contar as negações."""
+    lista_negra = carregar_avisos().lista_negra
+    for excecao in lista_negra.intervalos_excecoes:
+        texto = re.sub(rf"(?<!\w){re.escape(excecao)}(?!\w)", " ", texto, flags=re.I)
+    tempos = tuple(m.group(0) for m in _ALTERNANDO_TEMPO.finditer(texto))
+    return tuple(dict.fromkeys((*tempos, *encontrar_termos(lista_negra.intervalos, texto))))
+
+
+def _intervalos_no_treino(plano: Plano, e: Estrategia) -> list[Falha]:
+    """Com «sem intervalos», o texto do treino montado pelo motor não alterna ritmos."""
+    if not e.restricoes.sem_intervalos:
+        return []
+    s = plano.treino.estrutura_sessao
+    textos = [
+        ("Estrutura da sessão", t)
+        for t in (s.aquecimento, s.bloco_principal, s.cardio_finalizador, s.retorno_calma)
+    ]
+    for f in plano.treino.fases:
+        cardio = (f.cardio_finalizador,) if f.cardio_finalizador else ()
+        for x in (*f.forca, *cardio, *f.mobilidade_equilibrio):
+            textos += [(f"Fase {f.numero}: «{x.id}»", t) for t in (x.descricao, *x.notas)]
+    return [
+        Falha(
+            tipo=TipoFalha.INTERVALOS_NO_TREINO,
+            motivo=f"{onde}: o texto do treino tem «{termo}» (alternância de ritmos), mas o "
+            "plano é sem intervalos.",
+        )
+        for onde, texto in textos
+        for termo in mencoes_de_intervalos(texto)
+    ]
 
 
 # ---------------------------------------------------------------- Números
@@ -337,6 +391,15 @@ def _texto(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
                 "segurança; use linguagem prudente.",
             )
         )
+    if e.restricoes.sem_intervalos:
+        for termo in mencoes_de_intervalos(tudo):
+            falhas.append(
+                Falha(
+                    tipo=TipoFalha.INTERVALOS,
+                    motivo=f"O texto tem «{termo}» (alternância de ritmos), mas o plano é "
+                    "sem intervalos: use só ritmo contínuo e confortável.",
+                )
+            )
     if _TAI_CHI.search(tudo) and Preferencia.TAI_CHI not in q.preferencias:
         falhas.append(
             Falha(

@@ -348,6 +348,10 @@ exercicios:
     descricao: >-
       Elevar os joelhos alternadamente em ritmo vivo, sem saltar, com apoio por perto se
       necessário.
+    # Com «sem intervalos» na Estrategia (decisão de 30/10/2026): sem «ritmo vivo».
+    descricao_sem_intervalos: >-
+      Elevar os joelhos alternadamente em ritmo confortável e estável, sem acelerar, sem
+      saltar, com apoio por perto se necessário.
     grupo: cardio
     fase_minima: 1
     impacto: baixo

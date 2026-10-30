@@ -3,6 +3,8 @@
 Para cada fase: as posições de força do programa, cada uma resolvida pela seleção
 (o próprio exercício ou a regressão permitida), o cardio finalizador, a mobilidade e o
 equilíbrio permitidos, o esforço percebido da fase e a estrutura da sessão.
+Com «sem intervalos» na Estrategia, o cardio finalizador da estrutura é a variante
+contínua e cada exercício usa `descricao_sem_intervalos`, se a tiver.
 
 Regras (REGRAS_DOMINIO §6.6, decisão de 30/10/2026):
 - um substituto por regressão mantém as séries e o descanso da posição, mas usa as
@@ -41,11 +43,12 @@ _KG_REPETIDO = re.compile(r"(\d+(?:,\d+)? kg) ou \1")
 def construir_treino(e: Estrategia, q: Questionario) -> Treino:
     programa = carregar_programa()
     s = programa.estrutura_sessao
+    continuo = e.restricoes.sem_intervalos
     return Treino(
         estrutura_sessao=EstruturaSessao(
             aquecimento=s.aquecimento,
             bloco_principal=s.bloco_principal,
-            cardio_finalizador=s.cardio_finalizador,
+            cardio_finalizador=s.cardio_finalizador_continuo if continuo else s.cardio_finalizador,
             retorno_calma=s.retorno_calma,
         ),
         fases=tuple(_fase(f, e, q) for f in programa.fases),
@@ -61,13 +64,14 @@ def _fase(fase: Fase, e: Estrategia, q: Questionario) -> TreinoFase:
         if id_ is None:
             continue  # nem o exercício nem uma regressão livre: a posição sai
         usados.add(id_)
-        forca.append(_exercicio_da_posicao(id_, posicao, fase, permitidos, usados, q))
+        forca.append(_exercicio_da_posicao(id_, posicao, fase, permitidos, usados, e, q))
 
     cardio = next(
         (c for c in CARDIO_FINALIZADOR if c in permitidos and c not in usados),
         None,
     )
-    notas_cardio = (textos.CARDIO_RITMO_CONTINUO,) if e.restricoes.sem_intervalos else ()
+    continuo = e.restricoes.sem_intervalos
+    notas_cardio = (textos.CARDIO_RITMO_CONTINUO,) if continuo else ()
     duracao = carregar_programa().estrutura_sessao.duracao_cardio_min
     return TreinoFase(
         numero=fase.numero,
@@ -75,10 +79,12 @@ def _fase(fase: Fase, e: Estrategia, q: Questionario) -> TreinoFase:
         foco=fase.foco_estrategico,
         esforco=(fase.esforco.min, fase.esforco.max),
         forca=tuple(forca),
-        cardio_finalizador=_exercicio(permitidos[cardio], q, notas_cardio) if cardio else None,
+        cardio_finalizador=(
+            _exercicio(permitidos[cardio], q, notas_cardio, continuo) if cardio else None
+        ),
         cardio_duracao_min=(duracao.min, duracao.max),
         mobilidade_equilibrio=tuple(
-            _exercicio(p, q)
+            _exercicio(p, q, sem_intervalos=continuo)
             for p in permitidos.values()
             if p.grupo in (Grupo.MOBILIDADE, Grupo.EQUILIBRIO)
         ),
@@ -108,6 +114,7 @@ def _exercicio_da_posicao(
     fase: Fase,
     permitidos: dict[str, ExercicioPermitido],
     usados: set[str],
+    e: Estrategia,
     q: Questionario,
 ) -> ExercicioPlano:
     rotulos = carregar_avisos().rotulos.plano
@@ -123,7 +130,7 @@ def _exercicio_da_posicao(
     )
     if alternativa is not None:
         notas.append(rotulos["alternativa"].format(nome=biblioteca[alternativa].nome))
-    base = _exercicio(permitidos[id_], q, tuple(notas))
+    base = _exercicio(permitidos[id_], q, tuple(notas), e.restricoes.sem_intervalos)
     substituto = id_ != posicao.id
     return base.model_copy(
         update={
@@ -157,7 +164,10 @@ def _sem_lado(repeticoes: str) -> str:
 
 
 def _exercicio(
-    p: ExercicioPermitido, q: Questionario, extra: tuple[str, ...] = ()
+    p: ExercicioPermitido,
+    q: Questionario,
+    extra: tuple[str, ...] = (),
+    sem_intervalos: bool = False,
 ) -> ExercicioPlano:
     ex = carregar_exercicios()[p.id]
     rotulos = carregar_avisos().rotulos.plano
@@ -170,7 +180,7 @@ def _exercicio(
     return ExercicioPlano(
         id=ex.id,
         nome=ex.nome,
-        descricao=ex.descricao,
+        descricao=(ex.descricao_sem_intervalos if sem_intervalos else None) or ex.descricao,
         notas=tuple(dict.fromkeys(notas)),
     )
 

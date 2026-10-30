@@ -192,3 +192,66 @@ def test_estrutura_da_sessao_do_programa() -> None:
         s.cardio_finalizador,
         s.retorno_calma,
     )
+
+
+# ---------------------------------------------------------------- Sem intervalos (30/10/2026)
+
+
+def _textos_do_treino(treino: Treino) -> list[str]:
+    s = treino.estrutura_sessao
+    textos_ = [s.aquecimento, s.bloco_principal, s.cardio_finalizador, s.retorno_calma]
+    for f in treino.fases:
+        cardio = (f.cardio_finalizador,) if f.cardio_finalizador else ()
+        for x in (*f.forca, *cardio, *f.mobilidade_equilibrio):
+            textos_ += [x.descricao, *x.notas]
+    return textos_
+
+
+def _marchas(treino: Treino) -> list[Any]:
+    return [
+        x
+        for f in treino.fases
+        for x in (*f.forca, *((f.cardio_finalizador,) if f.cardio_finalizador else ()))
+        if x.id == "marcha_rapida_lugar"
+    ]
+
+
+def test_imc36_sem_intervalos_cardio_continuo_e_marcha_estavel() -> None:
+    q = _q("persona_imc36.json")
+    e = gerar_estrategia(q)
+    assert e.restricoes.sem_intervalos
+    treino = construir_treino(e, q)
+    programa = carregar_programa()
+    assert treino.estrutura_sessao.cardio_finalizador == (
+        programa.estrutura_sessao.cardio_finalizador_continuo
+    )
+    tudo = "\n".join(_textos_do_treino(treino))
+    for proibido in ("30 s mais vivos", "alternando 30 s", "ritmo vivo"):
+        assert proibido not in tudo
+    marcha = carregar_exercicios()["marcha_rapida_lugar"]
+    assert marcha.descricao_sem_intervalos is not None
+    assert "ritmo confortável e estável, sem acelerar" in marcha.descricao_sem_intervalos
+    marchas = _marchas(treino)
+    assert marchas  # a fase 4 tem a marcha no circuito
+    assert all(x.descricao == marcha.descricao_sem_intervalos for x in marchas)
+    fase4 = _forca(treino, 4)["marcha_rapida_lugar"]
+    posicao = next(p for p in programa.fases[3].exercicios if p.id == "marcha_rapida_lugar")
+    assert (fase4.series, fase4.repeticoes, fase4.descanso_s) == (
+        posicao.series,
+        posicao.repeticoes,
+        (posicao.descanso_s.min, posicao.descanso_s.max),
+    )
+
+
+def test_sem_intervalos_vem_da_estrategia_nao_do_modo() -> None:
+    q = _q()
+    e = gerar_estrategia(q)
+    assert not e.restricoes.sem_intervalos
+    base = construir_treino(e, q)
+    assert "30 s mais vivos" in base.estrutura_sessao.cardio_finalizador  # texto do V2
+    restricoes = e.restricoes.model_copy(update={"sem_intervalos": True})
+    continuo = construir_treino(e.model_copy(update={"restricoes": restricoes}), q)
+    s = carregar_programa().estrutura_sessao
+    assert continuo.estrutura_sessao.cardio_finalizador == s.cardio_finalizador_continuo
+    marcha = carregar_exercicios()["marcha_rapida_lugar"]
+    assert all(x.descricao == marcha.descricao_sem_intervalos for x in _marchas(continuo))

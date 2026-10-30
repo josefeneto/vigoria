@@ -271,20 +271,65 @@ lista_negra:
     - garantidas
     - resultados garantidos
     - vai perder
-    - vai emagrecer
     - irá perder
+    - perderá
+    - vai emagrecer
     - irá emagrecer
+    - emagrecerá
+    # Promessas de resultado no futuro (decisão de 30/10/2026, revista no mesmo dia).
+    - alcançará
+    - vai alcançar
+    - irá alcançar
+    - vai conseguir
+    - irá conseguir
+    - conseguirá
+    - vai notar
+    - irá notar
+    - notará
+    - verá resultados
+    - vai ver resultados
+    - irá ver resultados
     - sem risco
     - sem riscos
     - risco zero
     - 100 %
     - 100%
+    - exercícios seguros
+    - exercício seguro
+    - plano seguro
     - totalmente seguro
     - totalmente segura
     - completamente seguro
     - completamente segura
     - absolutamente seguro
     - absolutamente segura
+  # Alternância de ritmos (decisão de 30/10/2026): só com «sem intervalos» na
+  # Estrategia. No texto da LLM leva a regenerar; no texto do motor é erro do código.
+  # Antes de procurar, retiram-se as negações de `intervalos_excecoes`. O código apanha
+  # também «alternando» seguido de um tempo («alternando 1 minuto»).
+  intervalos:
+    - 30 s mais vivos
+    - mais vivos com
+    - mais vivo com
+    - ritmo vivo
+    - ritmos vivos
+    - intervalado
+    - intervalada
+    - intervalados
+    - intervaladas
+    - treino por intervalos
+    - treino de intervalos
+    - trabalho por intervalos
+    - alternar ritmos
+    - alternar o ritmo
+    - alternando ritmos
+    - alterne ritmos
+    - alterne o ritmo
+    - alternância de ritmos
+  intervalos_excecoes:
+    - sem alternar ritmos
+    - sem alternar o ritmo
+    - sem alternância de ritmos
   ideias:
     - jejum prolongado sem acompanhamento
     - dietas com menos de 1200 kcal
@@ -416,6 +461,10 @@ estilo:
     - rigorosa
     - rigorosos
     - rigorosas
+    # O plano não «protege» uma condição de saúde: «tem em conta», «foi adaptado a».
+    - protege
+    - proteger
+    - protegendo
 
 # Ortografia (motor/ortografia.py, decisão de 30/10/2026): palavras corretas que o
 # dicionário pt_PT não conhece. O vocabulário dos YAML editoriais já é aceite.
@@ -427,3 +476,6 @@ ortografia_aceites:
   - anaeróbio
   - anaeróbia
   - tónus
+  # Tai Chi (REGRAS §3): o dicionário conhece «chi», mas não «tai».
+  - tai
+  - tai-chi

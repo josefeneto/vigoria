@@ -60,6 +60,7 @@ class Exercicio(_Conteudo):
     id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     nome: str
     descricao: str
+    descricao_sem_intervalos: str | None = None  # com «sem intervalos» na Estrategia
     grupo: Grupo
     fase_minima: int = Field(ge=1, le=4)
     equipamento: tuple[Equipamento, ...] = ()
@@ -119,6 +120,7 @@ class EstruturaSessao(_Conteudo):
     aquecimento: str
     bloco_principal: str
     cardio_finalizador: str
+    cardio_finalizador_continuo: str  # com «sem intervalos» na Estrategia
     duracao_cardio_min: Intervalo
     retorno_calma: str
 
@@ -152,6 +154,8 @@ class Rotulos(_Conteudo):
 class ListaNegra(_Conteudo):
     termos: tuple[str, ...] = Field(min_length=1)  # procurados à letra pelo código
     promessas: tuple[str, ...] = ()  # promessas absolutas, procuradas como os termos
+    intervalos: tuple[str, ...] = ()  # alternância de ritmos (com «sem intervalos»)
+    intervalos_excecoes: tuple[str, ...] = ()  # negações retiradas antes de procurar
     ideias: tuple[str, ...] = ()  # para a revisão crítica pela LLM
 
 

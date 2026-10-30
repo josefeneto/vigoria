@@ -18,6 +18,15 @@ estrutura_sessao:
     equipamento: marcha rápida no lugar, alternando 30 s mais vivos com 30 s calmos. Opcional
     com equipamento: 12 minutos de caminhada com inclinação leve na Passadeira ou ritmo
     contínuo na Elíptica.
+  # Variante contínua, usada no lugar da anterior quando a Estrategia tem «sem
+  # intervalos» (REGRAS §6.3 ponto 4, decisão de 30/10/2026).
+  # A CONFIRMAR (revisão editorial): não vem dos volumes.
+  cardio_finalizador_continuo: >-
+    Cardio finalizador opcional (10 a 15 min): Trabalho aeróbio de baixo impacto, sempre
+    a um ritmo contínuo e confortável, sem alternar ritmos. Padrão sem equipamento: marcha
+    no lugar a um ritmo estável, em que ainda consiga falar em frases curtas. Opcional com
+    equipamento: 12 minutos de caminhada a ritmo estável na passadeira, com inclinação
+    leve só se for confortável, ou ritmo contínuo na elíptica.
   # Duração do cardio finalizador em minutos (V2: «10 a 15 min»), usada por motor/treino.py.
   duracao_cardio_min: {min: 10, max: 15}
   retorno_calma: >-

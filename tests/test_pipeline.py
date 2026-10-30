@@ -97,7 +97,7 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
     assert f"- {CINCO_KG}" in segundo
     assert "{motivos}" not in segundo
     plano = resultado.plano  # type: ignore[attr-defined]
-    assert plano.versao_prompt == f"5 (correção {carregar_prompt_correcao().versao})"
+    assert plano.versao_prompt == f"6 (correção {carregar_prompt_correcao().versao})"
     assert progresso[0] == (
         "verificação: 2 falha(s) (numero_no_texto: 1, lista_negra: 1); uma regeneração com os "
         "motivos"
@@ -168,7 +168,7 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 5)." in md
+    assert "Plano gerado com falso (prompt versão 6)." in md
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:
