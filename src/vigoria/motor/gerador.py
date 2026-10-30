@@ -207,7 +207,7 @@ def _id_permitido(id_: str, permitidos: tuple[ExercicioPermitido, ...]) -> str |
     return None
 
 
-def _fases_para_pedido(
+def fases_para_pedido(
     permitidos: dict[int, tuple[ExercicioPermitido, ...]],
 ) -> list[dict[str, Any]]:
     """As 4 fases de fases.yaml, com os exercícios de referência já trocados pelos permitidos."""
@@ -265,7 +265,7 @@ def conteudo_pedido(q: Questionario, e: Estrategia) -> dict[str, Any]:
             f"fase_{fase}": [_permitido_na_fase(p) for p in lista]
             for fase, lista in permitidos.items()
         },
-        "fases": _fases_para_pedido(permitidos),
+        "fases": fases_para_pedido(permitidos),
         "estrutura_sessao": carregar_programa().estrutura_sessao.model_dump(mode="json"),
         "alimentacao": {
             "principios": alimentacao.principios.model_dump(mode="json"),

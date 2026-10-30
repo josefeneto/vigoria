@@ -45,12 +45,17 @@ def textos_da_llm(plano: Plano) -> list[str]:
     return list(_cadeias(escrito))
 
 
+# Valores fixos (enumerações e ids), não texto escrito: «terca», «pequeno_almoco», ids.
+_CAMPOS_NAO_TEXTO = frozenset({"dia", "refeicao", "exercicio_id"})
+
+
 def _cadeias(valor: Any) -> Iterator[str]:
     if isinstance(valor, str):
         yield valor
     elif isinstance(valor, dict):
-        for v in valor.values():
-            yield from _cadeias(v)
+        for chave, v in valor.items():
+            if chave not in _CAMPOS_NAO_TEXTO:
+                yield from _cadeias(v)
     elif isinstance(valor, list):
         for v in valor:
             yield from _cadeias(v)

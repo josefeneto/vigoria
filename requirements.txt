@@ -10,5 +10,6 @@ pyyaml==6.0.3
 plotly==7.1.0
 httpx==0.28.1
 tenacity==9.1.4
+spylls==0.1.7  # ortografia pt_PT (motor/ortografia.py), só Python
 phonenumbers==9.0.42
 babel==2.18.0

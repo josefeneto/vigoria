@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Dicionário Hunspell pt_PT: guardar tal como vem (sem conversão de fins de linha)
+src/vigoria/conteudo/dicionario/* -text

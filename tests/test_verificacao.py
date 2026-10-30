@@ -110,7 +110,7 @@ def test_chumba_peso_alvo_no_texto() -> None:
         (
             TipoFalha.NUMERO_NO_TEXTO,
             "O texto tem o valor «80 kg»: valores de peso, proteína, hidratação e calorias "
-            "vêm só da estratégia (o único peso permitido é o dos halteres, 2 kg).",
+            "vêm só da estratégia (pesos de halteres permitidos: 2 kg).",
         )
     ]
 

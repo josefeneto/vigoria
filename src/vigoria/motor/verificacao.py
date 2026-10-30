@@ -4,8 +4,11 @@ Verificações obrigatórias (.claude/rules/regras-e-motor.md e REGRAS_DOMINIO �
 avisos fixos presentes; exercícios da biblioteca, de nível base e permitidos para esta
 pessoa em cada fase (motor/selecao.py); números iguais aos da Estrategia e dentro dos
 limites (ritmo de perda de peso por idade, 0,5 kg de músculo por cada 4 semanas);
-texto da LLM sem números com unidades (só o peso dos halteres declarado), sem termos
-da lista negra e sem brasileirismos.
+semana-tipo dentro de dias_semana e minutos_dia; séries, repetições e descanso iguais
+aos do programa (fases.yaml); texto da LLM sem valores de peso, proteína, hidratação ou
+calorias (só o peso dos halteres: o menor entre o do programa e o declarado), sem outros
+números com unidade que não venham dos dados, sem termos da lista negra, sem promessas
+absolutas e sem brasileirismos.
 
 Os motivos são técnicos (ids, termos, valores) e nunca citam respostas de saúde: seguem
 no pedido de regeneração e aparecem na linha de comando.
@@ -16,11 +19,19 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-from vigoria.conteudo.carregar import Impacto, Nivel, carregar_avisos, carregar_exercicios
+from vigoria.conteudo.carregar import (
+    Impacto,
+    Nivel,
+    carregar_alimentacao,
+    carregar_avisos,
+    carregar_exercicios,
+    carregar_programa,
+)
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
 from vigoria.modelos.questionario import Questionario
+from vigoria.motor.gerador import fases_para_pedido
 from vigoria.motor.selecao import selecionar_exercicios
 from vigoria.motor.voz import (
     detetar_brasileirismos,
@@ -46,12 +57,41 @@ _NUMERO_COM_UNIDADE = re.compile(
 )
 
 
+# Outros números com unidade (copos, tempo, distância, percentagem): só se vierem dos dados.
+_NUMEROS_POR_EXTENSO = {
+    "um": 1, "uma": 1, "dois": 2, "duas": 2, "três": 3, "quatro": 4, "cinco": 5, "seis": 6,
+    "sete": 7, "oito": 8, "nove": 9, "dez": 10, "onze": 11, "doze": 12, "treze": 13,
+    "catorze": 14, "quinze": 15, "dezasseis": 16, "dezassete": 17, "dezoito": 18,
+    "dezanove": 19, "vinte": 20, "trinta": 30, "quarenta": 40, "cinquenta": 50,
+    "sessenta": 60, "meia": 0.5, "meio": 0.5,
+}  # fmt: skip
+# Unidade normalizada: o tempo fica sempre em minutos.
+_UNIDADES = {
+    "copo": "copos", "copos": "copos",
+    "h": "min", "hora": "min", "horas": "min",
+    "min": "min", "mins": "min", "minuto": "min", "minutos": "min",
+    "km": "km", "quilómetro": "km", "quilómetros": "km",
+    "%": "%", "por cento": "%",
+}  # fmt: skip
+_POR_MINUTOS = {"h": 60, "hora": 60, "horas": 60}
+_NUM = r"\d+(?:[.,]\d+)?|" + "|".join(sorted(_NUMEROS_POR_EXTENSO, key=len, reverse=True))
+_NUMERO_COM_OUTRA_UNIDADE = re.compile(
+    rf"(?<![\w,.])({_NUM})(?:\s*(?:a|-|–|ou)\s*({_NUM}))?\s*"
+    r"(por cento|quilómetros|quilómetro|minutos|minuto|horas|hora|copos|copo|mins|min|km|h|%)"
+    r"(?!\w)",
+    re.IGNORECASE,
+)
+
+
 class TipoFalha(StrEnum):
     AVISO_EM_FALTA = "aviso_em_falta"
     EXERCICIO = "exercicio"
+    PRESCRICAO = "prescricao"
+    SEMANA = "semana"
     NUMEROS = "numeros"
     NUMERO_NO_TEXTO = "numero_no_texto"
     LISTA_NEGRA = "lista_negra"
+    PROMESSA = "promessa"
     BRASILEIRISMO = "brasileirismo"
 
 
@@ -67,8 +107,10 @@ def verificar(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
     return [
         *_avisos(plano),
         *_exercicios(plano, e),
+        *_prescricao(plano, e),
+        *_semana(plano, q),
         *_numeros(plano, e, q),
-        *_texto(plano, q),
+        *_texto(plano, e, q),
     ]
 
 
@@ -107,6 +149,66 @@ def _exercicios(plano: Plano, e: Estrategia) -> list[Falha]:
                 razao = "não está na lista de exercícios permitidos desta fase"
             falhas.append(Falha(tipo=TipoFalha.EXERCICIO, motivo=f"Fase {fase}: «{id_}» {razao}."))
     return falhas
+
+
+def _prescricao(plano: Plano, e: Estrategia) -> list[Falha]:
+    """Exercícios de referência: séries, repetições e descanso iguais aos de fases.yaml."""
+    permitidos = {fase: selecionar_exercicios(e, fase) for fase in FASES}
+    falhas = []
+    for fase in fases_para_pedido(permitidos):
+        referencia: dict[str, list[tuple[int, str, str]]] = {}
+        for item in fase["exercicios_referencia"]:
+            valores = (item["series"], item["repeticoes"], item["descanso_s"])
+            for id_ in (item["id"], *item.get("alternativas", [])):
+                referencia.setdefault(id_, []).append(valores)
+        numero_fase = fase["numero"]
+        for x in getattr(plano.treino, f"fase_{numero_fase}").exercicios:
+            certos = referencia.get(x.exercicio_id)
+            if not certos or any(
+                x.series == series
+                and _normalizar(x.repeticoes) == _normalizar(repeticoes)
+                and _algarismos(x.descanso) == _algarismos(descanso)
+                for series, repeticoes, descanso in certos
+            ):
+                continue
+            series, repeticoes, descanso = certos[0]
+            falhas.append(
+                Falha(
+                    tipo=TipoFalha.PRESCRICAO,
+                    motivo=f"Fase {numero_fase}: «{x.exercicio_id}» tem de seguir o programa: "
+                    f"{series} séries de {repeticoes}, descanso de {descanso} s.",
+                )
+            )
+    return falhas
+
+
+def _normalizar(texto: str) -> str:
+    return re.sub(r"\s+", "", texto).lower()
+
+
+def _algarismos(texto: str) -> list[int]:
+    return [int(n) for n in re.findall(r"\d+", texto)]
+
+
+# ---------------------------------------------------------------- Semana-tipo
+
+
+def _semana(plano: Plano, q: Questionario) -> list[Falha]:
+    """Dias com sessão (duração > 0) até dias_semana; cada sessão até minutos_dia."""
+    dias = carregar_avisos().rotulos.dias
+    ativos = [s for s in plano.semana_tipo if s.duracao_min > 0]
+    falhas = []
+    if len(ativos) > q.dias_semana:
+        falhas.append(
+            f"A semana-tipo tem {len(ativos)} dias com sessão, mas a disponibilidade é de "
+            f"{q.dias_semana} dias (os outros dias ficam com duração 0)."
+        )
+    falhas += [
+        f"{dias[s.dia]}: sessão de {s.duracao_min} min, acima dos {q.minutos_dia} min disponíveis."
+        for s in ativos
+        if s.duracao_min > q.minutos_dia
+    ]
+    return [Falha(tipo=TipoFalha.SEMANA, motivo=m) for m in falhas]
 
 
 # ---------------------------------------------------------------- Números
@@ -152,29 +254,127 @@ def _numeros(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
 # ---------------------------------------------------------------- Texto da LLM
 
 
-def _texto(plano: Plano, q: Questionario) -> list[Falha]:
+def pesos_halteres_permitidos(q: Questionario) -> frozenset[float]:
+    """Cargas do programa (biblioteca e fases.yaml), cada uma limitada ao peso declarado."""
+    if EquipamentoDeclarado.HALTERES not in q.equipamento or not q.halteres_kg:
+        return frozenset()
+    return frozenset(min(v, float(q.halteres_kg)) for v in _kg_do_programa())
+
+
+def _kg_do_programa() -> frozenset[float]:
+    textos = [x.variante_halteres or "" for x in carregar_exercicios().values()]
+    textos += [p.com_halteres for f in carregar_programa().fases for p in f.exercicios]
+    return frozenset(
+        float(v.replace(",", "."))
+        for texto in textos
+        for v, u in _NUMERO_COM_UNIDADE.findall(texto)
+        if u.lower() == "kg"
+    )
+
+
+def _valor(texto: str) -> float:
+    texto = texto.lower()
+    if texto in _NUMEROS_POR_EXTENSO:
+        return float(_NUMEROS_POR_EXTENSO[texto])
+    return float(texto.replace(",", "."))
+
+
+def _numeros_com_unidade(texto: str) -> list[tuple[str, str, list[float]]]:
+    """(trecho, unidade normalizada, valores nessa unidade) de cada ocorrência."""
+    resultado = []
+    for m in _NUMERO_COM_OUTRA_UNIDADE.finditer(texto):
+        primeiro, segundo, unidade = m.groups()
+        fator = _POR_MINUTOS.get(unidade.lower(), 1)
+        valores = [_valor(v) * fator for v in (primeiro, segundo) if v]
+        resultado.append((m.group(0), _UNIDADES[unidade.lower()], valores))
+    return resultado
+
+
+def valores_dos_dados(e: Estrategia, q: Questionario) -> dict[str, list[tuple[float, float]]]:
+    """Intervalos (mínimo, máximo) aceites por unidade: YAML, Estrategia e questionário."""
+    intervalos: dict[str, list[tuple[float, float]]] = {}
+    for texto in (*_textos_dos_yaml(), *_textos(e.model_dump(mode="json"))):
+        for _, unidade, valores in _numeros_com_unidade(texto):
+            intervalos.setdefault(unidade, []).append((min(valores), max(valores)))
+    do_questionario = {
+        "min": [q.minutos_dia, q.sono_horas * 60 if q.sono_horas else None],
+        "copos": [q.vinho_copos_dia],
+    }
+    for unidade, valores in do_questionario.items():
+        for v in valores:
+            if v is not None:
+                intervalos.setdefault(unidade, []).append((float(v), float(v)))
+    return intervalos
+
+
+def _textos_dos_yaml() -> list[str]:
+    return _textos(
+        [
+            [x.model_dump(mode="json") for x in carregar_exercicios().values()],
+            carregar_programa().model_dump(mode="json"),
+            carregar_alimentacao().model_dump(mode="json"),
+            carregar_avisos().textos,
+        ]
+    )
+
+
+def _textos(valor: object) -> list[str]:
+    if isinstance(valor, str):
+        return [valor]
+    if isinstance(valor, dict):
+        return [t for v in valor.values() for t in _textos(v)]
+    if isinstance(valor, list | tuple):
+        return [t for v in valor for t in _textos(v)]
+    return []
+
+
+def _texto(plano: Plano, e: Estrategia, q: Questionario) -> list[Falha]:
     tudo = "\n".join(textos_da_llm(plano))
     falhas = []
-    halteres = q.halteres_kg if EquipamentoDeclarado.HALTERES in q.equipamento else None
+    halteres = pesos_halteres_permitidos(q)
+    lista_halteres = ", ".join(f"{h:g} kg" for h in sorted(halteres))
     for valor, unidade in dict.fromkeys(_NUMERO_COM_UNIDADE.findall(tudo)):
-        numero = float(valor.replace(",", "."))
-        e_halteres = unidade.lower() in ("kg", "quilo", "quilos") and numero == halteres
+        e_halteres = (
+            unidade.lower() in ("kg", "quilo", "quilos")
+            and float(valor.replace(",", ".")) in halteres
+        )
         if not e_halteres:
+            permitido = f" (pesos de halteres permitidos: {lista_halteres})." if halteres else "."
             falhas.append(
                 Falha(
                     tipo=TipoFalha.NUMERO_NO_TEXTO,
                     motivo=f"O texto tem o valor «{valor} {unidade}»: valores de peso, "
-                    "proteína, hidratação e calorias vêm só da estratégia"
-                    + (
-                        f" (o único peso permitido é o dos halteres, {halteres:g} kg)."
-                        if halteres
-                        else "."
-                    ),
+                    f"proteína, hidratação e calorias vêm só da estratégia{permitido}",
                 )
             )
-    for termo in encontrar_termos(carregar_avisos().lista_negra.termos, tudo):
+    aceites = valores_dos_dados(e, q)
+    vistos: set[str] = set()
+    for trecho, unidade, valores in _numeros_com_unidade(tudo):
+        dentro = all(
+            any(lo - 1e-9 <= v <= hi + 1e-9 for lo, hi in aceites.get(unidade, [])) for v in valores
+        )
+        if not dentro and trecho.lower() not in vistos:
+            vistos.add(trecho.lower())
+            falhas.append(
+                Falha(
+                    tipo=TipoFalha.NUMERO_NO_TEXTO,
+                    motivo=f"O texto tem «{trecho}», um valor que não vem do questionário, da "
+                    "estratégia nem do programa: use só os valores do pedido ou escreva sem "
+                    "números.",
+                )
+            )
+    lista_negra = carregar_avisos().lista_negra
+    for termo in encontrar_termos(lista_negra.termos, tudo):
         falhas.append(
             Falha(tipo=TipoFalha.LISTA_NEGRA, motivo=f"O texto tem o termo proibido «{termo}».")
+        )
+    for termo in encontrar_termos(lista_negra.promessas, tudo):
+        falhas.append(
+            Falha(
+                tipo=TipoFalha.PROMESSA,
+                motivo=f"O texto tem a promessa absoluta «{termo}»: não prometa resultados nem "
+                "segurança total; use linguagem prudente.",
+            )
         )
     for termo in detetar_brasileirismos(plano):
         falhas.append(

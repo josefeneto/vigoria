@@ -144,6 +144,7 @@ class Rotulos(_Conteudo):
 
 class ListaNegra(_Conteudo):
     termos: tuple[str, ...] = Field(min_length=1)  # procurados à letra pelo código
+    promessas: tuple[str, ...] = ()  # promessas absolutas, procuradas como os termos
     ideias: tuple[str, ...] = ()  # para a revisão crítica pela LLM
 
 
@@ -153,6 +154,7 @@ class Avisos(_Conteudo):
     rotulos: Rotulos
     lista_negra: ListaNegra
     brasileirismos: tuple[str, ...] = Field(min_length=1)
+    ortografia_aceites: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def _ids_validos(self) -> Self:

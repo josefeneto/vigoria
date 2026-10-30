@@ -63,10 +63,20 @@ class ProvedorFalso:
 
 def test_prompt_versao_e_texto() -> None:
     prompt = carregar_prompt_sistema()
-    assert prompt.versao == "2"
+    assert prompt.versao == "3"
     assert not prompt.texto.startswith("<!--")
     assert prompt.texto.startswith("# Papel")
     for essencial in ("exercicios_permitidos", "nunca em meses", "sem_intervalos", "Texto livre"):
+        assert essencial in prompt.texto
+    # Versão 3 (30/10/2026): dias e duração, prescrição exata, halteres, promessas, «aeróbio».
+    for essencial in (
+        "No máximo `dias_semana` dias com sessão",
+        "usa **exatamente** as séries",
+        "**nunca acima de `halteres_kg`**",
+        "Fazer promessas absolutas",
+        "nunca «aeróbico»",
+        "`fases[].esforco`",
+    ):
         assert essencial in prompt.texto
 
 
@@ -261,7 +271,7 @@ def test_pedido_em_json_compacto() -> None:
 
 def test_pedido_em_texto() -> None:
     pedido = montar_pedido(*_persona())
-    assert pedido.versao_prompt == "2"
+    assert pedido.versao_prompt == "3"
     assert pedido.sistema == carregar_prompt_sistema().texto
     json.loads(pedido.conteudo.split("\n", 1)[1])  # JSON válido depois da 1.ª linha
 
@@ -347,7 +357,7 @@ def test_gerar_plano_com_provedor_falso() -> None:
     assert pedido == montar_pedido(q, e).conteudo
     assert schema is PlanoGerado
 
-    assert plano.versao_prompt == "2"
+    assert plano.versao_prompt == "3"
     assert plano.provedor == "falso"
     assert plano.avisos == e.avisos
     assert [m.semana for m in plano.marcos] == [4, 8, 12, 16]
@@ -381,7 +391,7 @@ def test_cli_so_pedido() -> None:
     with contextlib.redirect_stdout(saida):
         assert cli.main(["--so-pedido", str(RAIZ / "exemplos" / "persona_teste.json")]) == 0
     texto = saida.getvalue()
-    assert texto.startswith("=== PROMPT DE SISTEMA (versão 2) ===")
+    assert texto.startswith("=== PROMPT DE SISTEMA (versão 3) ===")
     assert "=== PEDIDO (indentado para leitura; segue em JSON compacto) ===" in texto
     assert '\n  "catalogo_exercicios": {' in texto  # indentado
     assert "Tamanho enviado:" in texto

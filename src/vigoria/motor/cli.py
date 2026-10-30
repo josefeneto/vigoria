@@ -151,6 +151,9 @@ def gerar_plano_em_markdown(
     if resultado.motivos_regeneracao:
         print("Regenerado uma vez. Motivos da primeira versão:")
         print("\n".join(f"  - {m}" for m in resultado.motivos_regeneracao))
+    if resultado.palavras_desconhecidas:
+        print("Ortografia (só aviso): palavras que o dicionário pt_PT não conhece:")
+        print("  " + ", ".join(resultado.palavras_desconhecidas))
     return 0
 
 

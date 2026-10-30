@@ -19,12 +19,12 @@
     "fase_1": {
       "foco": "Aprender a técnica e criar a rotina.",
       "exercicios": [
-        {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "12-15", "descanso": "60 s", "adaptacao": ""},
+        {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "15", "descanso": "45 s", "adaptacao": ""},
         {"exercicio_id": "flexao_parede", "series": 3, "repeticoes": "10-12", "descanso": "60 s", "adaptacao": ""},
         {"exercicio_id": "remada_halteres", "series": 3, "repeticoes": "12", "descanso": "60 s", "adaptacao": "Com os halteres de 2 kg."},
         {"exercicio_id": "elevacao_lateral", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
         {"exercicio_id": "bird_dog", "series": 3, "repeticoes": "30-45s", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "caminhada", "series": 1, "repeticoes": "20 min", "descanso": "-", "adaptacao": "Esforço até 4, amplitude confortável, sem dor."}
+        {"exercicio_id": "caminhada", "series": 1, "repeticoes": "15 min", "descanso": "-", "adaptacao": "Esforço até 4, amplitude confortável, sem dor."}
       ],
       "progressao": "Só a técnica: mantenha as repetições até cada movimento sair controlado."
     },
@@ -42,10 +42,10 @@
     "fase_3": {
       "foco": "Mais força funcional, sempre com apoio disponível.",
       "exercicios": [
-        {"exercicio_id": "peso_morto_romeno", "series": 3, "repeticoes": "12", "descanso": "45-60 s", "adaptacao": ""},
-        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
+        {"exercicio_id": "peso_morto_romeno", "series": 3, "repeticoes": "12", "descanso": "60 s", "adaptacao": ""},
+        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12 (por braço)", "descanso": "45 s", "adaptacao": ""},
         {"exercicio_id": "elevacao_frontal", "series": 3, "repeticoes": "12", "descanso": "45 s", "adaptacao": ""},
-        {"exercicio_id": "prancha_lateral_joelhos", "series": 3, "repeticoes": "20-30s", "descanso": "45 s", "adaptacao": ""}
+        {"exercicio_id": "prancha_lateral_joelhos", "series": 3, "repeticoes": "30s (cada lado)", "descanso": "45 s", "adaptacao": ""}
       ],
       "progressao": "Aumente uma série ou algumas repetições, nunca as duas ao mesmo tempo."
     },
@@ -54,7 +54,7 @@
       "exercicios": [
         {"exercicio_id": "ponte_gluteos", "series": 3, "repeticoes": "15", "descanso": "45-60 s", "adaptacao": ""},
         {"exercicio_id": "prancha_inclinada_toque_ombro", "series": 3, "repeticoes": "10", "descanso": "45-60 s", "adaptacao": ""},
-        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12", "descanso": "45-60 s", "adaptacao": ""}
+        {"exercicio_id": "remada_unilateral_apoio", "series": 3, "repeticoes": "12 (por braço)", "descanso": "45-60 s", "adaptacao": ""}
       ],
       "progressao": "Mantenha a carga e foque-se na regularidade."
     }
@@ -76,10 +76,10 @@
   },
   "hidratacao_dicas": [
     "Tenha uma garrafa de água à vista durante o dia.",
-    "Beba um copo de água a cada refeição."
+    "Beba água a cada refeição."
   ],
   "habitos": [
-    {"titulo": "Sono", "descricao": "Procure deitar-se à mesma hora para chegar perto das 7 horas de sono."},
+    {"titulo": "Sono", "descricao": "Procure deitar-se à mesma hora para dormir de forma mais regular."},
     {"titulo": "Menos tempo sentado", "descricao": "Levante-se e caminhe uns minutos a cada hora."}
   ],
   "indicadores_acompanhamento": [

@@ -1,9 +1,10 @@
 """Plano em Markdown (CLI --plano). Títulos e rótulos em avisos.yaml (`rotulos`).
 
-Os nomes dos exercícios vêm da biblioteca; os números, da Estrategia (já no Plano).
+Os nomes dos exercícios vêm da biblioteca; os números, da Estrategia (já no Plano);
+a estrutura da sessão e o esforço percebido de cada fase, de fases.yaml (nunca da LLM).
 """
 
-from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios
+from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_programa
 from vigoria.modelos.plano import Plano
 from vigoria.regras.textos import numero
 
@@ -56,11 +57,19 @@ def plano_para_markdown(plano: Plano) -> str:
         ],
     )
 
-    md += [f"## {r['treino']}", ""]
-    for n in (1, 2, 3, 4):
+    programa = carregar_programa()
+    sessao = programa.estrutura_sessao
+    md += [f"## {r['treino']}", "", f"### {r['estrutura_sessao']}", ""]
+    md += [
+        f"- **{r[parte]}:** {getattr(sessao, parte)}"
+        for parte in ("aquecimento", "bloco_principal", "cardio_finalizador", "retorno_calma")
+    ]
+    md += [""]
+    for n, fase_programa in enumerate(programa.fases, start=1):
         fase = getattr(plano.treino, f"fase_{n}")
-        nome_fase = plano.marcos[n - 1].fase if len(plano.marcos) >= n else str(n)
-        md += [f"### {r['fase']} {n}: {nome_fase}", "", f"**{r['foco']}:** {fase.foco}", ""]
+        esforco = r["esforco"].format(min=fase_programa.esforco.min, max=fase_programa.esforco.max)
+        md += [f"### {r['fase']} {n}: {fase_programa.nome}", ""]
+        md += [f"**{r['foco']}:** {fase.foco}", "", esforco, ""]
         md += _tabela(
             [r["exercicio"], r["series"], r["repeticoes"], r["descanso"], r["adaptacao"]],
             [

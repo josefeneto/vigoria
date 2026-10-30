@@ -164,6 +164,12 @@ rotulos:
     duracao: Duração
     descricao: Descrição
     treino: Treino
+    estrutura_sessao: Como é cada sessão
+    aquecimento: Aquecimento
+    bloco_principal: Bloco principal
+    cardio_finalizador: Cardio finalizador
+    retorno_calma: Retorno à calma
+    esforco: "Esforço percebido: {min} a {max}, numa escala de 0 a 10."
     foco: Foco
     exercicio: Exercício
     series: Séries
@@ -215,6 +221,35 @@ lista_negra:
     - termogénico
     - seca barriga
     - secante
+  # Promessas absolutas (decisão de 30/10/2026): procuradas como os termos; motivo próprio.
+  promessas:
+    - garantir
+    - garante
+    - garantem
+    - garantido
+    - garantida
+    - garantidos
+    - garantidas
+    - garantindo
+    - total
+    - totais
+    - totalmente
+    - perfeitamente
+    - perfeito
+    - perfeita
+    - absoluto
+    - absoluta
+    - absolutos
+    - absolutas
+    - absolutamente
+    - rigoroso
+    - rigorosa
+    - rigorosos
+    - rigorosas
+    - sem risco
+    - sem riscos
+    - risco zero
+    - 100 % seguro
   ideias:
     - jejum prolongado sem acompanhamento
     - dietas com menos de 1200 kcal
@@ -235,3 +270,18 @@ brasileirismos:
   - baixar a app
   - time
   - registro
+  # 30/10/2026: em PT-EU, «aeróbio».
+  - aeróbico
+  - aeróbica
+  - aeróbicos
+  - aeróbicas
+
+# Ortografia (motor/ortografia.py, decisão de 30/10/2026): palavras corretas que o
+# dicionário pt_PT não conhece. O vocabulário dos YAML editoriais já é aceite.
+ortografia_aceites:
+  - aeróbio
+  - aeróbia
+  - aeróbios
+  - aeróbias
+  - anaeróbio
+  - anaeróbia

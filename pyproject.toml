@@ -12,7 +12,7 @@ requires-python = ">=3.14"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"vigoria.conteudo" = ["*.yaml"]
+"vigoria.conteudo" = ["*.yaml", "dicionario/*"]
 
 [tool.ruff]
 line-length = 100

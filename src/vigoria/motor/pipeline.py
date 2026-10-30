@@ -16,6 +16,7 @@ from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import ErroGeracao, gerar_plano
+from vigoria.motor.ortografia import palavras_desconhecidas
 from vigoria.motor.verificacao import Falha, verificar
 from vigoria.motor.voz import aplicar_voz
 from vigoria.regras import textos
@@ -38,6 +39,7 @@ class ResultadoPipeline(BaseModel):
     estrategia: Estrategia
     chamadas: int
     motivos_regeneracao: tuple[str, ...] = ()  # vazio se passou à primeira
+    palavras_desconhecidas: tuple[str, ...] = ()  # ortografia: só aviso, não chumba
 
 
 class _ProvedorContado:
@@ -70,20 +72,28 @@ def gerar_plano_verificado(
 
     plano = _gerar(q, e, contado, ())
     falhas = verificar(plano, e, q)
-    if not falhas:
-        progresso("verificação: aprovado à primeira")
-        return ResultadoPipeline(plano=plano, estrategia=e, chamadas=contado.chamadas)
-
-    progresso(f"verificação: {_resumo(falhas)}; uma regeneração com os motivos")
-    motivos = tuple(f.motivo for f in falhas)
-    plano = _gerar(q, e, contado, motivos)
-    falhas = verificar(plano, e, q)
+    motivos: tuple[str, ...] = ()
     if falhas:
-        progresso(f"verificação depois da regeneração: {_resumo(falhas)}; plano recusado")
-        raise ErroVerificacao(tuple(f.motivo for f in falhas))
-    progresso("verificação: aprovado depois da regeneração")
+        progresso(f"verificação: {_resumo(falhas)}; uma regeneração com os motivos")
+        motivos = tuple(f.motivo for f in falhas)
+        plano = _gerar(q, e, contado, motivos)
+        falhas = verificar(plano, e, q)
+        if falhas:
+            progresso(f"verificação depois da regeneração: {_resumo(falhas)}; plano recusado")
+            raise ErroVerificacao(tuple(f.motivo for f in falhas))
+        progresso("verificação: aprovado depois da regeneração")
+    else:
+        progresso("verificação: aprovado à primeira")
+
+    desconhecidas = palavras_desconhecidas(plano)
+    if desconhecidas:
+        progresso(f"ortografia: {len(desconhecidas)} palavra(s) desconhecida(s) (só aviso)")
     return ResultadoPipeline(
-        plano=plano, estrategia=e, chamadas=contado.chamadas, motivos_regeneracao=motivos
+        plano=plano,
+        estrategia=e,
+        chamadas=contado.chamadas,
+        motivos_regeneracao=motivos,
+        palavras_desconhecidas=desconhecidas,
     )
 
 

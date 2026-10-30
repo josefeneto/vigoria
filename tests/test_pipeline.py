@@ -88,7 +88,7 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
     assert "- Fase 2: «burpee_turbo» não existe na biblioteca." in segundo
     assert "{motivos}" not in segundo
     plano = resultado.plano  # type: ignore[attr-defined]
-    assert plano.versao_prompt == f"2 (correção {carregar_prompt_correcao().versao})"
+    assert plano.versao_prompt == f"3 (correção {carregar_prompt_correcao().versao})"
     assert progresso[0] == (
         "verificação: 2 falha(s) (exercicio: 1, lista_negra: 1); uma regeneração com os motivos"
     )
@@ -158,7 +158,7 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 2)." in md
+    assert "Plano gerado com falso (prompt versão 3)." in md
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:
@@ -181,3 +181,26 @@ def test_cli_sem_opcao() -> None:
     with contextlib.redirect_stdout(saida):
         assert cli.main([str(RAIZ / "exemplos" / "persona_teste.json")]) == 2
     assert "--plano" in saida.getvalue()
+
+
+def test_markdown_com_esforco_e_estrutura_da_sessao_dos_yaml(tmp_path: Path) -> None:
+    _cli_plano(tmp_path, BOA)
+    md = (tmp_path / "plano_persona_teste.md").read_text(encoding="utf-8")
+    assert "### Como é cada sessão" in md
+    for parte in ("**Aquecimento:**", "**Bloco principal:**", "**Cardio finalizador:**"):
+        assert parte in md
+    assert "**Retorno à calma:** Retorno à Calma (5 min)" in md  # texto de fases.yaml
+    assert md.count("Esforço percebido: 3 a 6, numa escala de 0 a 10.") == 4  # uma por fase
+
+
+def test_ortografia_so_avisa(tmp_path: Path) -> None:
+    dados = json.loads(BOA)
+    dados["resumo"] += " Mantenha a durquetura."
+    resposta = json.dumps(dados, ensure_ascii=False)
+    resultado, _, progresso = _correr(resposta)
+    assert resultado.chamadas == 1  # type: ignore[attr-defined]
+    assert resultado.palavras_desconhecidas == ("durquetura",)  # type: ignore[attr-defined]
+    assert progresso[-1] == "ortografia: 1 palavra(s) desconhecida(s) (só aviso)"
+    codigo, saida = _cli_plano(tmp_path, resposta)
+    assert codigo == 0
+    assert "Ortografia (só aviso)" in saida and "durquetura" in saida
