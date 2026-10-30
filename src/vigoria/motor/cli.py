@@ -4,8 +4,9 @@ Uso: python -m vigoria.motor.cli --so-estrategia exemplos/persona_teste.json
      python -m vigoria.motor.cli --so-pedido exemplos/persona_teste.json
      python -m vigoria.motor.cli --testar-ligacao
      python -m vigoria.motor.cli --comparar gemini,mistral exemplos/persona_teste.json
---so-estrategia e --so-pedido correm sem LLM. --testar-ligacao, --comparar e a geração
-completa chamam a LLM (Gemini, Groq, Mistral) e só o José os executa.
+     python -m vigoria.motor.cli --plano exemplos/persona_teste.json
+--so-estrategia e --so-pedido correm sem LLM. --testar-ligacao, --comparar e --plano
+chamam a LLM (Gemini, Groq, Mistral) e só o José os executa.
 """
 
 import argparse
@@ -18,16 +19,20 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from vigoria.config import Configuracao, NomeProvedor, obter_configuracao
+from vigoria.exportacao.markdown import plano_para_markdown
 from vigoria.llm.base import TIMEOUT_TESTE_S, ErroLLM, ProvedorLLM
-from vigoria.llm.escolha import FORNECEDORES, criar_fornecedor
+from vigoria.llm.escolha import FORNECEDORES, criar_fornecedor, criar_provedor
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.comparacao import PASTA_SAIDAS, comparar, formatar_comparacao
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import ErroGeracao, montar_pedido
+from vigoria.motor.pipeline import ErroVerificacao, gerar_plano_verificado
 from vigoria.regras.calculos import ClasseImc
 from vigoria.regras.textos import NOMES_INTENSIDADE, numero
+
+PASTA_PLANOS = Path("saidas")  # no .gitignore
 
 NOMES_CLASSE_IMC = {
     ClasseImc.BAIXO_PESO: "baixo peso",
@@ -64,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FORNECEDORES",
         help="gera um plano com cada fornecedor (por exemplo «gemini,mistral») e compara-os",
     )
+    parser.add_argument(
+        "--plano",
+        action="store_true",
+        help="gera o plano completo (verificado) e grava-o em Markdown em saidas/",
+    )
     args = parser.parse_args(argv)
 
     _consola_utf8()
@@ -76,11 +86,8 @@ def main(argv: list[str] | None = None) -> int:
         desconhecidos = [n for n in nomes if n not in FORNECEDORES]
         if not nomes or desconhecidos:
             parser.error(f"fornecedores possíveis: {', '.join(FORNECEDORES)}")
-    elif not (args.so_estrategia or args.so_pedido):
-        print(
-            "A geração completa do plano só chega com a verificação (Fase 4, parte 2). "
-            "Use --so-estrategia, --so-pedido ou --comparar."
-        )
+    elif not (args.so_estrategia or args.so_pedido or args.plano):
+        print("Indique o que fazer: --plano, --so-estrategia, --so-pedido ou --comparar.")
         return 2
 
     try:
@@ -93,6 +100,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Questionário inválido:\n{erro}")
         return 1
 
+    if args.plano:
+        return gerar_plano_em_markdown(q, args.questionario.stem)
     estrategia = gerar_estrategia(q)
     if args.comparar:
         return comparar_fornecedores(q, estrategia, nomes, args.questionario.stem)
@@ -111,6 +120,37 @@ def main(argv: list[str] | None = None) -> int:
     print(cabecalho)
     print(json.dumps(json.loads(corpo), ensure_ascii=False, indent=2))
     print(f"\nTamanho enviado: {len(pedido.sistema) + len(pedido.conteudo)} caracteres")
+    return 0
+
+
+def gerar_plano_em_markdown(
+    q: Questionario,
+    origem: str,
+    provedor: ProvedorLLM | None = None,
+    pasta: Path = PASTA_PLANOS,
+) -> int:
+    """Pipeline completo (estratégia, geração, voz, verificação) e plano em Markdown."""
+    try:
+        provedor = criar_provedor() if provedor is None else provedor
+        resultado = gerar_plano_verificado(q, provedor)
+    except ErroVerificacao as erro:
+        print(erro)
+        print("Motivos (depois da regeneração):")
+        print("\n".join(f"  - {m}" for m in erro.motivos))
+        return 1
+    except (ErroGeracao, ErroLLM) as erro:
+        print(erro)
+        return 1
+    pasta.mkdir(parents=True, exist_ok=True)
+    ficheiro = pasta / f"plano_{origem}.md"
+    ficheiro.write_text(plano_para_markdown(resultado.plano), encoding="utf-8")
+    plano = resultado.plano
+    print(f"Plano gravado em {ficheiro}")
+    print(f"Fornecedor: {plano.provedor} | prompt: {plano.versao_prompt}")
+    print(f"Chamadas à LLM: {resultado.chamadas}")
+    if resultado.motivos_regeneracao:
+        print("Regenerado uma vez. Motivos da primeira versão:")
+        print("\n".join(f"  - {m}" for m in resultado.motivos_regeneracao))
     return 0
 
 

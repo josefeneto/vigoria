@@ -131,6 +131,11 @@ textos:
   cintura_medir_com_limiar: >-
     Medir e comparar com a medição inicial; referência: limiar de risco de {limiar} cm.
 
+  # ---------------------------------------------------------------- Verificação (papel 4)
+  plano_nao_verificado: >-
+    Não foi possível preparar um plano que cumpra todas as regras de segurança da Vigoria.
+    Tente de novo mais tarde.
+
 # Rótulos curtos usados nos textos e na CLI.
 rotulos:
   intensidade:
@@ -143,6 +148,56 @@ rotulos:
     ombros: nos ombros
     coluna: na coluna
     equilibrio: no equilíbrio
+  # Títulos e rótulos do plano em Markdown (exportacao/markdown.py; mais tarde, interface e PDF).
+  plano:
+    titulo: O seu plano Vigoria de 16 semanas
+    resumo: Resumo
+    marcos: Marcos
+    semana: Semana
+    fase: Fase
+    peso_indicativo: Peso indicativo
+    cintura: Cintura
+    forca_resistencia: Força e resistência
+    semana_tipo: Semana-tipo
+    dia: Dia
+    atividade: Atividade
+    duracao: Duração
+    descricao: Descrição
+    treino: Treino
+    foco: Foco
+    exercicio: Exercício
+    series: Séries
+    repeticoes: Repetições
+    descanso: Descanso
+    adaptacao: Adaptação
+    progressao: Progressão
+    alimentacao: Alimentação
+    ajustes_refeicoes: Ajustes às refeições
+    bebidas_e_alcool: Bebidas e álcool
+    prioridades_por_fase: Prioridades por fase
+    proteina: Proteína
+    proteina_valores: "{minimo} a {maximo} g por dia; {por_refeicao_min} a {por_refeicao_max} g em cada refeição principal."
+    hidratacao: Hidratação
+    hidratacao_valores: "{minimo} a {maximo} ml por dia (cerca de {central} ml)."
+    habitos: Hábitos
+    indicadores: O que registar
+    notas: Notas para si
+    avisos: Avisos importantes
+    gerado_por: "Plano gerado com {provedor} (prompt versão {versao})."
+  dias:
+    segunda: Segunda-feira
+    terca: Terça-feira
+    quarta: Quarta-feira
+    quinta: Quinta-feira
+    sexta: Sexta-feira
+    sabado: Sábado
+    domingo: Domingo
+  refeicoes:
+    pequeno_almoco: Pequeno-almoço
+    almoco: Almoço
+    lanche: Lanche
+    jantar: Jantar
+    ceia: Ceia
 
 # Lista negra (§8), decisão de 28/10/2026:
 # - termos: procurados no texto pelo código (palavra ou expressão inteira, sem distinguir

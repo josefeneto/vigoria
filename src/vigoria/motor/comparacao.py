@@ -7,9 +7,8 @@ Cada fornecedor faz uma chamada real: só o José corre a comparação.
 
 import re
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -20,6 +19,7 @@ from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.gerador import gerar_plano
 from vigoria.motor.selecao import selecionar_exercicios
+from vigoria.motor.voz import encontrar_termos, textos_da_llm
 
 PASTA_SAIDAS = Path("saidas") / "comparacao"  # saidas/ está no .gitignore
 _MESES = re.compile(r"\bm[eê]s(?:es)?\b", re.IGNORECASE)
@@ -42,42 +42,6 @@ class Avaliacao(BaseModel):
     lista_negra: tuple[str, ...] = ()
     caracteres_texto: int = 0
     erro: str | None = None
-
-
-def textos_da_llm(plano: Plano) -> list[str]:
-    """Só o texto escrito pela LLM (sem avisos fixos nem números da Estrategia)."""
-    escrito = plano.model_dump(
-        mode="json",
-        include={
-            "resumo",
-            "semana_tipo",
-            "treino",
-            "alimentacao",
-            "habitos",
-            "indicadores_acompanhamento",
-            "notas_personalizadas",
-        },
-    )
-    escrito["forca"] = [m.forca_resistencia for m in plano.marcos]
-    escrito["dicas"] = plano.hidratacao.dicas
-    return list(_cadeias(escrito))
-
-
-def _cadeias(valor: Any) -> Iterator[str]:
-    if isinstance(valor, str):
-        yield valor
-    elif isinstance(valor, dict):
-        for v in valor.values():
-            yield from _cadeias(v)
-    elif isinstance(valor, list):
-        for v in valor:
-            yield from _cadeias(v)
-
-
-def _encontrados(termos: tuple[str, ...], texto: str) -> tuple[str, ...]:
-    return tuple(
-        t for t in termos if re.search(rf"(?<!\w){re.escape(t)}(?!\w)", texto, re.IGNORECASE)
-    )
 
 
 def avaliar_plano(plano: Plano, e: Estrategia, metricas: Metricas | None) -> Avaliacao:
@@ -103,8 +67,8 @@ def avaliar_plano(plano: Plano, e: Estrategia, metricas: Metricas | None) -> Ava
         exercicios_por_fase=tuple(por_fase),
         ids_fora_da_lista=tuple(fora),
         mencoes_meses=len(_MESES.findall(tudo)),
-        brasileirismos=_encontrados(avisos.brasileirismos, tudo),
-        lista_negra=_encontrados(avisos.lista_negra.termos, tudo),
+        brasileirismos=encontrar_termos(avisos.brasileirismos, tudo),
+        lista_negra=encontrar_termos(avisos.lista_negra.termos, tudo),
         caracteres_texto=sum(len(t) for t in textos),
     )
 

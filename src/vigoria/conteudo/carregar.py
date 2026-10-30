@@ -137,6 +137,9 @@ class _Biblioteca(_Conteudo):
 class Rotulos(_Conteudo):
     intensidade: dict[str, str]
     zonas_limitacao: dict[str, str]
+    plano: dict[str, str]  # títulos do plano em Markdown
+    dias: dict[str, str]
+    refeicoes: dict[str, str]
 
 
 class ListaNegra(_Conteudo):

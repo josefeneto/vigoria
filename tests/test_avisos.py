@@ -159,7 +159,7 @@ def test_erro_obrigatorio_sem_texto(pasta: Path) -> None:
     (pasta / "avisos.yaml").write_text(
         "obrigatorios: [aviso_geral]\n"
         "textos: {outro: Texto.}\n"
-        "rotulos: {intensidade: {}, zonas_limitacao: {}}\n"
+        "rotulos: {intensidade: {}, zonas_limitacao: {}, plano: {}, dias: {}, refeicoes: {}}\n"
         "lista_negra: {termos: [detox]}\n"
         "brasileirismos: [tela]\n",
         encoding="utf-8",

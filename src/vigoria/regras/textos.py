@@ -86,3 +86,6 @@ APOIO_POR_PERTO = _T["apoio_por_perto"]
 FASES = tuple(fase.nome for fase in carregar_fases())
 CINTURA_MEDIR = _T["cintura_medir"]
 CINTURA_MEDIR_COM_LIMIAR = _T["cintura_medir_com_limiar"]
+
+# Verificação (papel 4)
+PLANO_NAO_VERIFICADO = _T["plano_nao_verificado"]

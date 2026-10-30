@@ -14,9 +14,10 @@ from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor import cli
-from vigoria.motor.comparacao import avaliar_plano, comparar, formatar_comparacao, textos_da_llm
+from vigoria.motor.comparacao import avaliar_plano, comparar, formatar_comparacao
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import gerar_plano
+from vigoria.motor.voz import textos_da_llm
 
 RAIZ = Path(__file__).parent.parent
 RESPOSTA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text(

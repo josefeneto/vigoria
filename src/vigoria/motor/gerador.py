@@ -26,7 +26,9 @@ from vigoria.modelos.questionario import Equipamento as EquipamentoDeclarado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.selecao import ExercicioPermitido, selecionar_exercicios
 
-PROMPT_SISTEMA = Path(__file__).resolve().parents[3] / "prompts" / "gerador_sistema.md"
+PROMPTS = Path(__file__).resolve().parents[3] / "prompts"
+PROMPT_SISTEMA = PROMPTS / "gerador_sistema.md"
+PROMPT_CORRECAO = PROMPTS / "gerador_correcao.md"
 _CABECALHO = re.compile(r"\A<!--\s*versao:\s*(\d+)\b.*?-->\s*", re.DOTALL)
 
 # Lista explícita: um campo novo do questionário não segue para a LLM por omissão.
@@ -105,14 +107,25 @@ class Pedido(BaseModel):
     conteudo: str
 
 
-@cache
-def carregar_prompt_sistema() -> PromptSistema:
-    """Lê prompts/gerador_sistema.md e separa a versão do cabeçalho do texto."""
-    texto = PROMPT_SISTEMA.read_text(encoding="utf-8")
+def _carregar_prompt(ficheiro: Path) -> PromptSistema:
+    """Lê um prompt de prompts/ e separa a versão do cabeçalho do texto."""
+    texto = ficheiro.read_text(encoding="utf-8")
     cabecalho = _CABECALHO.match(texto)
     if cabecalho is None:
-        raise ErroGeracao(f"{PROMPT_SISTEMA.name}: falta o cabeçalho com a versão")
+        raise ErroGeracao(f"{ficheiro.name}: falta o cabeçalho com a versão")
     return PromptSistema(versao=cabecalho.group(1), texto=texto[cabecalho.end() :].strip())
+
+
+@cache
+def carregar_prompt_sistema() -> PromptSistema:
+    """prompts/gerador_sistema.md."""
+    return _carregar_prompt(PROMPT_SISTEMA)
+
+
+@cache
+def carregar_prompt_correcao() -> PromptSistema:
+    """prompts/gerador_correcao.md: acrescentado ao pedido na regeneração."""
+    return _carregar_prompt(PROMPT_CORRECAO)
 
 
 # ---------------------------------------------------------------- Pedido
@@ -312,9 +325,28 @@ def montar_plano(gerado: PlanoGerado, e: Estrategia, versao_prompt: str, provedo
     )
 
 
-def gerar_plano(q: Questionario, e: Estrategia, provedor: ProvedorLLM) -> Plano:
-    """Uma chamada à LLM. A verificação e a regeneração são o papel 4 (motor/verificacao.py)."""
+def montar_pedido_correcao(pedido: Pedido, motivos: tuple[str, ...]) -> Pedido:
+    """O mesmo pedido, com os motivos da rejeição anterior (prompts/gerador_correcao.md)."""
+    correcao = carregar_prompt_correcao()
+    lista = "\n".join(f"- {m}" for m in motivos)
+    texto = correcao.texto.replace("{motivos}", lista)
+    return Pedido(
+        versao_prompt=f"{pedido.versao_prompt} (correção {correcao.versao})",
+        sistema=pedido.sistema,
+        conteudo=f"{pedido.conteudo}\n\n{texto}",
+    )
+
+
+def gerar_plano(
+    q: Questionario, e: Estrategia, provedor: ProvedorLLM, motivos: tuple[str, ...] = ()
+) -> Plano:
+    """Uma chamada à LLM; com `motivos`, é a regeneração depois de uma verificação falhada.
+
+    A verificação e a decisão de regenerar são do pipeline (motor/pipeline.py).
+    """
     pedido = montar_pedido(q, e)
+    if motivos:
+        pedido = montar_pedido_correcao(pedido, motivos)
     gerado = provedor.gerar_json(pedido.sistema, pedido.conteudo, PlanoGerado)
     usado = provedor.ultimo_provedor or provedor.nome
     return montar_plano(gerado, e, pedido.versao_prompt, usado)
