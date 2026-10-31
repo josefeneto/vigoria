@@ -106,7 +106,20 @@ def avisos(q: Questionario, eleg: Elegibilidade, acolhimento: Acolhimento) -> tu
         lista.append(
             textos.DISPONIBILIDADE_1_DIA if q.dias_semana == 1 else textos.DISPONIBILIDADE_2_DIAS
         )
-    lista.extend(acolhimento.incoerencias)
+    lista.extend(avisos_objetivo(acolhimento))
+    # O ganho muscular pedido nunca excede o máximo: o questionário limita-o a 2 kg (5.C).
+    if ind.cintura_de_risco:
+        lista.extend([textos.VISCERAL_REDUCAO, textos.VISCERAL_INDICADOR])
+        if {Condicao.HIPERTENSAO, Condicao.DOENCA_CARDIOVASCULAR} & set(q.condicoes):
+            lista.append(textos.INTENSIFICACAO_VALIDACAO_MEDICA)
+    return tuple(dict.fromkeys(lista))
+
+
+def avisos_objetivo(acolhimento: Acolhimento) -> list[str]:
+    """Incoerências nos objetivos e, se o ritmo exceder o máximo, o alvo realista (§2).
+    Também usados no passo 5 do questionário, logo ao indicar o peso-alvo."""
+    ind = acolhimento.indicadores
+    lista = list(acolhimento.incoerencias)
     perda = ind.perda_peso
     if not perda.realista:
         lista.append(
@@ -118,12 +131,7 @@ def avisos(q: Questionario, eleg: Elegibilidade, acolhimento: Acolhimento) -> tu
                 semana=perda.semana_objetivo,
             )
         )
-    # O ganho muscular pedido nunca excede o máximo: o questionário limita-o a 2 kg (5.C).
-    if ind.cintura_de_risco:
-        lista.extend([textos.VISCERAL_REDUCAO, textos.VISCERAL_INDICADOR])
-        if {Condicao.HIPERTENSAO, Condicao.DOENCA_CARDIOVASCULAR} & set(q.condicoes):
-            lista.append(textos.INTENSIFICACAO_VALIDACAO_MEDICA)
-    return tuple(dict.fromkeys(lista))
+    return lista
 
 
 def avisos_condicoes(q: Questionario) -> list[str]:
