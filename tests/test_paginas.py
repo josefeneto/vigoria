@@ -80,6 +80,7 @@ def test_numeros_pedidos_sem_casas_decimais() -> None:
         "Perímetro da cintura (cm)": 108,
     }
     assert all(type(n.value) is int for n in at.number_input)
+    assert all(n.min == 0 for n in at.number_input)  # começam em 0: setas ativas
     at.session_state["passo"] = "4b"
     at.run()
     espirituosas = at.selectbox[0]
@@ -94,7 +95,7 @@ def test_gravidez_termina_sem_guardar_respostas() -> None:
     _botao(at, "Seguinte").click().run()
     assert not at.exception
     assert any(textos.GRAVIDEZ in i.value for i in at.info)
-    assert at.session_state[chave("peso_kg")] is None  # respostas apagadas
+    assert at.session_state[chave("peso_kg")] == 0  # respostas apagadas (valor inicial)
     assert "resultado" not in at.session_state
 
 

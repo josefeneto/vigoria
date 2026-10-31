@@ -5,7 +5,14 @@ from typing import Any
 
 import pytest
 
-from vigoria.interface.estado import INTEIROS, chave, estado_inicial, para_estado, para_respostas
+from vigoria.interface.estado import (
+    INTEIROS,
+    ZERO_E_VAZIO,
+    chave,
+    estado_inicial,
+    para_estado,
+    para_respostas,
+)
 from vigoria.interface.passos import (
     CAMPOS,
     PASSOS,
@@ -221,6 +228,22 @@ def test_estado_dos_widgets_ida_e_volta(ficheiro: str) -> None:
     # Os campos pedidos em inteiros voltam arredondados (6,5 h de sono → 7); o resto igual.
     inteiros = {c: int(v + 0.5) for c in INTEIROS if isinstance(v := getattr(q, c, None), float)}
     assert volta == q.model_copy(update=inteiros)
+
+
+def test_caixas_comecam_em_zero_e_zero_e_sem_resposta() -> None:
+    estado = estado_inicial()
+    assert all(estado[chave(c)] == 0 for c in ZERO_E_VAZIO)
+    # Vinho e doces: 0 é resposta válida, por isso começam vazios.
+    assert estado[chave("vinho_copos_dia")] is None and estado[chave("doces_por_semana")] is None
+    r = para_respostas(estado)
+    assert r["peso_kg"] is None and r["cintura_alvo_cm"] is None
+    assert {e.campo for e in validar_passo("1", r)} >= {"idade", "altura_cm", "peso_kg"}
+    estado[chave("objetivo_muscular_tipo")] = "kg"
+    assert para_respostas(estado)["objetivo_muscular"] is None
+    estado[chave("objetivo_muscular_kg")] = 2
+    assert para_respostas(estado)["objetivo_muscular"] == 2
+    # Sem halteres nem cintura-alvo nas respostas, a caixa volta a 0.
+    assert para_estado(_r(halteres_kg=None))[chave("halteres_kg")] == 0
 
 
 def test_campos_inteiros_arredondam_a_meia_unidade_para_cima() -> None:

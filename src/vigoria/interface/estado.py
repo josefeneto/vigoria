@@ -48,6 +48,11 @@ INTEIROS = {
     "cintura_alvo_cm",
     OBJETIVO_KG,
 }
+# Caixas que começam em 0 (e não vazias) para as setas +/− funcionarem logo: o Streamlit
+# desativa-as com a caixa vazia. Nestes campos 0 não é resposta possível, por isso 0 conta
+# como «sem resposta». O vinho e os doces ficam vazios: aí 0 é uma resposta válida e não
+# pode ficar dada sem a pessoa a escolher.
+ZERO_E_VAZIO = {"idade", "altura_cm"} | INTEIROS
 
 
 def _inteiro(valor: Any) -> Any:
@@ -55,6 +60,11 @@ def _inteiro(valor: Any) -> Any:
     if isinstance(valor, float | int) and not isinstance(valor, bool):
         return int(valor + 0.5)
     return valor
+
+
+def _sem_zero(campo: str, valor: Any) -> Any:
+    """0 (ou caixa limpa) nos campos de ZERO_E_VAZIO é «sem resposta»."""
+    return None if campo in ZERO_E_VAZIO and not valor else valor
 
 
 def chave(campo: str, opcao: str | None = None) -> str:
@@ -81,7 +91,8 @@ def estado_inicial() -> dict[str, Any]:
         estado[chave("refeicoes", x)] = ""
         estado[chave("refeicoes_faz", x)] = False
     estado[chave(OBJETIVO_TIPO)] = None
-    estado[chave(OBJETIVO_KG)] = None
+    for campo in ZERO_E_VAZIO:
+        estado[chave(campo)] = 0
     return estado
 
 
@@ -93,7 +104,7 @@ def para_respostas(estado: Mapping[str, Any]) -> dict[str, Any]:
             continue
         campo = chave_estado.removeprefix(PREFIXO)
         if "." not in campo and campo not in {OBJETIVO_TIPO, OBJETIVO_KG}:
-            respostas[campo] = valor
+            respostas[campo] = _sem_zero(campo, valor)
     respostas["condicoes_controladas"] = {
         c: estado[k] == "sim"
         for c in controladas_aplicaveis(respostas)
@@ -110,7 +121,7 @@ def para_respostas(estado: Mapping[str, Any]) -> dict[str, Any]:
     if tipo == FORCA_TONUS:
         respostas["objetivo_muscular"] = FORCA_TONUS
     elif tipo == "kg":
-        respostas["objetivo_muscular"] = estado.get(chave(OBJETIVO_KG))
+        respostas["objetivo_muscular"] = _sem_zero(OBJETIVO_KG, estado.get(chave(OBJETIVO_KG)))
     return respostas
 
 
@@ -122,6 +133,8 @@ def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
             continue
         if chave(campo) in estado:
             estado[chave(campo)] = _inteiro(valor) if campo in INTEIROS else valor
+            if campo in ZERO_E_VAZIO and valor is None:
+                estado[chave(campo)] = 0
     for c, controlada in (respostas.get("condicoes_controladas") or {}).items():
         estado[chave("condicoes_controladas", c)] = _SIM_NAO[controlada]
     for x, gravidade in (respostas.get("limitacoes_gravidade") or {}).items():

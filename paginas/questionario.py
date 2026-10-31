@@ -16,7 +16,14 @@ from vigoria.config import obter_configuracao
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.interface.decisoes import avisos_passo_objetivo, decisoes_estrategia, imc_com_classe
 from vigoria.interface.erros import classificar_erro
-from vigoria.interface.estado import FORCA_TONUS, OBJETIVO_KG, OBJETIVO_TIPO, chave, para_estado
+from vigoria.interface.estado import (
+    FORCA_TONUS,
+    OBJETIVO_KG,
+    OBJETIVO_TIPO,
+    ZERO_E_VAZIO,
+    chave,
+    para_estado,
+)
 from vigoria.interface.passos import (
     CAMPOS,
     PASSOS,
@@ -126,8 +133,12 @@ def _radio(campo: str, opcoes: dict[str, str], legendas: dict[str, str] | None =
 
 
 def _numero(campo: str) -> None:
-    """Só números inteiros: não se pede mais rigor a quem responde (a cintura 113 chega)."""
-    st.number_input(t.ROTULOS[campo], value=None, step=1, **W(campo))
+    """Só números inteiros: não se pede mais rigor a quem responde (a cintura 113 chega).
+
+    Os campos de ZERO_E_VAZIO começam em 0 (estado.py), para as setas +/− funcionarem logo.
+    """
+    minimo = 0 if campo in ZERO_E_VAZIO else None
+    st.number_input(t.ROTULOS[campo], value=None, step=1, min_value=minimo, **W(campo))
     comum.erro(campo)
 
 
@@ -265,7 +276,7 @@ def passo_5() -> None:
         **W(OBJETIVO_TIPO),
     )
     if st.session_state[chave(OBJETIVO_TIPO)] == "kg":
-        st.number_input(t.OBJETIVO_MUSCULAR_KG, value=None, step=1, **W(OBJETIVO_KG))
+        st.number_input(t.OBJETIVO_MUSCULAR_KG, value=None, step=1, min_value=0, **W(OBJETIVO_KG))
     st.caption(t.NOTA_GANHO_MUSCULAR)
     comum.erro("objetivo_muscular")
     _radio("intensidade_pedida", t.INTENSIDADE, t.INTENSIDADE_DESCRICAO)
