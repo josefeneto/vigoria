@@ -8,7 +8,8 @@ font = "sans serif"
 baseFontSize = 17                   # público 45+: letra base de pelo menos 17 px
 
 [server]
-headless = false                    # abre o browser em local; em produção (Docker/Railway) usar STREAMLIT_SERVER_HEADLESS=true
+headless = true                     # obrigatório no Community Cloud e no Docker; em local, abrir http://localhost:8501
+# Sem port nem address: ficam os valores por omissão (8501, todas as interfaces).
 
 [client]
 toolbarMode = "minimal"                # sem o botão «Deploy» e opções de programador

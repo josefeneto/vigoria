@@ -106,7 +106,7 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 ## Dados pessoais e RGPD
 
 - Dados de saúde são categoria especial (art. 9.º RGPD): consentimento explícito antes do questionário, finalidade clara, exportar e apagar conta disponíveis.
-- Telemóvel opcional (nacional por omissão, internacional com lista de países), validado com `phonenumbers` e guardado em E.164.
+- Telemóvel não recolhido no MVP (decisão de 31/10/2026): lembretes só por email. Se voltar, opcional, validado com `phonenumbers` e guardado em E.164 (`docs/dominio/QUESTIONARIO.md`, «Contactos»).
 - **Nunca** enviar à LLM nome, email, telemóvel ou identificadores. Só os dados do questionário necessários ao plano, pseudonimizados.
 - Não registar respostas de saúde em logs. Logs só com identificadores técnicos.
 - Publicidade (futura) nunca pode usar dados de saúde para segmentação.

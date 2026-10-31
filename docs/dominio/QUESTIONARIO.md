@@ -112,7 +112,7 @@ O telemóvel (1.M) não é pedido no MVP (decisão de 31/10/2026): ver «Contact
 - `telemovel` (1.M): **não recolhido no MVP** (decisão de 31/10/2026): os lembretes são só por email e, por minimização de dados (RGPD), não se pede o que não se usa. A especificação abaixo fica para quando houver lembretes por SMS ou WhatsApp, que exigirão consentimento próprio.
 - Especificação futura do telemóvel: **opcional**, pedido no passo 6 e editável ou removível em «A minha conta».
   - Dois campos lado a lado: lista de países com bandeira, nome em português e indicativo (ex.: «🇵🇹 Portugal +351»), com pesquisa por escrita; por omissão, **Portugal (+351)**. A seguir, Portugal; depois os restantes por ordem alfabética.
-  - Lista gerada pela biblioteca `phonenumbers` (indicativos) e `babel` (nomes dos países em pt-PT), não escrita à mão.
+  - Lista gerada pela biblioteca `phonenumbers` (indicativos; saiu das dependências a 31/10/2026 e volta a entrar nessa altura) e `babel` (nomes dos países em pt-PT), não escrita à mão.
   - Validação com `phonenumbers`: tem de ser um número de telemóvel válido para o país escolhido (em Portugal, 9 algarismos a começar por 9). O utilizador pode escrever com ou sem espaços; se colar um número com `+` ou `00`, o país é detetado automaticamente.
   - Guardado no formato internacional E.164 (ex.: `+3519XXXXXXXX`) e apresentado no formato nacional legível (ex.: «912 345 678»).
   - Texto junto ao campo: «Opcional. Usamos o seu telemóvel apenas para contacto sobre a sua conta e, no futuro, se o ativar, para lembretes por SMS ou WhatsApp. Nunca o partilhamos.»
