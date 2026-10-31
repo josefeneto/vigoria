@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano, PlanoGerado
 from vigoria.modelos.questionario import Questionario
@@ -25,9 +26,7 @@ from vigoria.motor.voz import (
 from vigoria.regras import textos
 
 RAIZ = Path(__file__).parent.parent
-RESPOSTA = json.loads(
-    (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text("utf-8")
-)
+RESPOSTA = json.loads(ler_resposta_simulada())
 
 
 def _persona() -> tuple[Questionario, Estrategia]:

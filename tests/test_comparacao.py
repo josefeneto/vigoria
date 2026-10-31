@@ -10,6 +10,7 @@ from pydantic import BaseModel, SecretStr
 
 from vigoria.config import Configuracao
 from vigoria.llm.base import ErroLLM, Metricas, RespostaTeste
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
@@ -20,9 +21,7 @@ from vigoria.motor.gerador import gerar_plano
 from vigoria.motor.voz import aplicar_voz, textos_da_llm
 
 RAIZ = Path(__file__).parent.parent
-RESPOSTA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
-    encoding="utf-8"
-)
+RESPOSTA = ler_resposta_simulada()
 
 
 def _persona() -> tuple[Questionario, Estrategia]:

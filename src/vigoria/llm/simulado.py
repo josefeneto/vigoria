@@ -5,29 +5,35 @@ AMBIENTE=local (config.py) e nunca tem reserva (llm/escolha.py). Com respostas d
 das da persona de teste, a verificação pode recusar o plano: é o comportamento esperado.
 """
 
-from pathlib import Path
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 
 from pydantic import BaseModel
 
 from vigoria.llm.base import ErroLLM, RespostaTeste
 
-RAIZ = Path(__file__).resolve().parents[3]
-RESPOSTA = RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json"
+# Dados do pacote, como os prompts; os testes usam a mesma resposta (ler_resposta_simulada).
+RESPOSTA = files("vigoria.llm").joinpath("resposta_simulada.json")
+
+
+def ler_resposta_simulada() -> str:
+    """A resposta do gerador para a persona de teste, em JSON."""
+    return RESPOSTA.read_text(encoding="utf-8")
 
 
 class ProvedorSimulado:
-    """Implementa ProvedorLLM com a resposta de tests/fixtures/."""
+    """Implementa ProvedorLLM com a resposta guardada em vigoria/llm/resposta_simulada.json."""
 
     nome = "simulado"
     modelo = "persona_teste"
 
-    def __init__(self, resposta: Path = RESPOSTA) -> None:
+    def __init__(self, resposta: Traversable = RESPOSTA) -> None:
         self._resposta = resposta
         self.ultimo_provedor: str | None = None
 
     def gerar_json[M: BaseModel](self, sistema: str, pedido: str, schema: type[M]) -> M:
         try:
-            texto = self._resposta.read_text("utf-8")
+            texto = self._resposta.read_text(encoding="utf-8")
         except OSError:
             raise ErroLLM(f"Falta a resposta simulada ({self._resposta.name}).") from None
         self.ultimo_provedor = self.nome

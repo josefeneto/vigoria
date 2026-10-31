@@ -3,7 +3,6 @@
 import contextlib
 import io
 import json
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -14,12 +13,11 @@ from vigoria.config import Configuracao
 from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM
 from vigoria.llm.groq import ProvedorGroq
 from vigoria.llm.openai_compat import schema_estrito
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.plano import PlanoGerado
 from vigoria.motor import cli
 
-RESPOSTA = (Path(__file__).parent / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
-    encoding="utf-8"
-)
+RESPOSTA = ler_resposta_simulada()
 PEDIDO = "Pedido com dados de saúde: hipertensão controlada"
 LIMITES = {
     "x-ratelimit-limit-tokens": "8000",

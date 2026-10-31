@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from vigoria.llm.base import ErroLLM, RespostaTeste
 from vigoria.llm.escolha import ProvedorComReserva
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.plano import PlanoGerado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor import cli
@@ -24,7 +25,7 @@ from vigoria.motor.verificacao import TipoFalha
 from vigoria.regras import textos
 
 RAIZ = Path(__file__).parent.parent
-BOA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text("utf-8")
+BOA = ler_resposta_simulada()
 
 
 CINCO_KG = (

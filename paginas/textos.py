@@ -13,6 +13,10 @@ from vigoria.regras.elegibilidade import Modo
 
 MARCA = "Vigoria"
 ASSINATURA = "O seu plano, à sua medida."
+DEMO_AVISO = (
+    "Versão de demonstração — não introduza dados reais de saúde. "
+    "Os dados são processados em servidores fora da UE."
+)
 ANTERIOR = "Anterior"
 SEGUINTE = "Seguinte"
 ALTERAR = "Alterar"

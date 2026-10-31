@@ -3,7 +3,6 @@
 import contextlib
 import io
 import logging
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -20,12 +19,11 @@ from vigoria.llm.gemini import (
     e_quota_diaria,
     espera_sugerida_s,
 )
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.plano import PlanoGerado
 from vigoria.motor import cli
 
-RESPOSTA = (Path(__file__).parent / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
-    encoding="utf-8"
-)
+RESPOSTA = ler_resposta_simulada()
 PEDIDO = "Pedido com dados de saúde: hipertensão controlada"
 
 

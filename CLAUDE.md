@@ -54,13 +54,13 @@ src/vigoria/
   regras/               cálculos e decisões determinísticas — SEM LLM (IMC, cintura, hidratação, proteína, elegibilidade, intensidade)
   conteudo/             YAML editorial: exercicios.yaml, fases.yaml, alimentacao.yaml, avisos.yaml
   motor/                pipeline de geração (ver abaixo) + cli.py
-  llm/                  interface ProvedorLLM; gemini.py (principal), groq.py (reserva)
+  llm/                  interface ProvedorLLM; gemini.py (principal), groq.py (reserva), simulado.py (só local)
+  prompts/              prompts de sistema versionados (.md), lidos com importlib.resources — nunca embutidos no código
   dados/                SQLAlchemy 2.x, repositórios, migrações Alembic
   notificacoes/         envio de email (Brevo)
   exportacao/           plano em PDF/DOCX
   tarefas/              lembretes (executado por cron no Railway)
 pwa/                    manifest.webmanifest, sw.js, ícones, página offline, Caddyfile (camada PWA à frente do Streamlit)
-prompts/                prompts de sistema versionados (.md) — nunca embutidos no código
 tests/                  pytest; fixtures em tests/fixtures/
 docs/                   plano, estado, domínio, referência
 ```
@@ -115,7 +115,7 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 
 - Python 3.14 (`requires-python = ">=3.14"`), tipagem em todas as funções públicas, Pydantic v2 para modelos, SQLAlchemy 2.x.
 - Nomes de módulos, classes e funções de domínio em português sem acentos (`calcular_imc`, `Questionario`); termos técnicos genéricos podem ficar em inglês (`client`, `retry`).
-- Docstrings e comentários em PT-EU, curtos. Textos visíveis ao utilizador em `paginas/` ou `prompts/`, nunca espalhados pelo código.
+- Docstrings e comentários em PT-EU, curtos. Textos visíveis ao utilizador em `paginas/` ou `src/vigoria/prompts/`, nunca espalhados pelo código.
 - Testes: cada regra em `regras/` tem testes com casos-limite. Chamadas à LLM marcadas com `@pytest.mark.llm` e simuladas por omissão. Os testes `llm` só correm de verdade com a variável `VIGORIA_TESTES_LLM_REAIS=1`, lida apenas de `os.environ` (nunca do `.env`); sem ela, o `conftest.py` salta-os. O mesmo vale para a CLI: gerar um plano completo chama o Gemini, por isso só `--so-estrategia` corre sem me perguntar. Nunca definas essa variável nem corras esses testes: pede-me para o fazer.
 - Configuração por variáveis de ambiente lidas num único sítio (`src/vigoria/config.py`); em alternativa, de `st.secrets` (Streamlit Community Cloud, `AMBIENTE=demo`, só dados fictícios).
 - Modelo da LLM configurável (`GEMINI_MODEL`); não fixar nomes de modelos no código.

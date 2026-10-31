@@ -13,6 +13,7 @@ from typing import Any
 
 import pytest
 
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.plano import Plano, PlanoGerado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor import ortografia
@@ -33,9 +34,7 @@ from vigoria.motor.verificacao import (
 from vigoria.motor.voz import inserir_avisos, rever_estilo
 
 RAIZ = Path(__file__).parent.parent
-RESPOSTA = json.loads(
-    (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text("utf-8")
-)
+RESPOSTA = json.loads(ler_resposta_simulada())
 
 
 def _q(ficheiro: str = "persona_teste.json", **alteracoes: Any) -> Questionario:

@@ -3,13 +3,17 @@
 import contextlib
 import io
 import json
+import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import BaseModel
 
+import vigoria
 from vigoria.conteudo.carregar import carregar_alimentacao
+from vigoria.llm.simulado import RESPOSTA as FICHEIRO_SIMULADO
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import PlanoGerado
 from vigoria.modelos.questionario import Questionario
@@ -18,7 +22,10 @@ from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import (
     CAMPOS_QUESTIONARIO,
     MAX_TEXTO_LIVRE,
+    PROMPT_CORRECAO,
+    PROMPT_SISTEMA,
     ErroGeracao,
+    carregar_prompt_correcao,
     carregar_prompt_sistema,
     conteudo_pedido,
     gerar_plano,
@@ -30,7 +37,7 @@ from vigoria.motor.treino import construir_treino
 
 RAIZ = Path(__file__).parent.parent
 FIXTURES = Path(__file__).parent / "fixtures"
-RESPOSTA = (FIXTURES / "resposta_gerador_persona_teste.json").read_text(encoding="utf-8")
+RESPOSTA = ler_resposta_simulada()
 
 
 def _dados(ficheiro: str) -> dict[str, Any]:
@@ -59,6 +66,19 @@ class ProvedorFalso:
 
 
 # ---------------------------------------------------------------- Prompt de sistema
+
+
+def test_prompts_e_resposta_simulada_sao_dados_do_pacote() -> None:
+    """Lidos com importlib.resources de dentro de vigoria/ e declarados no pyproject.toml,
+    para funcionarem também com uma instalação normal («pip install .»)."""
+    pacote = Path(vigoria.__file__).parent
+    for ficheiro in (PROMPT_SISTEMA, PROMPT_CORRECAO, FICHEIRO_SIMULADO):
+        assert Path(str(ficheiro)).is_relative_to(pacote) and ficheiro.is_file()
+    dados = tomllib.loads((RAIZ / "pyproject.toml").read_text("utf-8"))
+    dados_pacote = dados["tool"]["setuptools"]["package-data"]
+    assert dados_pacote["vigoria.prompts"] == ["*.md"]
+    assert dados_pacote["vigoria.llm"] == ["resposta_simulada.json"]
+    assert carregar_prompt_correcao().versao
 
 
 def test_prompt_versao_e_texto() -> None:

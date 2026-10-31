@@ -13,6 +13,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "vigoria.conteudo" = ["*.yaml", "dicionario/*"]
+"vigoria.prompts" = ["*.md"]
+"vigoria.llm" = ["resposta_simulada.json"]
 
 [tool.ruff]
 line-length = 100

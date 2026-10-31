@@ -1,18 +1,51 @@
-"""Configuração da aplicação, lida de variáveis de ambiente e do ficheiro .env.
+"""Configuração da aplicação, lida de variáveis de ambiente, do ficheiro .env e, em
+alternativa, de st.secrets (Streamlit Community Cloud, AMBIENTE=demo, sem .env).
 
 É o único sítio do código que lê configuração. As chaves ficam em SecretStr
 para nunca aparecerem em logs ou mensagens de erro.
 """
 
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic.fields import FieldInfo
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 # Fornecedores de LLM: cada um tem <nome>_api_key e <nome>_model (llm/escolha.py).
 # «simulado» (llm/simulado.py) não tem chave nem modelo e só é aceite com AMBIENTE=local.
 NomeProvedor = Literal["gemini", "groq", "mistral", "simulado"]
+
+
+class _FonteSecretsStreamlit(PydanticBaseSettingsSource):
+    """Chaves de topo do .streamlit/secrets.toml (as secções, como [auth], ficam de fora).
+
+    Prioridade mais baixa: o ambiente e o .env ganham sempre. Sem o ficheiro, não faz nada.
+    """
+
+    def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
+        return None, field_name, False
+
+    def __call__(self) -> dict[str, Any]:
+        try:
+            import streamlit as st
+
+            if not st.secrets.load_if_toml_exists():
+                return {}
+            segredos = st.secrets.to_dict()
+        except Exception:  # sem Streamlit ou ficheiro inválido: segue sem st.secrets
+            return {}
+        campos = self.settings_cls.model_fields
+        return {
+            k.lower(): v
+            for k, v in segredos.items()
+            if k.lower() in campos and not isinstance(v, Mapping)
+        }
 
 
 class Configuracao(BaseSettings):
@@ -34,6 +67,23 @@ class Configuracao(BaseSettings):
     email_nome_remetente: str = "Vigoria"
     app_url: str = "http://localhost:8501"
     ambiente: Literal["local", "demo", "producao"] = "local"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            _FonteSecretsStreamlit(settings_cls),
+            file_secret_settings,
+        )
 
     @field_validator("vigoria_provedor_reserva", mode="before")
     @classmethod

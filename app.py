@@ -7,6 +7,7 @@ Fase 5: ainda sem contas; as respostas e o plano vivem só em st.session_state.
 import streamlit as st
 
 from paginas import textos as t
+from vigoria.config import obter_configuracao
 
 st.set_page_config(page_title=t.MARCA, page_icon="🌿", layout="centered")
 
@@ -17,6 +18,10 @@ st.html(
     [data-testid="stPageLink"] a { min-height: 3rem; align-items: center; }
     </style>"""
 )
+
+# Na demonstração (Streamlit Community Cloud), em todas as páginas.
+if obter_configuracao().ambiente == "demo":
+    st.warning(t.DEMO_AVISO, icon=":material/science:")
 
 navegacao = st.navigation(
     [

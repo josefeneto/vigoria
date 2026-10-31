@@ -143,6 +143,19 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_separador() -> None:
     assert "Em vez de:" in "\n".join(m.value for m in at.markdown)
 
 
+def test_faixa_de_demonstracao_so_em_demo(monkeypatch: pytest.MonkeyPatch) -> None:
+    aviso = "Versão de demonstração — não introduza dados reais de saúde."
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not any(aviso in w.value for w in at.warning)
+    monkeypatch.setenv("AMBIENTE", "demo")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
+    obter_configuracao.cache_clear()
+    for pagina in ("paginas/inicio.py", QUESTIONARIO, "paginas/plano.py", "paginas/privacidade.py"):
+        at.switch_page(pagina).run()
+        assert not at.exception
+        assert any(aviso in w.value for w in at.warning), pagina
+
+
 def test_plano_sem_resultado_convida_ao_questionario() -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     at.switch_page("paginas/plano.py").run()

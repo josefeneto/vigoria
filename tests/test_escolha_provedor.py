@@ -11,15 +11,13 @@ from vigoria.llm.base import ErroLLM, RespostaTeste, TipoFalha
 from vigoria.llm.escolha import ProvedorComReserva, criar_provedor
 from vigoria.llm.gemini import ProvedorGemini
 from vigoria.llm.groq import ProvedorGroq
-from vigoria.llm.simulado import ProvedorSimulado
+from vigoria.llm.simulado import ProvedorSimulado, ler_resposta_simulada
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import gerar_plano
 
 RAIZ = Path(__file__).parent.parent
-RESPOSTA = (RAIZ / "tests" / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
-    encoding="utf-8"
-)
+RESPOSTA = ler_resposta_simulada()
 
 
 class _Falso:

@@ -10,7 +10,8 @@ alimentar de cada fase e um resumo do treino (só contexto), em JSON compacto.
 import json
 import re
 from functools import cache
-from pathlib import Path
+from importlib.resources import files
+from importlib.resources.abc import Traversable
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -32,9 +33,10 @@ from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 from vigoria.motor.semana import construir_semana
 from vigoria.motor.treino import construir_treino
 
-PROMPTS = Path(__file__).resolve().parents[3] / "prompts"
-PROMPT_SISTEMA = PROMPTS / "gerador_sistema.md"
-PROMPT_CORRECAO = PROMPTS / "gerador_correcao.md"
+# Dados do pacote (vigoria/prompts/): funcionam também quando instalado sem «-e».
+PROMPTS = files("vigoria.prompts")
+PROMPT_SISTEMA = PROMPTS.joinpath("gerador_sistema.md")
+PROMPT_CORRECAO = PROMPTS.joinpath("gerador_correcao.md")
 _CABECALHO = re.compile(r"\A<!--\s*versao:\s*(\d+)\b.*?-->\s*", re.DOTALL)
 
 # Lista explícita: um campo novo do questionário não segue para a LLM por omissão.
@@ -113,8 +115,8 @@ class Pedido(BaseModel):
     conteudo: str
 
 
-def _carregar_prompt(ficheiro: Path) -> PromptSistema:
-    """Lê um prompt de prompts/ e separa a versão do cabeçalho do texto."""
+def _carregar_prompt(ficheiro: Traversable) -> PromptSistema:
+    """Lê um prompt de vigoria/prompts/ e separa a versão do cabeçalho do texto."""
     texto = ficheiro.read_text(encoding="utf-8")
     cabecalho = _CABECALHO.match(texto)
     if cabecalho is None:
@@ -124,13 +126,13 @@ def _carregar_prompt(ficheiro: Path) -> PromptSistema:
 
 @cache
 def carregar_prompt_sistema() -> PromptSistema:
-    """prompts/gerador_sistema.md."""
+    """vigoria/prompts/gerador_sistema.md."""
     return _carregar_prompt(PROMPT_SISTEMA)
 
 
 @cache
 def carregar_prompt_correcao() -> PromptSistema:
-    """prompts/gerador_correcao.md: acrescentado ao pedido na regeneração."""
+    """vigoria/prompts/gerador_correcao.md: acrescentado ao pedido na regeneração."""
     return _carregar_prompt(PROMPT_CORRECAO)
 
 
@@ -266,7 +268,7 @@ def montar_plano(
 
 
 def montar_pedido_correcao(pedido: Pedido, motivos: tuple[str, ...]) -> Pedido:
-    """O mesmo pedido, com os motivos da rejeição anterior (prompts/gerador_correcao.md)."""
+    """O mesmo pedido, com os motivos da rejeição anterior (vigoria/prompts/gerador_correcao.md)."""
     correcao = carregar_prompt_correcao()
     lista = "\n".join(f"- {m}" for m in motivos)
     texto = correcao.texto.replace("{motivos}", lista)

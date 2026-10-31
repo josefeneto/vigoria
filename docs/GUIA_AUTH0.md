@@ -60,14 +60,48 @@ Na aplicação `Vigoria`, separador *Connections*, desligar tudo o que não seja
 
 ## 7. Testar online no Streamlit Community Cloud (opcional, só com dados fictícios)
 
-Serve para mostrar a app a algumas pessoas durante as Fases 5 a 7, antes do Railway.
+Serve para mostrar a app a algumas pessoas convidadas durante as Fases 5 a 7, antes do Railway. A app usa o Gemini real (com a Groq de reserva) e mostra em todas as páginas a faixa «Versão de demonstração — não introduza dados reais de saúde. Os dados são processados em servidores fora da UE.» Depois de criada, **atualiza-se sozinha a cada `git push` para o `main`**.
 
-1. Em share.streamlit.io, entrar com o GitHub e criar a app a partir do repositório `vigoria`, ramo `main`, ficheiro `app.py`. Escolher um nome curto; o endereço fica `https://<nome>.streamlit.app`. Se o repositório for privado, aceitar a permissão extra que o Streamlit pede ao GitHub. Em *Advanced settings*, escolher **Python 3.14**.
-2. No Auth0 (*Applications → Vigoria → Settings*), juntar aos valores locais, separados por vírgulas:
-   - Allowed Callback URLs: `https://<nome>.streamlit.app/oauth2callback`
-   - Allowed Logout URLs e Allowed Web Origins: `https://<nome>.streamlit.app`
-3. Na app do Community Cloud, *Settings → Secrets*: colar o conteúdo do `secrets.toml` local com o `redirect_uri` trocado para `https://<nome>.streamlit.app/oauth2callback`, e juntar no topo as variáveis do `.env` que a app precisa (por exemplo `GEMINI_API_KEY = "..."`, `GEMINI_MODEL = "..."`, `AMBIENTE = "demo"`). O `secrets.toml` local fica como está.
-4. Guardar, esperar que a app reinicie e repetir a verificação rápida da secção 6.
+### 7.1 Criar a app (uma vez)
+
+1. Em share.streamlit.io, entrar com a conta do GitHub. Aceitar a permissão extra para repositórios privados que o Streamlit pede ao GitHub.
+2. *Create app* e escolher a opção de publicar a partir de um repositório do GitHub (os nomes dos menus podem mudar; com repositório privado, a app fica privada).
+3. Preencher:
+   - Repository: `josefeneto/vigoria`
+   - Branch: `main`
+   - Main file path: `app.py`
+   - App URL: um nome curto; o endereço fica `https://<nome>.streamlit.app`.
+4. *Advanced settings*:
+   - Python version: **3.14** (o projeto exige 3.14; se não aparecer na lista, parar e avisar o Claude Code).
+   - Secrets: colar o modelo da secção 7.2 com os valores preenchidos.
+5. *Deploy*. A primeira instalação demora alguns minutos (o Cloud instala o `requirements.txt`, que inclui o próprio projeto com `-e .`).
+6. Na app, *Settings → Sharing*: confirmar que só as pessoas convidadas podem ver a app e convidá-las por email. Cada plano gerado gasta a quota do Gemini, por isso convidar só quem vai testar.
+
+### 7.2 Modelo dos Secrets (TOML)
+
+Copiar os valores do `.env` local (nunca para o chat nem para o git). Só as chaves de topo: as variáveis do ambiente e do `.env` têm prioridade, por isso este modelo só é usado no Cloud.
+
+```toml
+AMBIENTE = "demo"
+VIGORIA_PROVEDOR_LLM = "gemini"
+VIGORIA_PROVEDOR_RESERVA = "groq"
+GEMINI_API_KEY = ""
+GEMINI_MODEL = ""
+GROQ_API_KEY = ""
+GROQ_MODEL = ""
+```
+
+A partir da Fase 6 (login), juntar por baixo a secção `[auth]` do `secrets.toml` local, com o `redirect_uri` trocado para `https://<nome>.streamlit.app/oauth2callback`, e no Auth0 (*Applications → Vigoria → Settings*) juntar aos valores locais, separados por vírgulas:
+- Allowed Callback URLs: `https://<nome>.streamlit.app/oauth2callback`
+- Allowed Logout URLs e Allowed Web Origins: `https://<nome>.streamlit.app`
+
+Depois, repetir a verificação rápida da secção 6.
+
+### 7.3 Verificação rápida
+
+1. Abrir `https://<nome>.streamlit.app`: aparece a faixa de demonstração no topo de todas as páginas.
+2. Preencher o questionário com dados fictícios e gerar o plano.
+3. Se der erro, *Manage app* (canto inferior direito) mostra os registos: copiar para o Claude Code só a mensagem de erro, sem chaves.
 
 **Limitações (por isso só dados fictícios):**
 - Os servidores ficam nos Estados Unidos e não é configurável. Dados de saúde reais exigiriam uma transferência internacional que não queremos no beta.

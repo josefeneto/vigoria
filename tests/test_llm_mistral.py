@@ -1,7 +1,6 @@
 """Provedor Mistral (llm/mistral.py) com um transporte httpx simulado: nenhuma chamada real."""
 
 import json
-from pathlib import Path
 
 import httpx
 import pytest
@@ -11,11 +10,10 @@ from vigoria.config import Configuracao
 from vigoria.llm.base import ErroLLM
 from vigoria.llm.escolha import criar_provedor
 from vigoria.llm.mistral import ProvedorMistral
+from vigoria.llm.simulado import ler_resposta_simulada
 from vigoria.modelos.plano import PlanoGerado
 
-RESPOSTA = (Path(__file__).parent / "fixtures" / "resposta_gerador_persona_teste.json").read_text(
-    encoding="utf-8"
-)
+RESPOSTA = ler_resposta_simulada()
 
 
 def _provedor(resposta: httpx.Response) -> tuple[ProvedorMistral, list[httpx.Request]]:
