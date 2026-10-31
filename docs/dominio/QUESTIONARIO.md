@@ -70,7 +70,7 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 
 | Campo | Prompt | Tipo |
 |---|---|---|
-| `refeicoes` | 2.A–2.E | por refeição: faz/não faz + texto curto opcional (150) |
+| `refeicoes` | 2.A–2.E | por refeição: faz/não faz + texto curto opcional (150). Marcada sem descrição: segue para a LLM como «faz esta refeição (sem descrição)», que dá uma sugestão geral (decisão de 31/10/2026) |
 | `restricoes_alimentares` | 2.F | escolha múltipla (vegetariano, sem lactose, sem glúten, outra) + texto |
 
 ## Passo 4b — Bebidas e consumos (3.A–3.E)
@@ -101,13 +101,14 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 | `acompanhamento_ativo` | 6.A | sim/não | **sim** (recomendado) |
 | `frequencia_registo` | 6.B | semanal / a cada 4 semanas | semanal |
 | `lembretes_email` | 6.C | sim/não | sim |
-| `telemovel_pais` | 1.M | lista de países com indicativo, com pesquisa | **Portugal (+351)** — guardado no `Utilizador`, não no `Questionario` |
-| `telemovel_numero` | 1.M | texto, **opcional** | vazio — guardado no `Utilizador`, não no `Questionario` |
+
+O telemóvel (1.M) não é pedido no MVP (decisão de 31/10/2026): ver «Contactos».
 
 ## Contactos (1.L e 1.M)
 
 - `email` (1.L): vem da autenticação (Auth0, seja Google ou email e palavra-passe); não se pede de novo.
-- `telemovel` (1.M): **opcional**, pedido no passo 6 e editável ou removível em «A minha conta».
+- `telemovel` (1.M): **não recolhido no MVP** (decisão de 31/10/2026): os lembretes são só por email e, por minimização de dados (RGPD), não se pede o que não se usa. A especificação abaixo fica para quando houver lembretes por SMS ou WhatsApp, que exigirão consentimento próprio.
+- Especificação futura do telemóvel: **opcional**, pedido no passo 6 e editável ou removível em «A minha conta».
   - Dois campos lado a lado: lista de países com bandeira, nome em português e indicativo (ex.: «🇵🇹 Portugal +351»), com pesquisa por escrita; por omissão, **Portugal (+351)**. A seguir, Portugal; depois os restantes por ordem alfabética.
   - Lista gerada pela biblioteca `phonenumbers` (indicativos) e `babel` (nomes dos países em pt-PT), não escrita à mão.
   - Validação com `phonenumbers`: tem de ser um número de telemóvel válido para o país escolhido (em Portugal, 9 algarismos a começar por 9). O utilizador pode escrever com ou sem espaços; se colar um número com `+` ou `00`, o país é detetado automaticamente.

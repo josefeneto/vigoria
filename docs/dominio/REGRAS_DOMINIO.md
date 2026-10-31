@@ -226,7 +226,7 @@ Aplicação (decisão de 28/10/2026):
   - **estilo** (o motor corrige, sem chamar a LLM, em `motor/voz.py`): «garantir / garanta / garantam / garante / garantem / garantindo» → «assegurar / assegure / assegurem / assegura / asseguram / assegurando»; todos os brasileirismos da lista com a alternativa (acertando o artigo quando o género muda: «a tela» → «o ecrã», «o time» → «a equipa»); grafia anterior ao AO90 («acção» → «ação», «percepção» → «perceção», «óptimo» → «ótimo»...). Lista em `avisos.yaml` (`estilo.correcoes`). Sem correção conhecida (total, totalmente, perfeito(a), perfeitamente, absoluto(s/a/as), absolutamente, rigoroso(s/a/as), protege, proteger, protegendo) fica só registado no progresso e não bloqueia.
 - **Números no texto da LLM** (decisão de 30/10/2026): valores de peso, proteína, hidratação e calorias nunca; o único valor em kg permitido é o peso dos halteres, igual ao menor entre o do programa (biblioteca e `fases.yaml`) e o declarado (`halteres_kg`). Outros números com unidade (copos, horas, minutos, km, %), também por extenso, só se vierem do questionário, da estratégia ou dos YAML (dentro de um intervalo dos YAML, como «10 a 15 min»).
 - **Semana-tipo e prescrição** (decisão de 30/10/2026): no máximo `dias_semana` dias com sessão (duração maior do que 0), cada um até `minutos_dia`; nos exercícios de referência de cada fase, séries, repetições e descanso iguais aos de `fases.yaml`.
-- **Ortografia** (decisão de 30/10/2026): o texto da LLM é verificado com o dicionário Hunspell pt_PT AO90 (LibreOffice/Natura); por agora as palavras desconhecidas são só aviso e não obrigam a regenerar.
+- **Ortografia** (decisão de 30/10/2026): o texto da LLM é verificado com o dicionário Hunspell pt_PT AO90 (LibreOffice/Natura); por agora as palavras desconhecidas são só aviso e não obrigam a regenerar. Exceção (31/10/2026): se o dicionário só conhecer uma forma acentuada da palavra («exercicios» → «exercícios»), o motor corrige-a sozinho.
 
 ## 9. Acompanhamento e lembretes
 
@@ -243,8 +243,8 @@ Aplicação (decisão de 28/10/2026):
 
 - Email: obrigatório, vem da autenticação.
 - Os contactos pertencem ao modelo `Utilizador`, **não** ao `Questionario`: assim, nunca podem seguir para a LLM por engano.
-- Telemóvel: **opcional**, com país por omissão Portugal (+351) e escolha de qualquer outro país; validado como número de telemóvel do país escolhido e guardado em formato E.164. Especificação em `QUESTIONARIO.md`, secção «Contactos».
-- Nenhum envio por SMS ou WhatsApp no MVP; o telemóvel fica preparado para essa funcionalidade futura, que exigirá consentimento próprio no momento em que for ativada.
+- Telemóvel: **não recolhido no MVP** — lembretes por email; minimização de dados (RGPD). Decidido a 31/10/2026; substitui a decisão de 25/10/2026 (telemóvel opcional).
+- Se no futuro houver lembretes por SMS ou WhatsApp, o telemóvel volta a ser pedido, com consentimento próprio, segundo a especificação guardada em `QUESTIONARIO.md`, secção «Contactos».
 
 Não há decisões de domínio pendentes.
 
@@ -263,3 +263,5 @@ Não há decisões de domínio pendentes.
 - 30/10/2026 — Fase 4C: treino, semana-tipo, hábitos, hidratação e acompanhamento passam a ser do motor e dos YAML; a LLM só escreve o resumo, os marcos de força, a alimentação e as notas. Regras novas do treino (§6.6): repetições do substituto pela sua própria posição e nenhum exercício repetido na mesma fase. Semana-tipo: força em 1 / 2 / 3 dias (1 / 2–4 / 5–7 dias por semana), nunca seguidos, a partir da semana-base do V1.
 - 30/10/2026 — Verificação dividida em segurança (bloqueia e regenera) e estilo (o motor corrige, ou só regista); promessas de resultados ou de segurança redefinidas; Tai Chi só com `tai_chi` nas preferências (§3 e §8).
 - 30/10/2026 — Revisão do plano real (prompt v5): variante contínua do cardio finalizador e marcha «sem acelerar» com «sem intervalos» (§6.3, A CONFIRMAR); promessas de resultado no futuro e «exercícios seguros» (§8); «protege» só como aviso de estilo.
+- 31/10/2026 — Telemóvel não recolhido no MVP — lembretes por email; minimização de dados (RGPD) (§10).
+- 31/10/2026 — Ortografia (§8): uma palavra desconhecida com uma só forma acentuada no dicionário pt_PT («exercicios» → «exercícios») é corrigida pelo motor; as restantes continuam só como aviso.

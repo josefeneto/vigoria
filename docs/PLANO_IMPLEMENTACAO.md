@@ -199,7 +199,7 @@ Na verificação: a regeneração passa só pelas verificações em código, sem
 ```
 Fase 5. Constrói a interface Streamlit seguindo @docs/dominio/QUESTIONARIO.md e .claude/rules/interface-e-textos.md:
 - paginas/questionario.py: passos 0 a 7, um por ecrã, barra de progresso, botões Anterior/Seguinte, respostas em st.session_state, validação ao avançar com mensagens claras em PT-EU.
-- No passo 6, o telemóvel opcional segundo a secção «Contactos» do QUESTIONARIO.md: lista de países com pesquisa (Portugal +351 por omissão, nomes em pt-PT via babel) e número validado com phonenumbers; lógica de validação em src/vigoria/regras/contactos.py, com testes (número português válido, fixo recusado, internacional válido, número colado com +44, campo vazio aceite).
+- No passo 6, só acompanhamento, frequência e lembretes por email (o telemóvel não é recolhido no MVP, decisão de 31/10/2026).
 - No passo 7, mostrar as decisões da estratégia antes de gerar.
 - paginas/plano.py: plano em separadores (Resumo, Treino, Alimentação, Hábitos, Acompanhamento), com a semana-tipo em tabela e os avisos de segurança sempre visíveis.
 - Indicador de progresso durante a geração ("A preparar o seu plano…") e mensagem honesta se a quota da LLM esgotar.
@@ -223,10 +223,10 @@ Fase 6. Lê a secção "Contas e acesso aos dados" do CLAUDE.md e @docs/GUIA_AUT
 - Autenticação com st.login("auth0"); todas as páginas, exceto entrada, privacidade e termos, exigem st.user.is_logged_in.
 - Bloqueio de contas com email por verificar (email_verified falso), com mensagem clara e botão para tentar de novo.
 - Terminar sessão: st.logout() + redirecionamento para o logout do Auth0 (domínio e client_id vindos dos segredos).
-- src/vigoria/dados/: SQLAlchemy 2.x com tabelas utilizador (sub, fornecedor, email, telemovel em E.164 opcional, criado_em), consentimento (versão do texto + data), questionario, plano (JSON + versão do prompt + modelo usado), registo_progresso. Alembic para migrações. SQLite em local, PostgreSQL via DATABASE_URL em produção.
+- src/vigoria/dados/: SQLAlchemy 2.x com tabelas utilizador (sub, fornecedor, email, criado_em; sem telemóvel no MVP, decisão de 31/10/2026), consentimento (versão do texto + data), questionario, plano (JSON + versão do prompt + modelo usado), registo_progresso. Alembic para migrações. SQLite em local, PostgreSQL via DATABASE_URL em produção.
 - Criação automática do utilizador no primeiro login (pelo sub). Se o email já existir com outro sub, mostrar a mensagem definida no CLAUDE.md, sem juntar contas.
 - Repositórios em que todas as funções exigem utilizador_id.
-- Página "A minha conta": ver, alterar ou remover o telemóvel; planos anteriores, exportar todos os meus dados (JSON), apagar conta e dados (com confirmação dupla), e indicação de que a conta Auth0 também é apagada (via Management API ou instrução manual — propõe-me a opção).
+- Página "A minha conta": planos anteriores, exportar todos os meus dados (JSON), apagar conta e dados (com confirmação dupla), e indicação de que a conta Auth0 também é apagada (via Management API ou instrução manual — propõe-me a opção).
 - Garante que nenhuma resposta de saúde vai para os logs.
 Testes dos repositórios com SQLite em memória, incluindo o teste de isolamento: o utilizador A não consegue ler nem alterar dados do utilizador B.
 ```
