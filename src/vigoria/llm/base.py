@@ -48,14 +48,21 @@ class ErroLLM(Exception):
     `codigo` é o código HTTP devolvido pelo serviço (None: rede, tempo esgotado ou formato).
     `permite_reserva`: o fornecedor falhou de vez e vale a pena tentar a reserva
     (503/504 depois das repetições, tempo máximo, quota diária, pedido demasiado grande).
+    `tipo`: a falha do serviço já classificada (None: rede, tempo esgotado, formato ou
+    configuração); a interface usa-o para escolher a mensagem ao utilizador.
     """
 
     def __init__(
-        self, mensagem: str, codigo: int | None = None, permite_reserva: bool = False
+        self,
+        mensagem: str,
+        codigo: int | None = None,
+        permite_reserva: bool = False,
+        tipo: TipoFalha | None = None,
     ) -> None:
         super().__init__(mensagem)
         self.codigo = codigo
         self.permite_reserva = permite_reserva
+        self.tipo = tipo
 
 
 class Metricas(BaseModel):
@@ -290,4 +297,4 @@ class ProvedorBase:
                 )
             case _:
                 mensagem = f"O {self.rotulo} devolveu um erro (código {falha.codigo})."
-        return ErroLLM(mensagem, falha.codigo, permite_reserva=reserva)
+        return ErroLLM(mensagem, falha.codigo, permite_reserva=reserva, tipo=falha.tipo)

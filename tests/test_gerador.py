@@ -63,7 +63,7 @@ class ProvedorFalso:
 
 def test_prompt_versao_e_texto() -> None:
     prompt = carregar_prompt_sistema()
-    assert prompt.versao == "6"
+    assert prompt.versao == "7"
     assert not prompt.texto.startswith("<!--")
     assert prompt.texto.startswith("# Papel")
     # Versão 4 (30/10/2026): só os campos do novo PlanoGerado; v5: promessas e Tai Chi;
@@ -168,7 +168,7 @@ def test_pedido_em_json_compacto() -> None:
 
 def test_pedido_em_texto() -> None:
     pedido = montar_pedido(*_persona())
-    assert pedido.versao_prompt == "6"
+    assert pedido.versao_prompt == "7"
     assert pedido.sistema == carregar_prompt_sistema().texto
     json.loads(pedido.conteudo.split("\n", 1)[1])  # JSON válido depois da 1.ª linha
 
@@ -245,7 +245,7 @@ def test_gerar_plano_com_provedor_falso() -> None:
     assert pedido == montar_pedido(q, e).conteudo
     assert schema is PlanoGerado
 
-    assert plano.versao_prompt == "6"
+    assert plano.versao_prompt == "7"
     assert plano.provedor == "falso"
     assert plano.avisos == e.avisos
     assert [m.semana for m in plano.marcos] == [4, 8, 12, 16]
@@ -297,7 +297,7 @@ def test_cli_so_pedido() -> None:
     with contextlib.redirect_stdout(saida):
         assert cli.main(["--so-pedido", str(RAIZ / "exemplos" / "persona_teste.json")]) == 0
     texto = saida.getvalue()
-    assert texto.startswith("=== PROMPT DE SISTEMA (versão 6) ===")
+    assert texto.startswith("=== PROMPT DE SISTEMA (versão 7) ===")
     assert "=== PEDIDO (indentado para leitura; segue em JSON compacto) ===" in texto
     assert '\n  "treino_resumo": {' in texto  # indentado
     assert "Tamanho enviado:" in texto

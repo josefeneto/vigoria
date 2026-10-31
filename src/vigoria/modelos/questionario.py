@@ -139,6 +139,11 @@ class FrequenciaRegisto(StrEnum):
     A_CADA_4_SEMANAS = "a_cada_4_semanas"
 
 
+# Refeição marcada como feita, mas sem descrição (decisão de 31/10/2026): é este o texto
+# que segue para a LLM, que dá então uma sugestão geral para essa refeição.
+REFEICAO_SEM_DESCRICAO = "faz esta refeição (sem descrição)"
+
+
 class Refeicoes(BaseModel):
     """O que come em cada refeição. Texto vazio = não faz essa refeição."""
 

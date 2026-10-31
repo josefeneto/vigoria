@@ -97,7 +97,7 @@ def test_regenera_uma_vez_com_os_motivos() -> None:
     assert f"- {CINCO_KG}" in segundo
     assert "{motivos}" not in segundo
     plano = resultado.plano  # type: ignore[attr-defined]
-    assert plano.versao_prompt == f"6 (correção {carregar_prompt_correcao().versao})"
+    assert plano.versao_prompt == f"7 (correção {carregar_prompt_correcao().versao})"
     assert progresso[0] == (
         "verificação: 2 falha(s) (numero_no_texto: 1, lista_negra: 1); uma regeneração com os "
         "motivos"
@@ -168,7 +168,7 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 6)." in md
+    assert "Plano gerado com falso (prompt versão 7)." in md
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:
@@ -301,3 +301,13 @@ def test_estilo_corrigido_sem_chamar_a_llm(tmp_path: Path) -> None:
     assert codigo == 0
     assert "Estilo corrigido pelo motor: garantir → assegurar; celular → telemóvel" in saida
     assert "Estilo sem correção conhecida (só aviso): total" in saida
+
+
+def test_acentos_em_falta_corrigidos_sem_chamar_a_llm() -> None:
+    dados = json.loads(BOA)
+    dados["resumo"] += " Faça os exercicios com calma."
+    resultado, _, _ = _correr(json.dumps(dados, ensure_ascii=False))
+    assert resultado.chamadas == 1  # type: ignore[attr-defined]
+    assert "exercicios → exercícios" in resultado.correcoes_estilo  # type: ignore[attr-defined]
+    assert "Faça os exercícios com calma." in resultado.plano.resumo  # type: ignore[attr-defined]
+    assert resultado.palavras_desconhecidas == ()  # type: ignore[attr-defined]

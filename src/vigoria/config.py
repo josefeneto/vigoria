@@ -11,7 +11,8 @@ from pydantic import SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Fornecedores de LLM: cada um tem <nome>_api_key e <nome>_model (llm/escolha.py).
-NomeProvedor = Literal["gemini", "groq", "mistral"]
+# «simulado» (llm/simulado.py) não tem chave nem modelo e só é aceite com AMBIENTE=local.
+NomeProvedor = Literal["gemini", "groq", "mistral", "simulado"]
 
 
 class Configuracao(BaseSettings):
@@ -45,6 +46,10 @@ class Configuracao(BaseSettings):
             raise ValueError(
                 "VIGORIA_PROVEDOR_RESERVA tem de ser diferente de VIGORIA_PROVEDOR_LLM"
             )
+        if self.vigoria_provedor_reserva == "simulado":
+            raise ValueError("O fornecedor simulado não pode ser a reserva")
+        if self.vigoria_provedor_llm == "simulado" and self.ambiente != "local":
+            raise ValueError("O fornecedor simulado só é aceite com AMBIENTE=local")
         return self
 
 

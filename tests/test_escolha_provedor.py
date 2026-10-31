@@ -7,10 +7,11 @@ import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
 from vigoria.config import Configuracao
-from vigoria.llm.base import ErroLLM, RespostaTeste
+from vigoria.llm.base import ErroLLM, RespostaTeste, TipoFalha
 from vigoria.llm.escolha import ProvedorComReserva, criar_provedor
 from vigoria.llm.gemini import ProvedorGemini
 from vigoria.llm.groq import ProvedorGroq
+from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import gerar_plano
@@ -114,12 +115,13 @@ def test_sem_reserva_configurada_levanta_o_erro() -> None:
 def test_reserva_tambem_falha() -> None:
     provedor, _, _, _ = _par(
         ErroLLM("O Gemini não respondeu.", permite_reserva=True),
-        ErroLLM("O Groq recusou.", 413, permite_reserva=True),
+        ErroLLM("O Groq recusou.", 413, permite_reserva=True, tipo=TipoFalha.DEMASIADO_GRANDE),
     )
     with pytest.raises(ErroLLM, match="O Gemini não respondeu. A reserva \\(groq\\)") as erro:
         _plano(provedor)
     assert "O Groq recusou." in str(erro.value)
     assert erro.value.codigo == 413
+    assert erro.value.tipo is TipoFalha.DEMASIADO_GRANDE
     assert not erro.value.permite_reserva
 
 
@@ -170,3 +172,31 @@ def test_variaveis_de_ambiente(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VIGORIA_PROVEDOR_RESERVA", "gemini")
     config = Configuracao(_env_file=None)  # type: ignore[call-arg]
     assert (config.vigoria_provedor_llm, config.vigoria_provedor_reserva) == ("groq", "gemini")
+
+
+# ---------------------------------------------------------------- Simulado (só em local)
+
+
+def test_simulado_em_local_sem_reserva() -> None:
+    provedor = criar_provedor(
+        _config(vigoria_provedor_llm="simulado", vigoria_provedor_reserva="groq")
+    )
+    assert isinstance(provedor.principal, ProvedorSimulado)
+    assert provedor.reserva is None  # uma recusa nunca chega a um fornecedor real
+    assert _plano(provedor) == "simulado"
+
+
+@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+def test_simulado_recusado_fora_de_local(ambiente: str) -> None:
+    with pytest.raises(ValidationError, match="AMBIENTE=local"):
+        _config(vigoria_provedor_llm="simulado", ambiente=ambiente)
+
+
+def test_simulado_nunca_e_reserva() -> None:
+    with pytest.raises(ValidationError, match="não pode ser a reserva"):
+        _config(vigoria_provedor_reserva="simulado")
+
+
+def test_simulado_sem_ficheiro_da_erro_claro(tmp_path: Path) -> None:
+    with pytest.raises(ErroLLM, match="Falta a resposta simulada"):
+        ProvedorSimulado(tmp_path / "nao_existe.json").gerar_json("", "", Questionario)

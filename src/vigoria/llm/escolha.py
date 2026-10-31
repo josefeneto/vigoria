@@ -3,6 +3,7 @@
 A reserva só é usada quando o principal falha de vez (ErroLLM.permite_reserva):
 503/504 depois das repetições, tempo máximo excedido, quota diária esgotada ou
 pedido demasiado grande (413). Nunca por o principal demorar, dentro dos 120 s.
+Com o fornecedor simulado não há reserva: uma recusa nunca chega a um fornecedor real.
 """
 
 from collections.abc import Callable
@@ -14,11 +15,13 @@ from vigoria.llm.base import ErroLLM, Progresso, ProvedorLLM, RespostaTeste, pro
 from vigoria.llm.gemini import ProvedorGemini
 from vigoria.llm.groq import ProvedorGroq
 from vigoria.llm.mistral import ProvedorMistral
+from vigoria.llm.simulado import ProvedorSimulado
 
 FORNECEDORES: dict[str, Callable[[Configuracao], ProvedorLLM]] = {
     "gemini": lambda config: ProvedorGemini(config=config),
     "groq": lambda config: ProvedorGroq(config=config),
     "mistral": lambda config: ProvedorMistral(config=config),
+    "simulado": lambda config: ProvedorSimulado(),
 }
 
 
@@ -31,7 +34,7 @@ def criar_provedor(config: Configuracao | None = None) -> ProvedorComReserva:
     """O fornecedor principal e, se estiver configurada, a reserva."""
     config = obter_configuracao() if config is None else config
     principal = criar_fornecedor(config.vigoria_provedor_llm, config)
-    reserva = config.vigoria_provedor_reserva
+    reserva = None if principal.nome == "simulado" else config.vigoria_provedor_reserva
     return ProvedorComReserva(principal, criar_fornecedor(reserva, config) if reserva else None)
 
 
@@ -69,6 +72,7 @@ class ProvedorComReserva:
                 raise ErroLLM(
                     f"{erro} A reserva ({usado.nome}) também falhou: {erro_reserva}",
                     erro_reserva.codigo,
+                    tipo=erro_reserva.tipo,
                 ) from None
         self.ultimo_provedor = usado.nome
         self._progresso(f"resposta gerada por: {usado.nome} (modelo {usado.modelo})")

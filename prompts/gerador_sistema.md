@@ -1,4 +1,4 @@
-<!-- versao: 6 | data: 30/10/2026 | papel: gerador (motor/gerador.py) -->
+<!-- versao: 7 | data: 31/10/2026 | papel: gerador (motor/gerador.py) -->
 
 # Papel
 
@@ -41,6 +41,7 @@ Usa sempre a norma de Portugal: ecrã, telemóvel, utilizador, guardar, descarre
   - Ligeira: pão ao pequeno-almoço e numa refeição adicional, porção moderada; doces raramente; refrigerantes só ocasionalmente.
   - Média: pão só ao pequeno-almoço; doces raramente; sem refrigerantes.
   - Alta: pão eliminado ou mínimo ao pequeno-almoço; sem doces; só água.
+  - Se a refeição vier como «faz esta refeição (sem descrição)», a pessoa faz essa refeição mas não disse o que come: dá uma sugestão geral e simples para ela, a partir dos princípios de `alimentacao`, sem supor o que come hoje.
 - **`bebidas_e_alcool`**: duas ou três frases. Álcool: Ligeira, reduzir cerca de um terço; Média, reduzir para metade; Alta, eliminar. A água é a bebida habitual.
 - **`prioridades_alimentares`**: exatamente quatro frases, uma por fase, a partir de `alimentacao.foco_por_fase`.
 - **`notas_personalizadas`**: no máximo três notas que mostrem que o plano foi pensado para esta pessoa (objetivo, rotina, preferências, restrições). Não digas que o plano «protege» uma condição de saúde nem que os exercícios são «seguros»: diz que o plano «tem em conta» a condição ou que «foi adaptado a» ela.

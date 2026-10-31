@@ -13,7 +13,7 @@ from google.genai import errors
 from pydantic import SecretStr
 
 from vigoria.config import Configuracao
-from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM
+from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM, TipoFalha
 from vigoria.llm.gemini import (
     QUOTA_DIARIA,
     ProvedorGemini,
@@ -209,6 +209,7 @@ def test_429_por_minuto_desiste_ao_fim_de_3_tentativas() -> None:
     with pytest.raises(ErroLLM, match="por minuto") as erro:
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert erro.value.codigo == 429
+    assert erro.value.tipo is TipoFalha.POR_MINUTO
     assert len(modelos.chamadas) == MAX_TENTATIVAS == 3
     assert len(registo.esperas) == 2
 
@@ -219,6 +220,7 @@ def test_quota_diaria_nao_repete() -> None:
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert QUOTA_DIARIA == "quota diária esgotada, tenta depois das 8h00"
     assert QUOTA_DIARIA in str(erro.value)
+    assert erro.value.tipo is TipoFalha.QUOTA_DIARIA
     assert erro.value.permite_reserva
     assert len(modelos.chamadas) == 1
     assert registo.esperas == []
@@ -239,6 +241,7 @@ def test_indisponivel_desiste_e_permite_reserva() -> None:
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert len(modelos.chamadas) == MAX_TENTATIVAS
     assert erro.value.codigo == 503
+    assert erro.value.tipo is TipoFalha.INDISPONIVEL
     assert erro.value.permite_reserva
 
 

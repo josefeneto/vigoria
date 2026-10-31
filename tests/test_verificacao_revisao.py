@@ -15,9 +15,14 @@ import pytest
 
 from vigoria.modelos.plano import Plano, PlanoGerado
 from vigoria.modelos.questionario import Questionario
+from vigoria.motor import ortografia
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import montar_plano
-from vigoria.motor.ortografia import palavras_desconhecidas
+from vigoria.motor.ortografia import (
+    corrigir_acentuacao,
+    forma_acentuada,
+    palavras_desconhecidas,
+)
 from vigoria.motor.verificacao import (
     TIPOS_DO_MOTOR,
     TipoFalha,
@@ -350,3 +355,45 @@ def test_ortografia_aceita_tai_chi() -> None:
 
 def test_ortografia_nao_chumba_o_plano() -> None:
     assert _falhas(_com_texto("Mantenha a durquetura.")) == []
+
+
+# ---------------------------------------------------------------- Acentos (correção automática)
+
+
+def test_acento_em_falta_e_corrigido() -> None:
+    plano, correcoes = corrigir_acentuacao(_plano(_com_texto("Faça os exercicios com calma.")))
+    assert "Faça os exercícios com calma." in plano.resumo
+    assert correcoes == ("exercicios → exercícios",)
+    assert palavras_desconhecidas(plano) == ()
+
+
+def test_acento_mantem_maiuscula_e_corrige_em_todos_os_campos() -> None:
+    resposta = _com_texto("Sessoes curtas.")
+    resposta["notas_personalizadas"][0] += " Sessoes curtas."
+    plano, correcoes = corrigir_acentuacao(_plano(resposta))
+    assert "Sessões curtas." in plano.resumo
+    assert plano.notas_personalizadas[0].endswith("Sessões curtas.")
+    assert correcoes == ("Sessoes → Sessões",)
+
+
+def test_sem_forma_acentuada_fica_so_como_aviso() -> None:
+    plano, correcoes = corrigir_acentuacao(_plano(_com_texto("Mantenha a durquetura e a acção.")))
+    assert correcoes == ()  # «acção» difere de «ação» numa letra, não só no acento
+    assert palavras_desconhecidas(plano) == ("durquetura", "acção")
+
+
+def test_mais_de_uma_forma_acentuada_nao_corrige(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _Dicionario:
+        def suggest(self, palavra: str) -> list[str]:
+            return ["pêlo", "pélo", "pelos"]
+
+        def lookup(self, palavra: str) -> bool:
+            return True
+
+    monkeypatch.setattr(ortografia, "_dicionario", lambda: _Dicionario())
+    assert forma_acentuada("pelo") is None
+
+
+def test_sem_palavras_desconhecidas_nao_muda_o_plano() -> None:
+    plano = _plano(_resposta())
+    assert corrigir_acentuacao(plano) == (plano, ())

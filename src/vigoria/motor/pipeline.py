@@ -2,7 +2,8 @@
 
 Só o texto da LLM pode levar a uma regeneração; uma falha do que o motor monta é um
 erro do código (ErroMotor), sem nova chamada. O estilo (brasileirismos, grafia anterior
-ao AO90, «garantir») é corrigido em voz.py, sem chamar a LLM.
+ao AO90, «garantir») é corrigido em voz.py e os acentos que faltem em ortografia.py,
+sem chamar a LLM.
 
 No máximo 3 chamadas à LLM por plano (CLAUDE.md): geração, uma regeneração com os motivos
 da verificação e, se a regeneração também falhar, uma terceira chamada para o fornecedor
@@ -21,7 +22,7 @@ from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.gerador import ErroGeracao, gerar_plano
-from vigoria.motor.ortografia import palavras_desconhecidas
+from vigoria.motor.ortografia import corrigir_acentuacao, palavras_desconhecidas
 from vigoria.motor.verificacao import TIPOS_DO_MOTOR, Falha, verificar
 from vigoria.motor.voz import RevisaoEstilo, inserir_avisos, rever_estilo
 from vigoria.regras import textos
@@ -150,7 +151,11 @@ def _gerar(
     q: Questionario, e: Estrategia, provedor: _ProvedorContado, motivos: tuple[str, ...]
 ) -> RevisaoEstilo:
     plano = gerar_plano(q, e, provedor, motivos)  # type: ignore[arg-type]
-    return rever_estilo(inserir_avisos(plano, e))
+    revisao = rever_estilo(inserir_avisos(plano, e))
+    plano, acentos = corrigir_acentuacao(revisao.plano)
+    if not acentos:
+        return revisao
+    return revisao.model_copy(update={"plano": plano, "correcoes": revisao.correcoes + acentos})
 
 
 def _resumo(falhas: list[Falha]) -> str:

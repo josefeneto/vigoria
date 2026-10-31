@@ -8,7 +8,7 @@ AO90 (avisos.yaml, `estilo.correcoes`). O que não tem correção conhecida
 """
 
 import re
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from functools import cache
 from typing import Any
 
@@ -106,17 +106,10 @@ def corrigir_texto(texto: str) -> tuple[str, tuple[str, ...]]:
     return padrao.sub(trocar, texto), tuple(feitas)
 
 
-def rever_estilo(plano: Plano) -> RevisaoEstilo:
-    """Corrige o estilo dos campos escritos pela LLM e regista o que ficou por corrigir."""
-    feitas: list[str] = []
-
-    def corrigir(texto: str) -> str:
-        novo, aqui = corrigir_texto(texto)
-        feitas.extend(aqui)
-        return novo
-
+def mapear_textos_llm(plano: Plano, corrigir: Callable[[str], str]) -> Plano:
+    """Aplica `corrigir` a cada campo escrito pela LLM (os mesmos de `textos_da_llm`)."""
     a = plano.alimentacao
-    corrigido = plano.model_copy(
+    return plano.model_copy(
         update={
             "resumo": corrigir(plano.resumo),
             "marcos": tuple(
@@ -136,6 +129,18 @@ def rever_estilo(plano: Plano) -> RevisaoEstilo:
             "notas_personalizadas": tuple(corrigir(n) for n in plano.notas_personalizadas),
         }
     )
+
+
+def rever_estilo(plano: Plano) -> RevisaoEstilo:
+    """Corrige o estilo dos campos escritos pela LLM e regista o que ficou por corrigir."""
+    feitas: list[str] = []
+
+    def corrigir(texto: str) -> str:
+        novo, aqui = corrigir_texto(texto)
+        feitas.extend(aqui)
+        return novo
+
+    corrigido = mapear_textos_llm(plano, corrigir)
     tudo = "\n".join(textos_da_llm(corrigido))
     estilo = carregar_avisos().estilo
     avisos = (*encontrar_termos(estilo.sem_correcao, tudo), *detetar_brasileirismos(corrigido))
