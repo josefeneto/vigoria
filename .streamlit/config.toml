@@ -8,8 +8,10 @@ font = "sans serif"
 baseFontSize = 17                   # público 45+: letra base de pelo menos 17 px
 
 [server]
-headless = true                     # obrigatório no Community Cloud e no Docker; em local, abrir http://localhost:8501
+# Sem headless: o Streamlit decide sozinho. No Windows abre o browser; em Linux sem ecrã
+# (Community Cloud, Docker) fica headless. Nunca pôr headless = false: o Cloud não arranca.
 # Sem port nem address: ficam os valores por omissão (8501, todas as interfaces).
+showEmailPrompt = false             # nunca pedir o email de boas-vindas no arranque
 
 [client]
 toolbarMode = "minimal"                # sem o botão «Deploy» e opções de programador
