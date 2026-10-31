@@ -451,6 +451,29 @@ PASSOS_DESENHO = {
 
 # ---------------------------------------------------------------- Página
 
+# O Streamlit mantém a posição do ecrã entre execuções: sem isto, o passo seguinte abria
+# a meio. Só volta ao topo quando o passo muda (não a cada «+» ou opção escolhida).
+_TOPO = """<script>
+(() => {
+  const passo = "%s";
+  if (window.vigoriaPasso === passo) return;
+  window.vigoriaPasso = passo;
+  const subir = () => {
+    window.scrollTo(0, 0);
+    document
+      .querySelectorAll('[data-testid="stMain"], [data-testid="stAppViewContainer"]')
+      .forEach((e) => e.scrollTo(0, 0));
+  };
+  subir();
+  setTimeout(subir, 150);
+})();
+</script>"""
+
+
+def _ir_ao_topo(passo: str) -> None:
+    st.html(_TOPO % passo, unsafe_allow_javascript=True)
+
+
 if obter_configuracao().ambiente == "local":
     with st.sidebar:
         st.button(t.PREENCHER_PERSONA, help=t.PREENCHER_PERSONA_AJUDA, on_click=_preencher_persona)
@@ -464,6 +487,7 @@ if st.session_state.get(comum.TERMINADO_GRAVIDEZ):
 
 passo = st.session_state[comum.PASSO]
 indice = PASSOS.index(passo)
+_ir_ao_topo(passo)
 st.title(t.TITULOS[passo])
 st.progress(indice / (len(PASSOS) - 1), text=t.PASSO_DE.format(n=indice + 1, total=len(PASSOS)))
 if st.session_state.get(comum.ERROS):
