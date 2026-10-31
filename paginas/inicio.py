@@ -2,10 +2,17 @@
 
 import streamlit as st
 
-st.title("Vigoria")
-st.subheader("O seu plano, à sua medida.")
-st.write(
-    "Um plano pessoal de 16 semanas para cuidar da sua saúde e vitalidade, "
-    "com exercícios para fazer em casa e hábitos simples para o dia a dia."
-)
-st.info("A Vigoria está em construção. Em breve poderá criar aqui o seu plano.")
+from paginas import comum
+from paginas import textos as t
+
+st.title(t.MARCA)
+st.subheader(t.ASSINATURA)
+st.write(t.INICIO_TEXTO)
+st.write(t.INICIO_COMO)
+if st.button(t.COMECAR, type="primary", icon=":material/arrow_forward:", width="stretch"):
+    st.switch_page(comum.PAGINA_QUESTIONARIO)
+if comum.RESULTADO in st.session_state:
+    st.page_link(
+        comum.PAGINA_PLANO, label=t.VER_PLANO, icon=":material/description:", width="stretch"
+    )
+st.caption(t.INICIO_SESSAO)

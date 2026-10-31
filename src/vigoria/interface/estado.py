@@ -1,0 +1,120 @@
+"""Chaves dos widgets do questionário em st.session_state e conversão para as respostas.
+
+Cada pergunta é um widget com a chave «q.<campo>» (e «q.<campo>.<opção>» nas perguntas por
+condição, limitação ou refeição). Aqui só se converte entre essas chaves e o dicionário de
+respostas de passos.py; não há Streamlit, para se poder testar.
+"""
+
+from collections.abc import Mapping
+from typing import Any
+
+from vigoria.interface.passos import (
+    CAMPOS,
+    PASSOS,
+    REFEICOES,
+    controladas_aplicaveis,
+    limitacoes_com_gravidade,
+)
+from vigoria.modelos.questionario import CONDICOES_COM_CONTROLO, Limitacao
+
+PREFIXO = "q."
+OBJETIVO_TIPO = "objetivo_muscular_tipo"  # «aumentar_forca_tonus» ou «kg»
+OBJETIVO_KG = "objetivo_muscular_kg"
+FORCA_TONUS = "aumentar_forca_tonus"
+
+_POR_OPCAO = {"condicoes_controladas", "limitacoes_gravidade", "refeicoes"}
+_LISTAS = {
+    "condicoes",
+    "dor_articular_zonas",
+    "limitacoes",
+    "equipamento",
+    "preferencias",
+    "restricoes_alimentares",
+}
+_POR_OMISSAO: dict[str, Any] = {
+    "acompanhamento_ativo": True,
+    "frequencia_registo": "semanal",
+    "lembretes_email": True,
+}
+_SIM_NAO = {True: "sim", False: "nao"}
+
+
+def chave(campo: str, opcao: str | None = None) -> str:
+    return f"{PREFIXO}{campo}" if opcao is None else f"{PREFIXO}{campo}.{opcao}"
+
+
+def estado_inicial() -> dict[str, Any]:
+    """Valor inicial de cada chave (vazio, salvo os três do passo 6)."""
+    estado: dict[str, Any] = {}
+    for passo in PASSOS:
+        for campo in CAMPOS[passo]:
+            if campo in _POR_OPCAO or campo == "objetivo_muscular":
+                continue
+            vazio: Any = [] if campo in _LISTAS else None
+            if campo in {"aceita_termos", "consentimento_saude", "confirma_maior_idade"}:
+                vazio = False
+            estado[chave(campo)] = _POR_OMISSAO.get(campo, vazio)
+    for c in CONDICOES_COM_CONTROLO:
+        estado[chave("condicoes_controladas", c)] = None
+    for x in Limitacao:
+        if x is not Limitacao.NENHUMA:
+            estado[chave("limitacoes_gravidade", x)] = None
+    for x in REFEICOES:
+        estado[chave("refeicoes", x)] = ""
+        estado[chave("refeicoes_faz", x)] = False
+    estado[chave(OBJETIVO_TIPO)] = None
+    estado[chave(OBJETIVO_KG)] = None
+    return estado
+
+
+def para_respostas(estado: Mapping[str, Any]) -> dict[str, Any]:
+    """As respostas (formato de passos.py) a partir das chaves dos widgets."""
+    respostas: dict[str, Any] = {}
+    for chave_estado, valor in estado.items():
+        if not isinstance(chave_estado, str) or not chave_estado.startswith(PREFIXO):
+            continue
+        campo = chave_estado.removeprefix(PREFIXO)
+        if "." not in campo and campo not in {OBJETIVO_TIPO, OBJETIVO_KG}:
+            respostas[campo] = valor
+    respostas["condicoes_controladas"] = {
+        c: estado[k] == "sim"
+        for c in controladas_aplicaveis(respostas)
+        if (k := chave("condicoes_controladas", c)) in estado and estado[k] in _SIM_NAO.values()
+    }
+    respostas["limitacoes_gravidade"] = {
+        x: estado[k]
+        for x in limitacoes_com_gravidade(respostas)
+        if estado.get(k := chave("limitacoes_gravidade", x))
+    }
+    respostas["refeicoes"] = {x: estado.get(chave("refeicoes", x)) or "" for x in REFEICOES}
+    respostas["refeicoes_faz"] = {x: bool(estado.get(chave("refeicoes_faz", x))) for x in REFEICOES}
+    tipo = estado.get(chave(OBJETIVO_TIPO))
+    if tipo == FORCA_TONUS:
+        respostas["objetivo_muscular"] = FORCA_TONUS
+    elif tipo == "kg":
+        respostas["objetivo_muscular"] = estado.get(chave(OBJETIVO_KG))
+    return respostas
+
+
+def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
+    """O inverso: as chaves dos widgets a partir das respostas (persona de teste em local)."""
+    estado = estado_inicial()
+    for campo, valor in respostas.items():
+        if campo in _POR_OPCAO or campo in {"refeicoes_faz", "objetivo_muscular"}:
+            continue
+        if chave(campo) in estado:
+            estado[chave(campo)] = valor
+    for c, controlada in (respostas.get("condicoes_controladas") or {}).items():
+        estado[chave("condicoes_controladas", c)] = _SIM_NAO[controlada]
+    for x, gravidade in (respostas.get("limitacoes_gravidade") or {}).items():
+        estado[chave("limitacoes_gravidade", x)] = gravidade
+    for x in REFEICOES:
+        estado[chave("refeicoes", x)] = (respostas.get("refeicoes") or {}).get(x, "")
+        estado[chave("refeicoes_faz", x)] = bool((respostas.get("refeicoes_faz") or {}).get(x))
+    objetivo = respostas.get("objetivo_muscular")
+    if objetivo == FORCA_TONUS:
+        estado[chave(OBJETIVO_TIPO)] = FORCA_TONUS
+    elif objetivo is not None:
+        estado[chave(OBJETIVO_TIPO)] = "kg"
+        estado[chave(OBJETIVO_KG)] = objetivo
+    return estado

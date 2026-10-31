@@ -10,5 +10,8 @@ baseFontSize = 17                   # público 45+: letra base de pelo menos 17 
 [server]
 headless = false                    # abre o browser em local; em produção (Docker/Railway) usar STREAMLIT_SERVER_HEADLESS=true
 
+[client]
+toolbarMode = "minimal"                # sem o botão «Deploy» e opções de programador
+
 [browser]
 gatherUsageStats = false

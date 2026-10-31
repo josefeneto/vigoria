@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from vigoria.interface.estado import chave, estado_inicial, para_estado, para_respostas
 from vigoria.interface.passos import (
     CAMPOS,
     PASSOS,
@@ -208,3 +209,33 @@ def test_refeicao_demasiado_longa() -> None:
     assert validar_passo("4a", respostas) == [
         ErroCampo(campo="refeicoes.almoco", codigo=CodigoErro.DEMASIADO_LONGO, maximo=150)
     ]
+
+
+# ---------------------------------------------------------------- Chaves dos widgets
+
+
+@pytest.mark.parametrize("ficheiro", PERSONAS)
+def test_estado_dos_widgets_ida_e_volta(ficheiro: str) -> None:
+    q = _q(ficheiro)
+    assert montar_questionario(para_respostas(para_estado(respostas_de_questionario(q)))) == q
+
+
+def test_estado_inicial_vazio_com_acompanhamento_por_omissao() -> None:
+    r = para_respostas(estado_inicial())
+    assert r["condicoes"] == [] and r["peso_kg"] is None
+    assert (r["acompanhamento_ativo"], r["frequencia_registo"], r["lembretes_email"]) == (
+        True,
+        "semanal",
+        True,
+    )
+    assert "objetivo_muscular" not in r
+    assert validar_passo("6", r) == []
+
+
+def test_objetivo_muscular_em_kg_e_controlo_sim_nao() -> None:
+    estado = para_estado(_r(objetivo_muscular=1.5))
+    assert estado[chave("objetivo_muscular_tipo")] == "kg"
+    assert para_respostas(estado)["objetivo_muscular"] == 1.5
+    assert estado[chave("condicoes_controladas", "hipertensao")] == "sim"
+    estado[chave("condicoes_controladas", "hipertensao")] = "nao"
+    assert para_respostas(estado)["condicoes_controladas"] == {"hipertensao": False}
