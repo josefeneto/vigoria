@@ -21,14 +21,16 @@ Data e versão do texto de consentimento ficam registadas.
 
 ## Passo 1 — Sobre si (Prompt 1.A–1.G)
 
+Números pedidos sem casas decimais (decidido a 31/10/2026): não se exige esse rigor a quem responde (cintura 113 chega). Os cálculos internos continuam com decimais. A única exceção são as bebidas espirituosas, escolhidas de uma lista com vírgula decimal.
+
 | Campo | Prompt | Tipo | Validação |
 |---|---|---|---|
 | `sexo` | 1.A | escolha: masculino / feminino | obrigatório (necessário para os limiares de cintura) |
 | `idade` | 1.B | inteiro | 18–100 |
 | `altura_cm` | 1.C | inteiro | 120–220 |
-| `peso_kg` | 1.D | decimal (0,1) | 35–250 |
-| `sono_horas` | 1.E | decimal (0,5) | 3–12 |
-| `cintura_cm` | 1.F | decimal | 50–200; ajuda com «como medir» (ao nível do umbigo, a expirar, fita sem apertar) |
+| `peso_kg` | 1.D | inteiro na interface | 35–250 |
+| `sono_horas` | 1.E | inteiro na interface | 3–12 |
+| `cintura_cm` | 1.F | inteiro na interface | 50–200; ajuda com «como medir» (ao nível do umbigo, a expirar, fita sem apertar) |
 | `atividade_atual` | 1.G | escolha: sedentário / ligeiro / moderado / ativo | descrição curta de cada opção |
 
 Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca alarmista).
@@ -80,7 +82,7 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 | `agua_litros` | 3.A | escolha: < 0,5 / 0,5–1 / 1–1,5 / 1,5–2 / > 2 |
 | `bebidas_acucaradas_litros` | 3.B | escolha: nenhuma / < 0,33 / 0,33–1 / > 1 |
 | `vinho_copos_dia` | 3.C | inteiro 0–10 |
-| `espirituosas_dl_dia` | 3.D | decimal 0–5 |
+| `espirituosas_dl_dia` | 3.D | lista de 0 a 5 dl, de 0,5 em 0,5 (com vírgula); um cálice ≈ 0,4 dl |
 | `pao_por_dia` | 3.E | escolha: nenhum / 1 / 2 / 3 / 4 ou mais (fatias ou papos-secos) |
 | `doces_por_semana` | (Vol. 3) | inteiro 0–14 |
 
@@ -88,9 +90,9 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 
 | Campo | Prompt | Tipo | Notas |
 |---|---|---|---|
-| `peso_alvo_kg` | 5.A | decimal | aviso imediato se o ritmo necessário em 16 semanas ultrapassar o limite da faixa etária (REGRAS_DOMINIO §2), com o alvo realista para a semana 16 |
-| `cintura_alvo_cm` | 5.B | decimal, opcional | |
-| `objetivo_muscular` | 5.C | escolha: «aumentar força e tónus» / valor em kg | máximo aceite: 2 kg; mostrar a nota «até 0,5 kg por cada 4 semanas» |
+| `peso_alvo_kg` | 5.A | inteiro na interface | aviso imediato se o ritmo necessário em 16 semanas ultrapassar o limite da faixa etária (REGRAS_DOMINIO §2), com o alvo realista para a semana 16 |
+| `cintura_alvo_cm` | 5.B | inteiro na interface, opcional | |
+| `objetivo_muscular` | 5.C | escolha: «aumentar força e tónus» / valor em kg inteiros (1 ou 2) | máximo aceite: 2 kg; mostrar a nota «até 0,5 kg por cada 4 semanas» |
 | — | 5.D | informação | Sem pergunta: o ecrã explica que o programa tem **16 semanas**, em 4 fases de 4 semanas, seguidas de manutenção |
 | `intensidade_pedida` | 5.E | escolha: ligeira / média / alta | cartões com a descrição da secção 7 do Prompt |
 

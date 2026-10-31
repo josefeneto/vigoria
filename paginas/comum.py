@@ -13,6 +13,7 @@ PASSO = "passo"
 RESULTADO = "resultado"  # ResultadoPipeline do último plano gerado
 TERMINADO_GRAVIDEZ = "terminado_gravidez"
 
+PAGINA_INICIO = "paginas/inicio.py"
 PAGINA_QUESTIONARIO = "paginas/questionario.py"
 PAGINA_PLANO = "paginas/plano.py"
 PAGINA_PRIVACIDADE = "paginas/privacidade.py"

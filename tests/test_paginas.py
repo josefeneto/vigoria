@@ -59,6 +59,33 @@ def test_passo_0_nao_avanca_sem_consentimento() -> None:
     assert not at.exception
 
 
+def test_primeiro_ecra_tem_anterior_que_volta_ao_inicio() -> None:
+    at = _app()
+    _botao(at, "Anterior").click().run()
+    assert not at.exception
+    assert any(b.label == "Começar o questionário" for b in at.button)  # página de início
+
+
+def test_numeros_pedidos_sem_casas_decimais() -> None:
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "1"
+    at.run()
+    assert not at.exception
+    assert {n.label: n.value for n in at.number_input} == {
+        "Idade (anos)": 68,
+        "Altura (cm)": 172,
+        "Peso (kg)": 94,
+        "Horas de sono por noite": 7,
+        "Perímetro da cintura (cm)": 108,
+    }
+    assert all(type(n.value) is int for n in at.number_input)
+    at.session_state["passo"] = "4b"
+    at.run()
+    espirituosas = at.selectbox[0]
+    assert "0,5 dl" in espirituosas.options and espirituosas.value == 0
+
+
 def test_gravidez_termina_sem_guardar_respostas() -> None:
     at = _app()
     _persona(at, condicoes=["gravidez"], condicoes_controladas={})

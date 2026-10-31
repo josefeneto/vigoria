@@ -40,6 +40,7 @@ PERSONA_TESTE = Path(__file__).resolve().parents[1] / "exemplos" / "persona_test
 A_GERAR = "a_gerar"
 ERRO_GERACAO = "erro_geracao"
 W = comum.widget
+ESPIRITUOSAS_DL = [x / 2 for x in range(11)]  # 0 a 5 dl, de 0,5 em 0,5
 
 comum.iniciar_estado()
 
@@ -124,13 +125,22 @@ def _radio(campo: str, opcoes: dict[str, str], legendas: dict[str, str] | None =
     comum.erro(campo)
 
 
-def _numero(campo: str, passo: float = 1, formato: str | None = None, **extra: Any) -> None:
-    st.number_input(
-        extra.pop("rotulo", None) or t.ROTULOS[campo],
-        value=None,
-        step=passo,
-        format=formato,
-        **(W(campo) | extra),
+def _numero(campo: str) -> None:
+    """Só números inteiros: não se pede mais rigor a quem responde (a cintura 113 chega)."""
+    st.number_input(t.ROTULOS[campo], value=None, step=1, **W(campo))
+    comum.erro(campo)
+
+
+def _espirituosas() -> None:
+    """Lista em vez de caixa de número: assim aparece «0,5» com vírgula, como em Portugal."""
+    campo = "espirituosas_dl_dia"
+    st.selectbox(
+        t.ROTULOS[campo],
+        ESPIRITUOSAS_DL,
+        index=None,
+        format_func=lambda dl: numero(dl) + t.UNIDADES[campo],
+        placeholder=t.ESCOLHER,
+        **W(campo),
     )
     comum.erro(campo)
 
@@ -156,9 +166,9 @@ def passo_1() -> None:
     _escolha("sexo", t.SEXO, **W("sexo"))
     _numero("idade")
     _numero("altura_cm")
-    _numero("peso_kg", 0.1, "%.1f")
-    _numero("sono_horas", 0.5, "%.1f")
-    _numero("cintura_cm", 0.5, "%.1f")
+    _numero("peso_kg")
+    _numero("sono_horas")
+    _numero("cintura_cm")
     st.caption(t.AJUDA_CINTURA)
     _radio("atividade_atual", t.ATIVIDADE, t.ATIVIDADE_DESCRICAO)
 
@@ -211,7 +221,7 @@ def passo_2b() -> None:
 def passo_3() -> None:
     _pills("equipamento", t.EQUIPAMENTO)
     if "halteres" in comum.respostas()["equipamento"]:
-        _numero("halteres_kg", 0.5, "%.1f")
+        _numero("halteres_kg")
     _escolha("dias_semana", {d: str(d) for d in range(1, 8)}, **W("dias_semana"))
     minutos = {m: t.MINUTOS.format(n=m) for m in (15, 20, 30, 45, 60)}
     _escolha("minutos_dia", minutos, **W("minutos_dia"))
@@ -236,17 +246,17 @@ def passo_4b() -> None:
     _radio("agua_litros", t.AGUA)
     _radio("bebidas_acucaradas_litros", t.BEBIDAS_ACUCARADAS)
     _numero("vinho_copos_dia")
-    _numero("espirituosas_dl_dia", 0.5, "%.1f")
+    _espirituosas()
     _escolha("pao_por_dia", t.PAO, **W("pao_por_dia"))
     _numero("doces_por_semana")
 
 
 def passo_5() -> None:
     st.info(t.PROGRAMA_16_SEMANAS, icon=":material/calendar_month:")
-    _numero("peso_alvo_kg", 0.5, "%.1f")
+    _numero("peso_alvo_kg")
     for aviso in avisos_passo_objetivo(comum.respostas()):
         st.warning(aviso, icon=":material/info:")
-    _numero("cintura_alvo_cm", 0.5, "%.1f")
+    _numero("cintura_alvo_cm")
     st.radio(
         t.ROTULOS["objetivo_muscular"],
         list(t.OBJETIVO_MUSCULAR),
@@ -255,9 +265,7 @@ def passo_5() -> None:
         **W(OBJETIVO_TIPO),
     )
     if st.session_state[chave(OBJETIVO_TIPO)] == "kg":
-        st.number_input(
-            t.OBJETIVO_MUSCULAR_KG, value=None, step=0.5, format="%.1f", **W(OBJETIVO_KG)
-        )
+        st.number_input(t.OBJETIVO_MUSCULAR_KG, value=None, step=1, **W(OBJETIVO_KG))
     st.caption(t.NOTA_GANHO_MUSCULAR)
     comum.erro("objetivo_muscular")
     _radio("intensidade_pedida", t.INTENSIDADE, t.INTENSIDADE_DESCRICAO)
@@ -456,6 +464,9 @@ if passo != "7" or not st.session_state.get(A_GERAR):
     with st.container(horizontal=True):
         if indice > 0:
             st.button(t.ANTERIOR, icon=":material/arrow_back:", width="stretch", on_click=_anterior)
+        # No primeiro ecrã não há passo anterior: «Anterior» volta à página de início.
+        elif st.button(t.ANTERIOR, icon=":material/arrow_back:", width="stretch"):
+            st.switch_page(comum.PAGINA_INICIO)
         if passo != "7":
             st.button(
                 t.SEGUINTE,

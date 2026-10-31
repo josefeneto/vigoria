@@ -37,6 +37,24 @@ _POR_OMISSAO: dict[str, Any] = {
     "lembretes_email": True,
 }
 _SIM_NAO = {True: "sim", False: "nao"}
+# Pedidos sem casas decimais (não se exige esse rigor a quem responde); os cálculos continuam
+# com decimais. As bebidas espirituosas ficam fora: escolhem-se de uma lista com 0,5 dl.
+INTEIROS = {
+    "peso_kg",
+    "sono_horas",
+    "cintura_cm",
+    "halteres_kg",
+    "peso_alvo_kg",
+    "cintura_alvo_cm",
+    OBJETIVO_KG,
+}
+
+
+def _inteiro(valor: Any) -> Any:
+    """Arredonda a meia unidade para cima (6,5 → 7); deixa como está o que não é número."""
+    if isinstance(valor, float | int) and not isinstance(valor, bool):
+        return int(valor + 0.5)
+    return valor
 
 
 def chave(campo: str, opcao: str | None = None) -> str:
@@ -103,7 +121,7 @@ def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
         if campo in _POR_OPCAO or campo in {"refeicoes_faz", "objetivo_muscular"}:
             continue
         if chave(campo) in estado:
-            estado[chave(campo)] = valor
+            estado[chave(campo)] = _inteiro(valor) if campo in INTEIROS else valor
     for c, controlada in (respostas.get("condicoes_controladas") or {}).items():
         estado[chave("condicoes_controladas", c)] = _SIM_NAO[controlada]
     for x, gravidade in (respostas.get("limitacoes_gravidade") or {}).items():
@@ -116,5 +134,5 @@ def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
         estado[chave(OBJETIVO_TIPO)] = FORCA_TONUS
     elif objetivo is not None:
         estado[chave(OBJETIVO_TIPO)] = "kg"
-        estado[chave(OBJETIVO_KG)] = objetivo
+        estado[chave(OBJETIVO_KG)] = _inteiro(objetivo)
     return estado

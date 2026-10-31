@@ -112,7 +112,7 @@ ROTULOS = {
     "agua_litros": "Quanta água bebe por dia?",
     "bebidas_acucaradas_litros": "Refrigerantes e sumos açucarados por dia",
     "vinho_copos_dia": "Copos de vinho por dia",
-    "espirituosas_dl_dia": "Bebidas espirituosas por dia (dl)",
+    "espirituosas_dl_dia": "Bebidas espirituosas por dia (um cálice tem cerca de 0,4 dl)",
     "pao_por_dia": "Pão por dia (fatias ou papos-secos)",
     "doces_por_semana": "Doces por semana",
     "peso_alvo_kg": "Peso que gostaria de atingir (kg)",
@@ -135,6 +135,7 @@ ROTULOS_RESUMO = {
     "minutos_dia": "Minutos por dia",
     "preferencias": "Atividades preferidas",
     "agua_litros": "Água por dia",
+    "espirituosas_dl_dia": "Bebidas espirituosas por dia",
     "intensidade_pedida": "Intensidade",
     "acompanhamento_ativo": "Acompanhar o progresso",
     "frequencia_registo": "Frequência dos registos",
@@ -435,6 +436,7 @@ PLANO_SIMULADO_NOTA = (
 )
 SEPARADORES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
 ESCOLHER_FASE = "Fase"
+ESCOLHER = "Escolha uma opção"
 SEM_SESSAO = "Descanso"
 MINUTOS_COLUNA = "Minutos"
 DETALHES_SEMANA = "Ver o que fazer em cada dia"

@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from vigoria.interface.estado import chave, estado_inicial, para_estado, para_respostas
+from vigoria.interface.estado import INTEIROS, chave, estado_inicial, para_estado, para_respostas
 from vigoria.interface.passos import (
     CAMPOS,
     PASSOS,
@@ -217,7 +217,17 @@ def test_refeicao_demasiado_longa() -> None:
 @pytest.mark.parametrize("ficheiro", PERSONAS)
 def test_estado_dos_widgets_ida_e_volta(ficheiro: str) -> None:
     q = _q(ficheiro)
-    assert montar_questionario(para_respostas(para_estado(respostas_de_questionario(q)))) == q
+    volta = montar_questionario(para_respostas(para_estado(respostas_de_questionario(q))))
+    # Os campos pedidos em inteiros voltam arredondados (6,5 h de sono → 7); o resto igual.
+    inteiros = {c: int(v + 0.5) for c in INTEIROS if isinstance(v := getattr(q, c, None), float)}
+    assert volta == q.model_copy(update=inteiros)
+
+
+def test_campos_inteiros_arredondam_a_meia_unidade_para_cima() -> None:
+    estado = para_estado(_r(peso_kg=94.4, sono_horas=6.5, cintura_cm=113.2))
+    assert [estado[chave(c)] for c in ("peso_kg", "sono_horas", "cintura_cm")] == [94, 7, 113]
+    assert all(type(estado[chave(c)]) is int for c in ("peso_kg", "sono_horas", "cintura_cm"))
+    assert para_estado(_r(espirituosas_dl_dia=0.5))[chave("espirituosas_dl_dia")] == 0.5
 
 
 def test_estado_inicial_vazio_com_acompanhamento_por_omissao() -> None:
@@ -235,7 +245,7 @@ def test_estado_inicial_vazio_com_acompanhamento_por_omissao() -> None:
 def test_objetivo_muscular_em_kg_e_controlo_sim_nao() -> None:
     estado = para_estado(_r(objetivo_muscular=1.5))
     assert estado[chave("objetivo_muscular_tipo")] == "kg"
-    assert para_respostas(estado)["objetivo_muscular"] == 1.5
+    assert para_respostas(estado)["objetivo_muscular"] == 2  # pedido em kg inteiros
     assert estado[chave("condicoes_controladas", "hipertensao")] == "sim"
     estado[chave("condicoes_controladas", "hipertensao")] = "nao"
     assert para_respostas(estado)["condicoes_controladas"] == {"hipertensao": False}
