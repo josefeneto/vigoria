@@ -22,10 +22,10 @@ CORES = {
     "principal_profundo": "#123F45",  # títulos e cartão de topo do plano
     "nevoa": "#E4EFEE",  # escolhas marcadas, fundos de destaque
     "terracota": "#C2693E",  # só ícones e formas (3,5:1: não serve para texto)
-    "cobre": "#A3532D",  # destaque em texto e no botão «Começar»
+    "cobre": "#A3532D",  # destaque em texto (sobretítulos, marca)
     "cobre_escuro": "#8F4524",  # cobre ao passar ou carregar
     "argila": "#F8E6DA",  # fundo dos ícones
-    "pessego": "#E9B48F",  # pormenores sobre o petróleo profundo
+    "pessego": "#E9B48F",  # sobre o petróleo: pormenores e o botão «Começar»
     "texto": "#2E3338",  # grafite
     "texto_secundario": "#5A6168",
     "fundo": "#F7F3EC",  # branco-osso
@@ -61,6 +61,12 @@ PARES_TEXTO = (
     ("fundo", "principal_profundo"),
     ("pessego", "principal_profundo"),
     ("aviso_texto", "aviso_fundo"),
+    # Início em faixas (Fase 5C)
+    ("principal_profundo", "pessego"),
+    ("fundo", "principal"),
+    ("argila", "principal"),
+    ("texto", "argila"),
+    ("principal_profundo", "argila"),
 )
 
 ICONES_PASSOS = {

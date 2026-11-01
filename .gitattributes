@@ -4,3 +4,4 @@
 src/vigoria/conteudo/dicionario/* -text
 *.woff2 binary
 *.webp binary
+*.mp4 binary

@@ -529,7 +529,10 @@ else:
     with st.container(key="questionario"):
         PASSOS_DESENHO[passo]()
 
-    with st.container(horizontal=True):
+    # No telemóvel, «Anterior / Seguinte» ficam fixos no fundo do ecrã (estilos.css), exceto no
+    # passo 7, onde a ação principal é «Gerar o meu plano», no fim da revisão.
+    fixa = "navegacao_fixa" if passo != "7" else "navegacao"
+    with st.container(horizontal=True, key=fixa):
         if indice > 0:
             st.button(t.ANTERIOR, icon=":material/arrow_back:", width="stretch", on_click=_anterior)
         # No primeiro ecrã não há passo anterior: «Anterior» volta à página de início.

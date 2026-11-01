@@ -16,10 +16,12 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
 .stApp [data-testid="stCaptionContainer"] p { color: var(--v-texto-secundario); opacity: 1; }
 :focus-visible { outline: 3px solid var(--v-terracota) !important; outline-offset: 2px; }
 
-/* ---- Botão de destaque (cobre): «Começar» no início */
-.st-key-comecar button { background: var(--v-cobre); border-color: var(--v-cobre); color: var(--v-branco); }
-.st-key-comecar button:hover, .st-key-comecar button:active {
-  background: var(--v-cobre-escuro); border-color: var(--v-cobre-escuro); color: var(--v-branco); }
+/* ---- Botão «Começar» nas faixas escuras do início: pêssego com texto em petróleo profundo
+   (6,25:1). A cobre ficava a 2,1:1 contra o fundo escuro e o botão perdia-se. */
+[class*="st-key-comecar"] button { background: var(--v-pessego); border-color: var(--v-pessego);
+  color: var(--v-principal-profundo); }
+[class*="st-key-comecar"] button:hover, [class*="st-key-comecar"] button:active {
+  background: var(--v-argila); border-color: var(--v-argila); color: var(--v-principal-profundo); }
 
 /* ---- Fotografias e marcadores */
 [class*="st-key-foto_"] img { border-radius: var(--v-raio); object-fit: cover; }
@@ -121,3 +123,58 @@ body:has(.st-key-a_preparar) [data-testid="stMain"] [data-stale="true"],
 body:has(.st-key-a_preparar) [data-testid="stMain"] :is([data-testid="stVerticalBlock"],
   [data-testid="stHorizontalBlock"], [data-testid="stExpander"])
   :has([data-stale="true"]):not(:has([data-stale="false"])) { display: none; }
+
+/* ---- Questionário no telemóvel: «Anterior / Seguinte» fixos no fundo do ecrã.
+   O «sticky» vai no invólucro (stLayoutWrapper), que tem a altura da barra; no próprio bloco
+   não teria para onde se mover. */
+@media (max-width: 640px) {
+  [data-testid="stLayoutWrapper"]:has(> .st-key-navegacao_fixa) {
+    position: sticky; bottom: 0; z-index: 20; background: var(--v-fundo);
+    margin: 0 -1rem; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 16px rgba(46,51,56,.10); width: calc(100% + 2rem);
+    max-width: none; box-sizing: border-box; } }
+
+/* ---- Plano: secções em botões grandes; a ativa em petróleo, com texto branco (7,6:1) */
+.st-key-plano_seccao button[data-variant="segmented_control"] { flex: 1 1 auto; }
+.stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"],
+.stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"]:hover {
+  background: var(--v-principal); border-color: var(--v-principal); color: var(--v-branco); }
+.st-key-plano_seccao button[aria-checked="true"] p { color: var(--v-branco); }
+
+/* ---- Fraunces (títulos) também nos títulos e números dos componentes da Vigoria */
+.v-promessa, .v-passo h1, .v-cartao h3, .v-exercicio h4, .v-numero-valor, .v-faixa-titulo {
+  font-family: "Fraunces", Georgia, serif; font-weight: 600; letter-spacing: -0.005em; }
+
+/* ---- Início em faixas a toda a largura (só nesta página: existe .st-key-faixa_topo) */
+body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] {
+  max-width: none; padding: 3.75rem 0 0; }  /* 3.75rem: só a altura do cabeçalho do Streamlit */
+body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+  gap: 0; }
+[class*="st-key-faixa_"] { padding: 2.5rem max(1rem, calc((100% - 1120px) / 2)); }
+@media (min-width: 640px) { [class*="st-key-faixa_"] { padding-top: 4rem; padding-bottom: 4rem; } }
+.st-key-faixa_topo { background: var(--v-principal-profundo); }
+.st-key-faixa_beneficios { background: var(--v-fundo); }
+.st-key-faixa_como { background: var(--v-argila); }
+.st-key-faixa_final { background: var(--v-principal); align-items: center; text-align: center; }
+.st-key-faixa_final [data-testid="stElementContainer"] { max-width: 28rem; width: 100%; }
+.st-key-faixa_topo .v-marca { color: var(--v-pessego); }
+.st-key-faixa_topo .v-promessa { color: var(--v-fundo); }
+.v-faixa-texto { color: var(--v-fundo); font-size: 1.1rem; margin: 0 0 1.25rem; }
+.v-faixa-titulo { font-size: 1.75rem; margin: 0 0 1.25rem; padding: 0; }
+.stApp .st-key-faixa_como .v-faixa-titulo { color: var(--v-principal-profundo); }
+.stApp .st-key-faixa_final .v-faixa-titulo { color: var(--v-fundo); }
+.st-key-faixa_topo [data-testid="stPageLink"] a,
+.st-key-faixa_topo [data-testid="stPageLink"] p,
+.st-key-faixa_topo [data-testid="stPageLink"] span { color: var(--v-fundo); }
+.st-key-faixa_final [data-testid="stCaptionContainer"] p { color: var(--v-argila); text-align: center; }
+
+/* ---- Vídeo do topo: capa enquanto carrega, botão de pausa sempre visível */
+.v-video { position: relative; border-radius: var(--v-raio); overflow: hidden; aspect-ratio: 16 / 9;
+  background: var(--v-principal); box-shadow: 0 12px 32px rgba(0,0,0,.25); }
+.v-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.v-video-botao { position: absolute; right: .75rem; bottom: .75rem; min-height: 2.75rem;
+  padding: .45rem 1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45);
+  background: rgba(18,63,69,.88); color: var(--v-fundo); font: inherit; font-size: .95rem;
+  font-weight: 700; cursor: pointer; }
+.v-video-botao::before { content: "▶  "; }
+.v-video-botao.a-correr::before { content: "❚❚  "; }

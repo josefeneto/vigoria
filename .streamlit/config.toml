@@ -28,12 +28,13 @@ redBackgroundColor = "#F9E3E0"
 redTextColor = "#A6342B"
 grayTextColor = "#5A6168"
 
-# Letra Atkinson Hyperlegible Next (OFL), servida pela própria app: nada vai ao Google.
+# Letras servidas pela própria app (nada vai ao Google), ambas OFL: Atkinson Hyperlegible
+# Next no texto (feita para ler bem) e Fraunces nos títulos e números grandes (Fase 5C).
 font = "Atkinson Hyperlegible Next"
-headingFont = "Atkinson Hyperlegible Next"
+headingFont = "Fraunces"
 baseFontSize = 18                   # público 45+: letra base de 18 px
 headingFontSizes = ["2.25rem", "1.6rem", "1.3rem", "1.1rem", "1rem", "1rem"]
-headingFontWeights = [700, 700, 700, 700, 700, 700]
+headingFontWeights = [600, 600, 600, 600, 600, 600]
 paddingTop = "1.5rem"               # menos espaço vazio no topo do telemóvel
 baseRadius = "12px"
 buttonRadius = "10px"
@@ -57,12 +58,24 @@ url = "app/static/fontes/atkinson-hyperlegible-next-latin-700-normal.woff2"
 weight = 700
 style = "normal"
 
+[[theme.fontFaces]]
+family = "Fraunces"
+url = "app/static/fontes/fraunces-latin-600-normal.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fraunces"
+url = "app/static/fontes/fraunces-latin-700-normal.woff2"
+weight = 700
+style = "normal"
+
 [server]
 # Sem headless: o Streamlit decide sozinho. No Windows abre o browser; em Linux sem ecrã
 # (Community Cloud, Docker) fica headless. Nunca pôr headless = false: o Cloud não arranca.
 # Sem port nem address: ficam os valores por omissão (8501, todas as interfaces).
 showEmailPrompt = false             # nunca pedir o email de boas-vindas no arranque
-enableStaticServing = true          # pasta static/ (letra) em app/static/
+enableStaticServing = true          # pasta static/ (letras e vídeo) em app/static/
 
 [client]
 toolbarMode = "minimal"                # sem o botão «Deploy» e opções de programador

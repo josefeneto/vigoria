@@ -39,10 +39,29 @@ INICIO_TEXTO = (
     "Um plano pessoal de 16 semanas para cuidar da sua saúde e vitalidade, com exercícios "
     "para fazer em casa e hábitos simples para o dia a dia."
 )
-INICIO_COMO = (
-    "Começa com um questionário de cerca de 10 minutos. No fim, mostramos-lhe as decisões "
-    "que tomámos a partir das suas respostas e só depois preparamos o plano."
+COMO_FUNCIONA = (
+    (
+        "lista",
+        "1. Responda ao questionário",
+        "Cerca de 10 minutos sobre si, a sua saúde e a sua rotina.",
+    ),
+    (
+        "intensidade",
+        "2. Veja as nossas decisões",
+        "Explicamos o que adaptámos e porquê, antes de preparar o plano.",
+    ),
+    (
+        "calendario",
+        "3. Receba o seu plano",
+        "16 semanas em 4 fases, com treino em casa, alimentação e hábitos.",
+    ),
 )
+FINAL_TITULO = "Pronto para começar?"
+VIDEO_DESCRICAO = (
+    "Pessoa de cabelo grisalho a levantar halteres acima da cabeça, devagar e com controlo."
+)
+VIDEO_PAUSAR = "Pausar o vídeo"
+VIDEO_REPRODUZIR = "Ver o vídeo"
 INICIO_COMO_TITULO = "Como funciona"
 BENEFICIOS = (
     (
@@ -472,7 +491,14 @@ FASES_TITULO = "As 4 fases do programa"
 CINTURA_FASES = "**{rotulo}**, no fim de cada fase: {texto}"
 FASE_SEMANAS = "Fase {n} · Semanas {min} a {max}"
 MINUTOS = "{n} min"
-SEPARADORES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
+SECCAO_PLANO = "Secção do plano"
+SECCOES_PLANO = {
+    "resumo": ":material/summarize: Resumo",
+    "treino": ":material/fitness_center: Treino",
+    "alimentacao": ":material/restaurant: Alimentação",
+    "habitos": ":material/self_improvement: Hábitos",
+    "acompanhamento": ":material/monitoring: Acompanhamento",
+}
 ESCOLHER_FASE = "Fase"
 ESCOLHER = "Escolha uma opção"
 MINUTOS_COLUNA = "Minutos"

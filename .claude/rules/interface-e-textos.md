@@ -27,7 +27,7 @@ paths:
 
 ## Identidade visual (Fase 5B)
 
-- Principal: petróleo `#1F5C63`. Texto: grafite `#2E3338`. Fundo: branco-osso `#F7F3EC`. Terracota `#C2693E` só em ícones e formas; em texto e botões de destaque, cobre `#A3532D`. Paleta completa em `paginas/estilos.py` (`CORES`).
+- Principal: petróleo `#1F5C63`. Texto: grafite `#2E3338`. Fundo: branco-osso `#F7F3EC`. Terracota `#C2693E` só em ícones e formas; em texto de destaque, cobre `#A3532D`; botão «Começar» sobre fundos escuros em pêssego `#E9B48F` com texto em petróleo profundo. Letras: Atkinson Hyperlegible Next no texto, Fraunces nos títulos (ambas em `static/fontes/`). Paleta completa em `paginas/estilos.py` (`CORES`).
 - Cores no tema (`.streamlit/config.toml`) e em `CORES`, nunca soltas no código; o CSS (`paginas/estilos.css`) usa as variáveis `--v-*`. Um teste confirma que os dois sítios coincidem e que cada par de texto e fundo tem pelo menos 4,5:1: um par novo entra em `PARES_TEXTO`.
 - Componentes visuais em `paginas/componentes.py`, com `html.escape` em todo o texto. Ícones próprios em `assets/icones/` (SVG 24×24, desenhados de raiz); nunca copiar elementos de outras apps.
 - CSS só com `.st-key-*`, classes `.v-*` e atributos estáveis dos widgets; nunca classes `st-emotion-cache-*`. Depois de mexer na interface: `python scripts/capturas.py depois` e comparar com `saidas/capturas/antes/`.

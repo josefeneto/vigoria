@@ -12,6 +12,13 @@ com um rebento) no lugar das duas obrigatórias; a opcional simplesmente não ap
 Regras: sem imagens de «antes e depois» nem mensagens de transformação corporal; nada que
 pareça uma pessoa real a recomendar a app ou a fazer afirmações de saúde.
 
+## Vídeo do topo do início
+
+Original em `originais/inicio_video.mp4`. Resultado em `static/video/` (servido pela app):
+`inicio.mp4` (1280 px, sem som, até 2,5 MB) e `inicio_capa.webp` (primeiro fotograma). Sem
+vídeo convertido, o topo mostra `inicio_topo.webp`. Converter com
+`python scripts/converter_video.py` (precisa do ffmpeg: `winget install ffmpeg`).
+
 ## Como converter
 
 1. Pôr os JPG em `assets/img/originais/` com os nomes da tabela (a pasta não vai para o Git).

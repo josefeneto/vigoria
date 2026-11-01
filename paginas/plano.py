@@ -1,6 +1,8 @@
-"""O plano gerado: cartão de topo com os números-chave e separadores em cartões.
+"""O plano gerado: cartão de topo com os números-chave e secções em cartões.
 
-Os avisos de segurança ficam no fim de cada separador. Sem tabelas: a 390 px, a
+As secções escolhem-se com botões grandes, com ícone, que passam para outra linha no
+telemóvel (os separadores cortavam «Acompanhamento» a 390 px); só a secção aberta é
+desenhada. Os avisos de segurança ficam no fim de cada secção. Sem tabelas: a 390 px, a
 semana-tipo e os exercícios leem-se melhor em lista e em cartões.
 
 Os rótulos vêm de avisos.yaml (`rotulos`), como no Markdown da CLI; o plano vem de
@@ -228,14 +230,27 @@ st.html(
     )
 )
 
-for separador, desenhar in zip(
-    st.tabs(t.SEPARADORES),
-    (_resumo, _treino, _alimentacao, _habitos, _acompanhamento),
-    strict=True,
-):
-    with separador:
-        desenhar(plano)
-        comum.avisos(plano, chave=desenhar.__name__)
+SECCOES = {
+    "resumo": _resumo,
+    "treino": _treino,
+    "alimentacao": _alimentacao,
+    "habitos": _habitos,
+    "acompanhamento": _acompanhamento,
+}
+seccao = st.segmented_control(
+    t.SECCAO_PLANO,
+    list(SECCOES),
+    default="resumo",
+    required=True,
+    format_func=t.SECCOES_PLANO.__getitem__,
+    key="plano_seccao",
+    label_visibility="collapsed",
+    width="stretch",
+    wrap=True,
+)
+desenhar = SECCOES[seccao or "resumo"]
+desenhar(plano)
+comum.avisos(plano, chave=desenhar.__name__)
 
 st.page_link(comum.PAGINA_QUESTIONARIO, label=t.VOLTAR_QUESTIONARIO, icon=":material/arrow_back:")
 st.caption(r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt))

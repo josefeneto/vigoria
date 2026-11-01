@@ -90,6 +90,7 @@ def test_icones_existem_para_passos_grupos_e_atividades() -> None:
         | {g.value for g in Grupo}
         | set(estilos.ICONES_ATIVIDADES.values())
         | {i for i, _, _ in t.BENEFICIOS}
+        | {i for i, _, _ in t.COMO_FUNCIONA}
         | {"bandeira", "intensidade", "calendario", "rebento"}
     )
     for nome in nomes:
@@ -182,3 +183,14 @@ def test_converter_fotos_recusa_o_que_nao_cabe(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="200 KB"):
         _converter_fotos().converter(origem, destino, (1600, 1067))
     assert not destino.exists()
+
+
+def test_video_do_inicio_leve_sem_som_e_com_capa() -> None:
+    """Vídeo do topo (Fase 5C): até 2,5 MB, H.264 em MP4, e capa webp até 120 KB."""
+    video = RAIZ / "static" / "video" / "inicio.mp4"
+    capa = RAIZ / "static" / "video" / "inicio_capa.webp"
+    assert video.stat().st_size <= 2.5 * 1024 * 1024
+    assert video.read_bytes()[4:8] == b"ftyp"  # contentor MP4
+    assert capa.stat().st_size <= 120 * 1024
+    with Image.open(capa) as imagem:
+        assert imagem.format == "WEBP" and imagem.size[0] == 1280

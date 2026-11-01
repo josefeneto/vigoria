@@ -131,7 +131,7 @@ def test_revisao_mostra_decisoes_e_gera_plano_simulado() -> None:
     assert resultado.chamadas == 1
 
 
-def test_plano_mostra_faixa_simulado_e_avisos_em_cada_separador() -> None:
+def test_plano_mostra_faixa_simulado_e_avisos_em_cada_seccao() -> None:
     at = _app()
     _persona(at)
     at.session_state["passo"] = "7"
@@ -139,12 +139,18 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_separador() -> None:
     _botao(at, "Gerar o meu plano").click().run(timeout=60)
     at.switch_page("paginas/plano.py").run()
     assert not at.exception
-    titulos = [w.proto.title for w in at.warning]
-    assert "Plano simulado (persona de teste)" in titulos
-    assert titulos.count("Avisos importantes") == 5  # um por separador
-    assert "Em vez de:" not in _texto(at)  # fase 1: a limitação ligeira só troca nas fases 2 a 4
+    assert "Plano simulado (persona de teste)" in [w.proto.title for w in at.warning]
     # Cintura sem número por fase (REGRAS §5): o mesmo texto, mostrado uma só vez.
     assert _texto(at).count("limiar de risco de 94 cm") == 1
+    for seccao in ("resumo", "treino", "alimentacao", "habitos", "acompanhamento"):
+        at.session_state["plano_seccao"] = seccao
+        at.run()
+        assert not at.exception
+        titulos = [w.proto.title for w in at.warning]
+        assert titulos.count("Avisos importantes") == 1, seccao  # em todas as secções
+    at.session_state["plano_seccao"] = "treino"
+    at.run()
+    assert "Em vez de:" not in _texto(at)  # fase 1: a limitação ligeira só troca nas fases 2 a 4
     at.session_state["plano_fase"] = 2
     at.run()
     assert "Em vez de:" in _texto(at)
@@ -168,3 +174,14 @@ def test_plano_sem_resultado_convida_ao_questionario() -> None:
     at.switch_page("paginas/plano.py").run()
     assert not at.exception
     assert at.info
+
+
+def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    html = "\n".join(h.proto.body for h in at.get("html"))
+    assert "<video" in html and "app/static/video/inicio.mp4" in html
+    assert 'poster="app/static/video/inicio_capa.webp"' in html
+    assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
+    assert "Como funciona" in html and "Pronto para começar?" in html
+    assert [b.label for b in at.button].count("Começar o questionário") == 2

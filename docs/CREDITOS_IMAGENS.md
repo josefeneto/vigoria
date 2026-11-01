@@ -12,3 +12,24 @@ Todas as fotografias usadas na Vigoria têm licença de uso comercial gratuito. 
 
 - Licença Unsplash: https://unsplash.com/license
 - Licença Pexels: https://www.pexels.com/license/
+
+## Vídeo
+
+| Ficheiro | Autor | Página do vídeo | Licença | Data de descarga |
+|---|---|---|---|---|
+| static/video/inicio.mp4 (e a capa inicio_capa.webp) | | | | |
+
+## Ícones
+
+Os ícones de `assets/icones/` foram desenhados de raiz para a Vigoria (Fase 5B, 01/11/2026).
+Não derivam de nenhuma biblioteca de ícones.
+
+## Letras
+
+Servidas pela própria app, sem pedidos ao Google Fonts; ficheiros `.woff2` (subconjunto
+latino) obtidos no Fontsource.
+
+- Atkinson Hyperlegible Next (texto), © 2020-2024 The Atkinson Hyperlegible Next Project
+  Authors, licença SIL Open Font License 1.1 (`static/fontes/OFL.txt`).
+- Fraunces (títulos, Fase 5C), © 2018 The Fraunces Project Authors, licença SIL Open Font
+  License 1.1 (`static/fontes/OFL-Fraunces.txt`).

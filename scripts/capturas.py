@@ -1,7 +1,7 @@
 """Capturas da interface a 390 px (telemóvel) e a 1280 px (computador), só em desenvolvimento.
 
 Arranca o Streamlit com o fornecedor simulado (nunca chama uma LLM real), percorre os
-passos do questionário e os separadores do plano e guarda PNG em saidas/capturas/.
+passos do questionário e as secções do plano e guarda PNG em saidas/capturas/.
 Usa o Google Chrome instalado (channel="chrome"): não é preciso «playwright install».
 
     python scripts/capturas.py            # em saidas/capturas/
@@ -24,7 +24,7 @@ URL = f"http://localhost:{PORTA}"
 # Altura grande: o Streamlit desloca o conteúdo dentro da página, não no documento.
 LARGURAS = {"telemovel": (390, 2600), "computador": (1280, 2200)}
 PASSOS = ("1", "2a", "2b", "3", "4a", "4b", "5", "6")
-SEPARADORES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
+SECCOES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
 
 
 def _arrancar() -> subprocess.Popen[bytes]:
@@ -98,8 +98,8 @@ def _percorrer(page: Page, largura: str) -> None:
     _clicar(page, "Gerar o meu plano")
     page.wait_for_url("**/plano", timeout=60_000)
     _esperar(page)
-    for i, separador in enumerate(SEPARADORES, start=12):
-        page.get_by_role("tab", name=separador).click()
+    for i, separador in enumerate(SECCOES, start=12):
+        page.locator(".st-key-plano_seccao").get_by_role("radio", name=separador).click()
         _esperar(page)
         _capturar(page, largura, f"{i:02d}_plano_{separador.lower()}")
         if separador == "Treino":  # os cartões dos exercícios ficam mais abaixo

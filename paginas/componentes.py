@@ -13,6 +13,34 @@ import streamlit as st
 from paginas.estilos import ICONES_ATIVIDADES, RAIZ, icone
 
 PASTA_FOTOS = RAIZ / "assets" / "img"
+VIDEO_TOPO = RAIZ / "static" / "video" / "inicio.mp4"  # servido em app/static/video/
+
+# Vídeo do topo do início: sem som, em ciclo, com capa e botão de pausa (WCAG 2.2.2).
+# Só arranca por código e só se o sistema não pedir menos movimento; sem código, fica a capa.
+_VIDEO = """<div class="v-video">
+<video muted loop playsinline preload="auto" poster="app/static/video/inicio_capa.webp"
+ aria-label="%(descricao)s"><source src="app/static/video/inicio.mp4" type="video/mp4"></video>
+<button type="button" class="v-video-botao" data-pausar="%(pausar)s"
+ data-reproduzir="%(reproduzir)s">%(reproduzir)s</button></div>
+<script>
+(() => {
+  const menos = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll(".v-video:not([data-pronto])").forEach((caixa) => {
+    caixa.dataset.pronto = "1";
+    const video = caixa.querySelector("video");
+    const botao = caixa.querySelector("button");
+    const mostrar = (aCorrer) => {
+      botao.textContent = aCorrer ? botao.dataset.pausar : botao.dataset.reproduzir;
+      botao.classList.toggle("a-correr", aCorrer);
+    };
+    botao.addEventListener("click", () => {
+      if (video.paused) { video.play().then(() => mostrar(true)).catch(() => mostrar(false)); }
+      else { video.pause(); mostrar(false); }
+    });
+    if (!menos) video.play().then(() => mostrar(true)).catch(() => mostrar(false));
+  });
+})();
+</script>"""
 
 
 def _icone(nome: str, cor: str = "principal", destaque: str = "terracota") -> str:
@@ -38,6 +66,15 @@ def fotografia(
     elif marcador:
         desenho = icone("rebento", "nevoa", "pessego")
         st.html(f'<div class="v-marcador" style="--proporcao:{proporcao}">{desenho}</div>')
+
+
+def video_topo(descricao: str, pausar: str, reproduzir: str) -> bool:
+    """Vídeo do topo do início; devolve False se ainda não houver vídeo convertido."""
+    if not VIDEO_TOPO.exists():
+        return False
+    textos = {"descricao": descricao, "pausar": pausar, "reproduzir": reproduzir}
+    st.html(_VIDEO % {k: escape(v) for k, v in textos.items()}, unsafe_allow_javascript=True)
+    return True
 
 
 def cabecalho_passo(nome_icone: str, rotulo: str, titulo: str, indice: int, total: int) -> str:
