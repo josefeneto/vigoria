@@ -4,7 +4,8 @@ Arranca o Streamlit com o fornecedor simulado (nunca chama uma LLM real), percor
 passos do questionário e os separadores do plano e guarda PNG em saidas/capturas/.
 Usa o Google Chrome instalado (channel="chrome"): não é preciso «playwright install».
 
-    python scripts/capturas.py
+    python scripts/capturas.py            # em saidas/capturas/
+    python scripts/capturas.py antes      # em saidas/capturas/antes/ (para comparar)
 """
 
 import os
@@ -47,6 +48,8 @@ def _arrancar() -> subprocess.Popen[bytes]:
 def _esperar(page: Page) -> None:
     """Espera que o Streamlit acabe de correr o script."""
     page.wait_for_timeout(400)
+    # Ao abrir uma página, o Streamlit demora cerca de 2 s a desenhar; todas têm um título h1.
+    page.wait_for_selector('[data-testid="stMain"] h1')
     page.wait_for_selector('[data-testid="stStatusWidget"]', state="detached", timeout=60_000)
     page.wait_for_timeout(600)
 
@@ -99,6 +102,12 @@ def _percorrer(page: Page, largura: str) -> None:
         page.get_by_role("tab", name=separador).click()
         _esperar(page)
         _capturar(page, largura, f"{i:02d}_plano_{separador.lower()}")
+        if separador == "Treino":  # os cartões dos exercícios ficam mais abaixo
+            tamanho = page.viewport_size or {"width": 390, "height": 2600}
+            page.set_viewport_size({"width": tamanho["width"], "height": 7000})
+            page.wait_for_timeout(500)
+            _capturar(page, largura, f"{i:02d}b_plano_treino_completo")
+            page.set_viewport_size(tamanho)
 
     page.goto(f"{URL}/privacidade")
     _esperar(page)
@@ -106,6 +115,9 @@ def _percorrer(page: Page, largura: str) -> None:
 
 
 def main() -> None:
+    global SAIDA
+    if len(sys.argv) > 1:
+        SAIDA = SAIDA / sys.argv[1]
     SAIDA.mkdir(parents=True, exist_ok=True)
     processo = _arrancar()
     try:

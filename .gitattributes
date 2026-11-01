@@ -2,3 +2,5 @@
 
 # Dicionário Hunspell pt_PT: guardar tal como vem (sem conversão de fins de linha)
 src/vigoria/conteudo/dicionario/* -text
+*.woff2 binary
+*.webp binary

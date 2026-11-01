@@ -29,3 +29,6 @@ build/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Fotografias originais (só as versões webp convertidas vão para o Git)
+assets/img/originais/

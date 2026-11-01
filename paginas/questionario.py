@@ -10,8 +10,9 @@ from typing import Any
 
 import streamlit as st
 
-from paginas import comum
+from paginas import componentes, comum
 from paginas import textos as t
+from paginas.estilos import ICONES_PASSOS
 from vigoria.config import obter_configuracao
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.interface.decisoes import avisos_passo_objetivo, decisoes_estrategia, imc_com_classe
@@ -127,6 +128,7 @@ def _radio(campo: str, opcoes: dict[str, str], legendas: dict[str, str] | None =
         index=None,
         format_func=opcoes.__getitem__,
         captions=[legendas[o] for o in opcoes] if legendas else None,
+        width="stretch",
         **W(campo),
     )
     comum.erro(campo)
@@ -167,7 +169,7 @@ def _texto(campo: str, maximo: int = 200) -> None:
 def passo_0() -> None:
     st.write(t.BOAS_VINDAS)
     for campo, rotulo in t.ROTULOS_CONSENTIMENTO.items():
-        st.checkbox(rotulo, **W(campo))
+        st.checkbox(rotulo, width="stretch", **W(campo))
         comum.erro(campo)
     st.page_link(comum.PAGINA_PRIVACIDADE, label=t.LER_PRIVACIDADE, icon=":material/policy:")
     st.caption(t.TERMOS_EM_PREPARACAO)
@@ -244,7 +246,11 @@ def passo_4a() -> None:
     rotulos = carregar_avisos().rotulos.refeicoes
     for x in REFEICOES:
         with st.container(border=True):
-            st.checkbox(f"**{rotulos[x]}** — {t.FACO_REFEICAO.lower()}", **W("refeicoes_faz", x))
+            st.checkbox(
+                f"**{rotulos[x]}** — {t.FACO_REFEICAO.lower()}",
+                width="stretch",
+                **W("refeicoes_faz", x),
+            )
             if st.session_state[chave("refeicoes_faz", x)]:
                 st.text_input(t.O_QUE_COME, max_chars=150, **W("refeicoes", x))
                 comum.erro(f"refeicoes.{x}")
@@ -273,6 +279,7 @@ def passo_5() -> None:
         list(t.OBJETIVO_MUSCULAR),
         index=None,
         format_func=t.OBJETIVO_MUSCULAR.__getitem__,
+        width="stretch",
         **W(OBJETIVO_TIPO),
     )
     if st.session_state[chave(OBJETIVO_TIPO)] == "kg":
@@ -417,6 +424,7 @@ def _gerar(q: Questionario) -> None:
 def passo_7() -> None:
     q = montar_questionario(comum.respostas())
     if st.session_state.get(A_GERAR):
+        componentes.fotografia("questionario_fim", t.ALT_FOTO_FIM, marcador=False)
         _gerar(q)
         return
     if erro_geracao := st.session_state.get(ERRO_GERACAO):
@@ -488,12 +496,21 @@ if st.session_state.get(comum.TERMINADO_GRAVIDEZ):
 passo = st.session_state[comum.PASSO]
 indice = PASSOS.index(passo)
 _ir_ao_topo(passo)
-st.title(t.TITULOS[passo])
-st.progress(indice / (len(PASSOS) - 1), text=t.PASSO_DE.format(n=indice + 1, total=len(PASSOS)))
+st.html(
+    componentes.cabecalho_passo(
+        ICONES_PASSOS[passo],
+        t.PASSO_DE.format(n=indice + 1, total=len(PASSOS)),
+        t.TITULOS[passo],
+        indice,
+        len(PASSOS),
+    )
+)
 if st.session_state.get(comum.ERROS):
     st.error(t.ERROS_NO_PASSO, icon=":material/error:")
 
-PASSOS_DESENHO[passo]()
+# Contentor com chave: o CSS das escolhas em cartões (estilos.py) só se aplica aqui.
+with st.container(key="questionario"):
+    PASSOS_DESENHO[passo]()
 
 if passo != "7" or not st.session_state.get(A_GERAR):
     with st.container(horizontal=True):

@@ -1,23 +1,17 @@
 """Ponto de entrada da Vigoria (Streamlit): configuração e navegação.
 
-As cores vêm de .streamlit/config.toml; os textos vivem nas páginas, em paginas/.
+As cores vêm de .streamlit/config.toml e de paginas/estilos.py; os textos, de paginas/textos.py.
 Fase 5: ainda sem contas; as respostas e o plano vivem só em st.session_state.
 """
 
 import streamlit as st
 
+from paginas import estilos
 from paginas import textos as t
 from vigoria.config import obter_configuracao
 
 st.set_page_config(page_title=t.MARCA, page_icon="🌿", layout="centered")
-
-# Botões altos, fáceis de tocar no telemóvel (público 45+). Só tamanhos, sem cores.
-st.html(
-    """<style>
-    button[data-testid^="stBaseButton"] { min-height: 3rem; }
-    [data-testid="stPageLink"] a { min-height: 3rem; align-items: center; }
-    </style>"""
-)
+estilos.aplicar()
 
 # Na demonstração (Streamlit Community Cloud), em todas as páginas.
 if obter_configuracao().ambiente == "demo":

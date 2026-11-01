@@ -1,17 +1,68 @@
+# Tema da Vigoria (Fase 5B). As cores repetem as de paginas/estilos.py (CORES):
+# um teste confirma que são iguais e que o contraste chega ao WCAG AA.
 [theme]
 base = "light"
-primaryColor = "#1F5C63"            # petróleo
+primaryColor = "#1F5C63"            # petróleo (texto branco por cima: 7,6:1)
 backgroundColor = "#F7F3EC"         # branco-osso
-secondaryBackgroundColor = "#ECE5D8"
-textColor = "#2E3338"               # grafite
-font = "sans serif"
-baseFontSize = 17                   # público 45+: letra base de pelo menos 17 px
+secondaryBackgroundColor = "#ECE5D8"  # fundo das caixas e dos campos
+textColor = "#2E3338"               # grafite (11,5:1 sobre o fundo)
+borderColor = "#DDD3C3"             # areia
+linkColor = "#1F5C63"
+linkUnderline = true
+
+# Alertas: aviso em âmbar, informação em petróleo, sucesso e erro com contraste AA.
+yellowColor = "#B7791F"
+yellowBackgroundColor = "#FBF0D9"
+yellowTextColor = "#7A4A00"
+orangeColor = "#A3532D"
+orangeBackgroundColor = "#F8E6DA"
+orangeTextColor = "#8F4524"
+blueColor = "#1F5C63"
+blueBackgroundColor = "#E4EFEE"
+blueTextColor = "#1F5C63"
+greenColor = "#2F6B45"
+greenBackgroundColor = "#E5F1E8"
+greenTextColor = "#2F6B45"
+redColor = "#A6342B"
+redBackgroundColor = "#F9E3E0"
+redTextColor = "#A6342B"
+grayTextColor = "#5A6168"
+
+# Letra Atkinson Hyperlegible Next (OFL), servida pela própria app: nada vai ao Google.
+font = "Atkinson Hyperlegible Next"
+headingFont = "Atkinson Hyperlegible Next"
+baseFontSize = 18                   # público 45+: letra base de 18 px
+headingFontSizes = ["2.25rem", "1.6rem", "1.3rem", "1.1rem", "1rem", "1rem"]
+headingFontWeights = [700, 700, 700, 700, 700, 700]
+paddingTop = "1.5rem"               # menos espaço vazio no topo do telemóvel
+baseRadius = "12px"
+buttonRadius = "10px"
+showWidgetBorder = true
+
+[[theme.fontFaces]]
+family = "Atkinson Hyperlegible Next"
+url = "app/static/fontes/atkinson-hyperlegible-next-latin-400-normal.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Atkinson Hyperlegible Next"
+url = "app/static/fontes/atkinson-hyperlegible-next-latin-400-italic.woff2"
+weight = 400
+style = "italic"
+
+[[theme.fontFaces]]
+family = "Atkinson Hyperlegible Next"
+url = "app/static/fontes/atkinson-hyperlegible-next-latin-700-normal.woff2"
+weight = 700
+style = "normal"
 
 [server]
 # Sem headless: o Streamlit decide sozinho. No Windows abre o browser; em Linux sem ecrã
 # (Community Cloud, Docker) fica headless. Nunca pôr headless = false: o Cloud não arranca.
 # Sem port nem address: ficam os valores por omissão (8501, todas as interfaces).
 showEmailPrompt = false             # nunca pedir o email de boas-vindas no arranque
+enableStaticServing = true          # pasta static/ (letra) em app/static/
 
 [client]
 toolbarMode = "minimal"                # sem o botão «Deploy» e opções de programador

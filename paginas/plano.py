@@ -1,4 +1,7 @@
-"""O plano gerado, em separadores. Os avisos de segurança ficam no fim de cada um.
+"""O plano gerado: cartão de topo com os números-chave e separadores em cartões.
+
+Os avisos de segurança ficam no fim de cada separador. Sem tabelas: a 390 px, a
+semana-tipo e os exercícios leem-se melhor em lista e em cartões.
 
 Os rótulos vêm de avisos.yaml (`rotulos`), como no Markdown da CLI; o plano vem de
 st.session_state (ainda sem contas, Fase 5).
@@ -6,9 +9,9 @@ st.session_state (ainda sem contas, Fase 5).
 
 import streamlit as st
 
-from paginas import comum
+from paginas import componentes, comum
 from paginas import textos as t
-from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios
+from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
 from vigoria.modelos.plano import ExercicioPlano, Plano, TreinoFase
 from vigoria.regras.textos import numero
 
@@ -21,36 +24,38 @@ def _intervalo(minimo: int, maximo: int, unidade: str) -> str:
 
 
 def _exercicio(x: ExercicioPlano) -> None:
-    with st.container(border=True):
-        st.markdown(f"**{x.nome}**")
-        prescricao = []
-        if x.series:
-            prescricao.append(f"{x.series} {r['series'].lower()}")
-        if x.repeticoes:
-            prescricao.append(f"{x.repeticoes} {r['repeticoes'].lower()}")
-        if x.descanso_s:
-            prescricao.append(f"{r['descanso'].lower()} {_intervalo(*x.descanso_s, 's')}")
-        if prescricao:
-            st.markdown(" · ".join(prescricao))
-        st.write(x.descricao)
-        if x.em_vez_de:
-            nome = carregar_exercicios()[x.em_vez_de].nome
-            st.markdown(f":material/swap_horiz: {r['em_vez_de'].format(nome=nome)}")
-        for nota in x.notas:
-            st.caption(nota)
+    prescricao = []
+    if x.series:
+        prescricao.append(f"{x.series} {r['series'].lower()}")
+    if x.repeticoes:
+        prescricao.append(f"{x.repeticoes} {r['repeticoes'].lower()}")
+    if x.descanso_s:
+        prescricao.append(f"{r['descanso'].lower()} {_intervalo(*x.descanso_s, 's')}")
+    extras = list(x.notas)
+    if x.em_vez_de:
+        extras.insert(0, "⇄ " + r["em_vez_de"].format(nome=carregar_exercicios()[x.em_vez_de].nome))
+    grupo = carregar_exercicios()[x.id].grupo
+    st.html(componentes.exercicio(grupo, x.nome, prescricao, x.descricao, extras))
 
 
 def _resumo(plano: Plano) -> None:
     st.write(plano.resumo)
-    st.subheader(r["marcos"])
-    for m in plano.marcos:
-        with st.container(border=True):
-            st.markdown(f"**{r['semana']} {m.semana}** — {m.fase}")
-            st.markdown(
-                f"- {r['peso_indicativo']}: {numero(m.peso_indicativo_kg)} kg\n"
-                f"- {r['cintura']}: {m.cintura}\n"
-                f"- {r['forca_resistencia']}: {m.forca_resistencia}"
-            )
+    st.subheader(t.FASES_TITULO)
+    semanas = {f.numero: f.semanas for f in carregar_fases()}
+    marcos = {m.semana: m for m in plano.marcos}
+    cartoes = []
+    for fase in plano.treino.fases:
+        intervalo = semanas[fase.numero]
+        detalhes = []
+        if (m := marcos.get(intervalo.max)) is not None:
+            detalhes = [
+                (r["peso_indicativo"], f"{numero(m.peso_indicativo_kg)} kg"),
+                (r["cintura"], m.cintura),
+                (r["forca_resistencia"], m.forca_resistencia),
+            ]
+        sobretitulo = t.FASE_SEMANAS.format(n=fase.numero, min=intervalo.min, max=intervalo.max)
+        cartoes.append(componentes.cartao_fase(sobretitulo, fase.nome, fase.foco, detalhes))
+    st.html(componentes.grelha(cartoes, colunas=2))
     if plano.notas_personalizadas:
         st.subheader(r["notas"])
         st.markdown("\n".join(f"- {n}" for n in plano.notas_personalizadas))
@@ -58,18 +63,17 @@ def _resumo(plano: Plano) -> None:
 
 def _semana(plano: Plano) -> None:
     st.subheader(r["semana_tipo"])
-    # Tabela em Markdown, não st.table: o st.table precisa do pyarrow, cujas DLL o Smart App
-    # Control do Windows bloqueia (31/10/2026). Três colunas estreitas, legíveis a 390 px.
-    linhas = [
-        f"| {r['dia']} | {r['atividade']} | {t.MINUTOS_COLUNA} |",
-        "|---|---|---|",
-        *(
-            f"| {rotulos.dias[s.dia]} | {s.atividade if s.duracao_min else t.SEM_SESSAO} "
-            f"| {s.duracao_min or t.SEM_RESPOSTA} |"
+    st.html(
+        componentes.semana(
+            (
+                componentes.icone_atividade(s.atividade),
+                rotulos.dias[s.dia],
+                s.atividade,
+                t.MINUTOS.format(n=s.duracao_min) if s.duracao_min else t.SEM_RESPOSTA,
+            )
             for s in plano.semana_tipo
-        ),
-    ]
-    st.markdown("\n".join(linhas))
+        )
+    )
     with st.expander(t.DETALHES_SEMANA):
         st.markdown(
             "\n".join(f"- **{rotulos.dias[s.dia]}:** {s.descricao}" for s in plano.semana_tipo)
@@ -189,8 +193,31 @@ if resultado is None:
 plano: Plano = resultado.plano
 if plano.provedor == "simulado":
     st.warning(t.PLANO_SIMULADO_NOTA, title=t.PLANO_SIMULADO, icon=":material/science:")
+componentes.fotografia("plano_topo", t.ALT_FOTO_PLANO, proporcao="8 / 3")
 st.title(r["titulo"])
 st.caption(t.NOTA_SESSAO_PLANO)
+intensidade = resultado.estrategia.intensidade_efetiva
+st.html(
+    componentes.numeros(
+        (
+            (
+                "bandeira",
+                t.NUMEROS_PLANO["objetivo"],
+                f"{numero(plano.marcos[-1].peso_indicativo_kg)} kg",
+            ),
+            (
+                "intensidade",
+                t.NUMEROS_PLANO["intensidade"],
+                t.INTENSIDADE.get(intensidade or "", t.SEM_RESPOSTA),
+            ),
+            (
+                "calendario",
+                t.NUMEROS_PLANO["dias"],
+                str(sum(1 for s in plano.semana_tipo if s.duracao_min)),
+            ),
+        )
+    )
+)
 
 for separador, desenhar in zip(
     st.tabs(t.SEPARADORES),
@@ -199,7 +226,7 @@ for separador, desenhar in zip(
 ):
     with separador:
         desenhar(plano)
-        comum.avisos(plano)
+        comum.avisos(plano, chave=desenhar.__name__)
 
 st.page_link(comum.PAGINA_QUESTIONARIO, label=t.VOLTAR_QUESTIONARIO, icon=":material/arrow_back:")
 st.caption(r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt))

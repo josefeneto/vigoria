@@ -34,6 +34,11 @@ def _app() -> AppTest:
     return at
 
 
+def _texto(at: AppTest) -> str:
+    """Markdown e HTML da página (os cartões do plano são HTML, desde a Fase 5B)."""
+    return "\n".join([m.value for m in at.markdown] + [h.proto.body for h in at.get("html")])
+
+
 def _botao(at: AppTest, rotulo: str):  # type: ignore[no-untyped-def]
     return next(b for b in at.button if b.label == rotulo)
 
@@ -137,11 +142,10 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_separador() -> None:
     titulos = [w.proto.title for w in at.warning]
     assert "Plano simulado (persona de teste)" in titulos
     assert titulos.count("Avisos importantes") == 5  # um por separador
-    texto = "\n".join(m.value for m in at.markdown)
-    assert "Em vez de:" not in texto  # fase 1: a limitação ligeira só troca nas fases 2 a 4
+    assert "Em vez de:" not in _texto(at)  # fase 1: a limitação ligeira só troca nas fases 2 a 4
     at.session_state["plano_fase"] = 2
     at.run()
-    assert "Em vez de:" in "\n".join(m.value for m in at.markdown)
+    assert "Em vez de:" in _texto(at)
 
 
 def test_faixa_de_demonstracao_so_em_demo(monkeypatch: pytest.MonkeyPatch) -> None:

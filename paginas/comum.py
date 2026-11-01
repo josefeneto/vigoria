@@ -52,10 +52,11 @@ def erro(campo: str) -> None:
         st.error(mensagem, icon=":material/error:")
 
 
-def avisos(plano: Plano) -> None:
-    """Avisos de segurança: no fim de cada separador do plano."""
-    st.warning(
-        "\n".join(f"- {a}" for a in plano.avisos),
-        title=carregar_avisos().rotulos.plano["avisos"],
-        icon=":material/health_and_safety:",
-    )
+def avisos(plano: Plano, chave: str) -> None:
+    """Avisos de segurança: no fim de cada separador do plano, em caixa bem visível."""
+    with st.container(key=f"avisos{chave}"):
+        st.warning(
+            "\n".join(f"- {a}" for a in plano.avisos),
+            title=carregar_avisos().rotulos.plano["avisos"],
+            icon=":material/health_and_safety:",
+        )

@@ -1,0 +1,117 @@
+/* CSS da Vigoria (Fase 5B). As cores (--v-*) vêm de CORES, em estilos.py. */
+:root {
+  --v-raio: 16px; --v-raio-pequeno: 12px;
+  --v-sombra: 0 1px 2px rgba(46,51,56,.06), 0 6px 16px rgba(46,51,56,.06);
+  --v-toque: 3rem; }
+
+/* ---- Base: títulos fortes, botões e ligações fáceis de tocar */
+.stApp h1, .stApp h2, .stApp h3 { color: var(--v-principal-profundo); letter-spacing: -0.01em; }
+button[data-testid^="stBaseButton"] { min-height: var(--v-toque); font-weight: 700; }
+[data-testid="stPageLink"] a { min-height: var(--v-toque); align-items: center; }
+button[role="tab"] { min-height: var(--v-toque); }
+button[data-variant="segmented_control"] { min-height: var(--v-toque); padding: .5rem 1rem; }
+button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700; }
+/* Legendas: o Streamlit esbate-as (cerca de 3:1); aqui ficam em grafite médio (5,7:1, AA). */
+.stApp [data-testid="stCaptionContainer"],
+.stApp [data-testid="stCaptionContainer"] p { color: var(--v-texto-secundario); opacity: 1; }
+:focus-visible { outline: 3px solid var(--v-terracota) !important; outline-offset: 2px; }
+
+/* ---- Botão de destaque (cobre): «Começar» no início */
+.st-key-comecar button { background: var(--v-cobre); border-color: var(--v-cobre); color: var(--v-branco); }
+.st-key-comecar button:hover, .st-key-comecar button:active {
+  background: var(--v-cobre-escuro); border-color: var(--v-cobre-escuro); color: var(--v-branco); }
+
+/* ---- Fotografias e marcadores */
+[class*="st-key-foto_"] img { border-radius: var(--v-raio); object-fit: cover; }
+.v-marcador { aspect-ratio: var(--proporcao, 3 / 2); border-radius: var(--v-raio);
+  background: linear-gradient(135deg, var(--v-principal), var(--v-principal-profundo));
+  display: grid; place-items: center; color: var(--v-nevoa); }
+.v-marcador img { width: 30%; max-width: 120px; height: auto; opacity: .9; }
+
+/* ---- Ícones e cartões */
+.v-icone { flex: none; width: 3rem; height: 3rem; border-radius: 14px; background: var(--v-argila);
+  color: var(--v-principal); display: inline-flex; align-items: center; justify-content: center; }
+.v-icone img { width: 1.75rem; height: 1.75rem; }
+.v-cartao { background: var(--v-cartao); border: 1px solid var(--v-borda); border-radius: var(--v-raio);
+  box-shadow: var(--v-sombra); padding: 1.25rem; }
+.v-cartao h3 { font-size: 1.15rem; margin: .75rem 0 .35rem; padding: 0; }
+.v-cartao p { margin: 0; }
+.v-grelha { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .v-grelha-3 { grid-template-columns: repeat(3, 1fr); }
+  .v-grelha-2 { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- Início */
+.v-marca { color: var(--v-cobre); font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  font-size: .95rem; margin: 0 0 .5rem; }
+.v-promessa { font-size: 1.9rem; line-height: 1.2; font-weight: 700; margin: 0 0 .75rem;
+  color: var(--v-principal-profundo); }
+@media (min-width: 640px) { .v-promessa { font-size: 2.25rem; } }
+
+/* ---- Questionário: cabeçalho do passo e barra de progresso */
+.v-passo { display: flex; gap: .9rem; align-items: center; }
+.v-passo-n { margin: 0; color: var(--v-texto-secundario); font-size: .95rem; }
+.v-passo h1 { margin: 0; padding: 0; font-size: 1.9rem; line-height: 1.15; }
+.v-barra { display: grid; grid-template-columns: repeat(var(--total), 1fr); gap: 4px; margin-top: 1rem; }
+.v-barra span { height: 8px; border-radius: 4px; background: var(--v-borda); }
+.v-barra .feito { background: var(--v-principal); }
+.v-barra .atual { background: var(--v-cobre); }
+
+/* ---- Questionário: escolhas em cartões grandes (widgets nativos, só aspeto) */
+/* Escolha única: o cartão é o invólucro de cada opção (rótulo e explicação lá dentro). */
+.st-key-questionario [data-testid="stRadio"],
+.st-key-questionario [data-testid="stRadioGroup"] { width: 100%; }
+.st-key-questionario [data-testid="stRadioGroup"] { gap: .6rem; }
+.st-key-questionario [data-testid="stRadioGroup"] > div,
+.st-key-questionario [data-testid="stCheckbox"]:not(:has([role="switch"])) > label {
+  width: 100%; min-height: 3.25rem; padding: .8rem 1rem; box-sizing: border-box;
+  background: var(--v-cartao); border: 1.5px solid var(--v-borda); border-radius: var(--v-raio-pequeno); }
+.st-key-questionario [data-testid="stRadioOption"] { width: 100%; min-height: 1.6rem; }
+.st-key-questionario [data-testid="stCheckbox"]:not(:has([role="switch"])) { width: 100%; }
+.st-key-questionario [data-testid="stRadioGroup"] > div[data-selected="true"],
+.st-key-questionario [data-testid="stCheckbox"][data-selected="true"]:not(:has([role="switch"])) > label {
+  background: var(--v-nevoa); border-color: var(--v-principal); box-shadow: inset 0 0 0 1px var(--v-principal); }
+.st-key-questionario button[data-variant="pills"] { min-height: var(--v-toque); padding: .5rem 1.1rem;
+  border-radius: var(--v-raio-pequeno); border-width: 1.5px; background: var(--v-cartao); }
+.st-key-questionario button[data-variant="pills"][aria-pressed="true"] {
+  background: var(--v-nevoa); border-color: var(--v-principal); color: var(--v-principal-profundo);
+  font-weight: 700; }
+.st-key-questionario button[data-variant="pills"][aria-pressed="true"] p::before { content: "✓ "; }
+
+/* ---- Plano: cartão de topo com os números-chave */
+.v-numeros { background: var(--v-principal-profundo); color: var(--v-fundo); border-radius: var(--v-raio);
+  padding: 1.25rem; display: grid; gap: 1rem; grid-template-columns: 1fr; box-shadow: var(--v-sombra); }
+@media (min-width: 640px) { .v-numeros { grid-template-columns: repeat(3, 1fr); } }
+.v-numero { display: flex; gap: .8rem; align-items: center; }
+.v-numero .v-icone { background: rgba(255,255,255,.1); }
+.v-numero p { margin: 0; }
+.v-numero-rotulo { font-size: .95rem; color: var(--v-pessego); }
+.v-numero-valor { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+
+/* ---- Plano: fases, semana-tipo e exercícios */
+.v-sobretitulo { color: var(--v-cobre); font-weight: 700; font-size: .95rem; margin: 0; }
+.stApp .v-cartao dl { margin: .75rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.stApp .v-cartao dt { margin: 0; padding: 0; font-weight: 700; color: var(--v-principal-profundo); }
+.stApp .v-cartao dd { padding: 0; margin: 0 0 .3rem; }
+.stApp .v-semana { list-style: none; margin: 0; padding: 0; }
+.stApp .v-semana li { display: flex; gap: .8rem; align-items: center; padding: .6rem 0;
+  border-bottom: 1px solid var(--v-borda); margin: 0; }
+.v-semana li:last-child { border-bottom: 0; }
+.v-semana .v-icone { width: 2.5rem; height: 2.5rem; border-radius: 12px; }
+.v-semana .v-icone img { width: 1.4rem; height: 1.4rem; }
+.v-semana-texto { flex: 1; }
+.v-semana-texto p { margin: 0; }
+.v-semana-dia { font-weight: 700; }
+.v-semana-min { white-space: nowrap; color: var(--v-texto-secundario); }
+.v-exercicio { margin: 0; }
+.v-exercicio-topo { display: flex; gap: .8rem; align-items: center; margin-bottom: .7rem; }
+.v-exercicio h4 { margin: 0; padding: 0; font-size: 1.1rem; color: var(--v-principal-profundo); }
+.v-exercicio p { margin: .4rem 0 0; }
+.v-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.v-chips span { background: var(--v-nevoa); color: var(--v-principal-profundo); border-radius: 999px;
+  padding: .15rem .7rem; font-size: .9rem; font-weight: 700; }
+.v-nota { color: var(--v-texto-secundario); font-size: .95rem; }
+
+/* ---- Avisos de segurança: caixa bem visível */
+[class*="st-key-avisos"] [data-testid="stAlert"] { border-left: 6px solid var(--v-aviso-borda);
+  border-radius: var(--v-raio-pequeno); }

@@ -12,7 +12,7 @@ from vigoria.regras.elegibilidade import Modo
 # ---------------------------------------------------------------- Geral
 
 MARCA = "Vigoria"
-ASSINATURA = "O seu plano, à sua medida."
+PROMESSA = "O seu plano, à sua medida — para ganhar força e energia, sem sair de casa."
 DEMO_AVISO = (
     "Versão de demonstração — não introduza dados reais de saúde. "
     "Os dados são processados em servidores fora da UE."
@@ -43,6 +43,29 @@ INICIO_COMO = (
     "Começa com um questionário de cerca de 10 minutos. No fim, mostramos-lhe as decisões "
     "que tomámos a partir das suas respostas e só depois preparamos o plano."
 )
+INICIO_COMO_TITULO = "Como funciona"
+BENEFICIOS = (
+    (
+        "medida",
+        "Feito à sua medida",
+        "O plano parte das suas respostas: idade, saúde, rotina e objetivos. "
+        "Nada de modelos iguais para todos.",
+    ),
+    (
+        "casa",
+        "Em casa, ao seu ritmo",
+        "16 semanas em 4 fases, com exercícios para fazer em casa, com ou sem equipamento.",
+    ),
+    (
+        "pessoa45",
+        "Pensado para os 45+",
+        "Respeita as articulações, o equilíbrio e o seu historial de saúde, com avisos claros "
+        "sempre que é preciso.",
+    ),
+)
+ALT_FOTO_INICIO = "Pessoa a fazer exercício em casa, numa sala com luz natural."
+ALT_FOTO_PLANO = "Tapete de exercício, garrafa de água e halteres leves."
+ALT_FOTO_FIM = "Pessoa a caminhar ao ar livre."
 INICIO_SESSAO = (
     "Nesta versão de teste, as respostas ficam apenas nesta janela do browser: se a fechar, "
     "perdem-se."
@@ -438,10 +461,17 @@ PLANO_SIMULADO = "Plano simulado (persona de teste)"
 PLANO_SIMULADO_NOTA = (
     "Este plano não foi escrito pela IA: é a resposta guardada da persona de teste."
 )
+NUMEROS_PLANO = {
+    "objetivo": "Objetivo à semana 16",
+    "intensidade": "Intensidade",
+    "dias": "Dias de treino por semana",
+}
+FASES_TITULO = "As 4 fases do programa"
+FASE_SEMANAS = "Fase {n} · Semanas {min} a {max}"
+MINUTOS = "{n} min"
 SEPARADORES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
 ESCOLHER_FASE = "Fase"
 ESCOLHER = "Escolha uma opção"
-SEM_SESSAO = "Descanso"
 MINUTOS_COLUNA = "Minutos"
 DETALHES_SEMANA = "Ver o que fazer em cada dia"
 NOTA_SESSAO_PLANO = "O plano fica só nesta janela do browser: se a fechar, perde-se."
