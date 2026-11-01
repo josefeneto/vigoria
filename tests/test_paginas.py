@@ -143,6 +143,8 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_separador() -> None:
     assert "Plano simulado (persona de teste)" in titulos
     assert titulos.count("Avisos importantes") == 5  # um por separador
     assert "Em vez de:" not in _texto(at)  # fase 1: a limitação ligeira só troca nas fases 2 a 4
+    # Cintura sem número por fase (REGRAS §5): o mesmo texto, mostrado uma só vez.
+    assert _texto(at).count("limiar de risco de 94 cm") == 1
     at.session_state["plano_fase"] = 2
     at.run()
     assert "Em vez de:" in _texto(at)

@@ -7,7 +7,7 @@ com um rebento) no lugar das duas obrigatórias; a opcional simplesmente não ap
 |---|---|---|---|
 | `inicio_topo.webp` | `inicio_topo.jpg` | Pessoa com 50 a 65 anos a treinar em casa (sala com luz natural, cadeira ou halteres leves, ar descontraído). Sem foco no corpo nem roupa de competição. | 1600×1067 (3:2) |
 | `plano_topo.webp` | `plano_topo.jpg` | Sem pessoas: tapete, garrafa de água, ténis, halteres leves. | 1600×600 (8:3) |
-| `questionario_fim.webp` (opcional) | `questionario_fim.jpg` | Pessoa a caminhar ao ar livre ou a alongar. Aparece enquanto o plano é preparado. | 1200×800 (3:2) |
+| `questionario_fim.webp` (opcional) | `questionario_fim.jpg` | Pessoa ao ar livre (caminhar, alongar, beber água). Aparece enquanto o plano é preparado. **Vertical**: não é recortada, só reduzida para caber em 800×1200. | até 800×1200 (2:3) |
 
 Regras: sem imagens de «antes e depois» nem mensagens de transformação corporal; nada que
 pareça uma pessoa real a recomendar a app ou a fazer afirmações de saúde.

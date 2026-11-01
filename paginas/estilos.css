@@ -115,3 +115,9 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
 /* ---- Avisos de segurança: caixa bem visível */
 [class*="st-key-avisos"] [data-testid="stAlert"] { border-left: 6px solid var(--v-aviso-borda);
   border-radius: var(--v-raio-pequeno); }
+
+/* ---- Ecrã de espera: esconder o ecrã anterior, que o Streamlit mantém esbatido até ao fim */
+body:has(.st-key-a_preparar) [data-testid="stMain"] [data-stale="true"],
+body:has(.st-key-a_preparar) [data-testid="stMain"] :is([data-testid="stVerticalBlock"],
+  [data-testid="stHorizontalBlock"], [data-testid="stExpander"])
+  :has([data-stale="true"]):not(:has([data-stale="false"])) { display: none; }

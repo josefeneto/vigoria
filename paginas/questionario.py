@@ -421,12 +421,21 @@ def _gerar(q: Questionario) -> None:
     st.rerun()
 
 
+def _a_preparar() -> None:
+    """Ecrã de espera enquanto o plano é gerado (passo 7, depois de «Gerar o meu plano»)."""
+    # Fotografia vertical: ao lado da mensagem no computador; por baixo dela no telemóvel
+    # (a mensagem vem primeiro). Desenhada antes de gerar, para se ver durante a espera.
+    mensagem, foto = st.columns([3, 2], gap="large", vertical_alignment="center")
+    with foto:
+        componentes.fotografia(
+            "questionario_fim", t.ALT_FOTO_FIM, marcador=False, largura_maxima=320
+        )
+    with mensagem:
+        _gerar(montar_questionario(comum.respostas()))
+
+
 def passo_7() -> None:
     q = montar_questionario(comum.respostas())
-    if st.session_state.get(A_GERAR):
-        componentes.fotografia("questionario_fim", t.ALT_FOTO_FIM, marcador=False)
-        _gerar(q)
-        return
     if erro_geracao := st.session_state.get(ERRO_GERACAO):
         st.error(t.ERROS_GERACAO[erro_geracao], title=t.ERRO_GERACAO_TITULO)
     _revisao(q)
@@ -495,7 +504,9 @@ if st.session_state.get(comum.TERMINADO_GRAVIDEZ):
 
 passo = st.session_state[comum.PASSO]
 indice = PASSOS.index(passo)
-_ir_ao_topo(passo)
+a_gerar = passo == "7" and bool(st.session_state.get(A_GERAR))
+# Ao gerar, volta também ao topo: o botão está no fundo da revisão e a espera fica em cima.
+_ir_ao_topo(f"{passo}-a-gerar" if a_gerar else passo)
 st.html(
     componentes.cabecalho_passo(
         ICONES_PASSOS[passo],
@@ -508,11 +519,16 @@ st.html(
 if st.session_state.get(comum.ERROS):
     st.error(t.ERROS_NO_PASSO, icon=":material/error:")
 
-# Contentor com chave: o CSS das escolhas em cartões (estilos.py) só se aplica aqui.
-with st.container(key="questionario"):
-    PASSOS_DESENHO[passo]()
+if a_gerar:
+    # Com este bloco na página, o CSS (estilos.css) esconde a revisão que o Streamlit guarda,
+    # esbatida, até a geração acabar (10 a 60 s com a LLM real).
+    with st.container(key="a_preparar"):
+        _a_preparar()
+else:
+    # Contentor com chave: o CSS das escolhas em cartões (estilos.css) só se aplica aqui.
+    with st.container(key="questionario"):
+        PASSOS_DESENHO[passo]()
 
-if passo != "7" or not st.session_state.get(A_GERAR):
     with st.container(horizontal=True):
         if indice > 0:
             st.button(t.ANTERIOR, icon=":material/arrow_back:", width="stretch", on_click=_anterior)

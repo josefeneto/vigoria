@@ -141,17 +141,17 @@ def _converter_fotos():  # type: ignore[no-untyped-def]
     return modulo
 
 
-def _fotografia(caminho: Path, grao: int) -> None:
-    """Imagem 3000×2000 parecida com uma fotografia: gradientes de cor com grão."""
+def _fotografia(caminho: Path, grao: int, tamanho: tuple[int, int] = (3000, 2000)) -> None:
+    """Imagem parecida com uma fotografia: gradientes de cor com grão."""
     fundo = Image.merge(
         "RGB",
         (
-            Image.linear_gradient("L").resize((3000, 2000)),
-            Image.radial_gradient("L").resize((3000, 2000)),
-            Image.linear_gradient("L").rotate(90).resize((3000, 2000)),
+            Image.linear_gradient("L").resize(tamanho),
+            Image.radial_gradient("L").resize(tamanho),
+            Image.linear_gradient("L").rotate(90).resize(tamanho),
         ),
     )
-    ruido = Image.effect_noise((3000, 2000), 255).convert("RGB")
+    ruido = Image.effect_noise(tamanho, 255).convert("RGB")
     Image.blend(fundo, ruido, grao / 100).save(caminho, quality=95)
 
 
@@ -159,10 +159,20 @@ def test_converter_fotos_recorta_reduz_e_cabe_em_200_kb(tmp_path: Path) -> None:
     origem = tmp_path / "original.jpg"
     _fotografia(origem, grao=15)
     destino = tmp_path / "inicio_topo.webp"
-    tamanho, _ = _converter_fotos().converter(origem, destino, (1600, 1067))
-    assert tamanho <= 200 * 1024
+    tamanho, _, final = _converter_fotos().converter(origem, destino, (1600, 1067))
+    assert tamanho <= 200 * 1024 and final == (1600, 1067)
     with Image.open(destino) as imagem:
         assert imagem.format == "WEBP" and imagem.size == (1600, 1067)
+
+
+def test_converter_fotos_vertical_sem_recorte_mantem_a_proporcao(tmp_path: Path) -> None:
+    """A fotografia do fim do questionário é vertical: reduzida, nunca recortada."""
+    origem = tmp_path / "original.jpg"
+    _fotografia(origem, grao=15, tamanho=(1500, 2400))  # 5:8, mais estreita do que 2:3
+    destino = tmp_path / "questionario_fim.webp"
+    _, _, final = _converter_fotos().converter(origem, destino, (800, 1200), recortar=False)
+    assert final == (750, 1200)  # cabe na caixa e mantém os 5:8
+    assert _converter_fotos().TAMANHOS["questionario_fim"] == (800, 1200, False)
 
 
 def test_converter_fotos_recusa_o_que_nao_cabe(tmp_path: Path) -> None:

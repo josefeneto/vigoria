@@ -38,21 +38,30 @@ def _exercicio(x: ExercicioPlano) -> None:
     st.html(componentes.exercicio(grupo, x.nome, prescricao, x.descricao, extras))
 
 
+def _minuscula(texto: str) -> str:
+    return texto[:1].lower() + texto[1:]
+
+
 def _resumo(plano: Plano) -> None:
     st.write(plano.resumo)
     st.subheader(t.FASES_TITULO)
     semanas = {f.numero: f.semanas for f in carregar_fases()}
     marcos = {m.semana: m for m in plano.marcos}
+    # A cintura não tem número por fase (REGRAS §5): o texto é igual nos 4 marcos e
+    # mostra-se uma só vez, por baixo do título, em vez de repetido em cada cartão.
+    cinturas = {m.cintura for m in plano.marcos}
+    cintura_unica = cinturas.pop() if len(cinturas) == 1 else None
+    if cintura_unica:
+        st.markdown(t.CINTURA_FASES.format(rotulo=r["cintura"], texto=_minuscula(cintura_unica)))
     cartoes = []
     for fase in plano.treino.fases:
         intervalo = semanas[fase.numero]
         detalhes = []
         if (m := marcos.get(intervalo.max)) is not None:
-            detalhes = [
-                (r["peso_indicativo"], f"{numero(m.peso_indicativo_kg)} kg"),
-                (r["cintura"], m.cintura),
-                (r["forca_resistencia"], m.forca_resistencia),
-            ]
+            detalhes = [(r["peso_indicativo"], f"{numero(m.peso_indicativo_kg)} kg")]
+            if cintura_unica is None:
+                detalhes.append((r["cintura"], m.cintura))
+            detalhes.append((r["forca_resistencia"], m.forca_resistencia))
         sobretitulo = t.FASE_SEMANAS.format(n=fase.numero, min=intervalo.min, max=intervalo.max)
         cartoes.append(componentes.cartao_fase(sobretitulo, fase.nome, fase.foco, detalhes))
     st.html(componentes.grelha(cartoes, colunas=2))

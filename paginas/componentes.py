@@ -19,12 +19,22 @@ def _icone(nome: str, cor: str = "principal", destaque: str = "terracota") -> st
     return f'<span class="v-icone">{icone(nome, cor, destaque)}</span>'
 
 
-def fotografia(nome: str, alt: str, *, proporcao: str = "3 / 2", marcador: bool = True) -> None:
-    """Fotografia de assets/img/<nome>.webp; sem ela, um marcador desenhado (ou nada)."""
+def fotografia(
+    nome: str,
+    alt: str,
+    *,
+    proporcao: str = "3 / 2",
+    marcador: bool = True,
+    largura_maxima: int | None = None,
+) -> None:
+    """Fotografia de assets/img/<nome>.webp; sem ela, um marcador desenhado (ou nada).
+
+    Com largura_maxima (fotografias verticais), fica centrada e nunca mais larga do que isso.
+    """
     caminho: Path = PASTA_FOTOS / f"{nome}.webp"
     if caminho.exists():
-        with st.container(key=f"foto_{nome}"):
-            st.image(str(caminho), width="stretch", alt=alt)
+        with st.container(key=f"foto_{nome}", horizontal_alignment="center"):
+            st.image(str(caminho), width=largura_maxima or "stretch", alt=alt)
     elif marcador:
         desenho = icone("rebento", "nevoa", "pessego")
         st.html(f'<div class="v-marcador" style="--proporcao:{proporcao}">{desenho}</div>')

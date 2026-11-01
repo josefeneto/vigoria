@@ -63,9 +63,11 @@ BENEFICIOS = (
         "sempre que é preciso.",
     ),
 )
-ALT_FOTO_INICIO = "Pessoa a fazer exercício em casa, numa sala com luz natural."
-ALT_FOTO_PLANO = "Tapete de exercício, garrafa de água e halteres leves."
-ALT_FOTO_FIM = "Pessoa a caminhar ao ar livre."
+ALT_FOTO_INICIO = "Pessoa deitada num tapete, em casa, a levantar halteres com os dois braços."
+ALT_FOTO_PLANO = "Pessoa a fazer um alongamento de pernas no chão de uma sala de estar."
+ALT_FOTO_FIM = (
+    "Pessoa ao ar livre, à sombra de uma árvore, a beber água com um tapete debaixo do braço."
+)
 INICIO_SESSAO = (
     "Nesta versão de teste, as respostas ficam apenas nesta janela do browser: se a fechar, "
     "perdem-se."
@@ -467,6 +469,7 @@ NUMEROS_PLANO = {
     "dias": "Dias de treino por semana",
 }
 FASES_TITULO = "As 4 fases do programa"
+CINTURA_FASES = "**{rotulo}**, no fim de cada fase: {texto}"
 FASE_SEMANAS = "Fase {n} · Semanas {min} a {max}"
 MINUTOS = "{n} min"
 SEPARADORES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
