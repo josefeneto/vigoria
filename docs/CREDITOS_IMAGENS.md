@@ -4,7 +4,7 @@ Todas as fotografias usadas na Vigoria têm licença de uso comercial gratuito. 
 
 | Ficheiro | Autor | Página da fotografia | Licença | Data de descarga |
 |---|---|---|---|---|
-| inicio_topo.webp | Vitaly Gariev | https://unsplash.com/photos/a-man-sitting-on-the-floor-in-front-of-a-couch-05xfuxIsyB0 | Licença Unsplash | 01/11/2026 |
+| inicio_topo.webp | Peyman Shojaei | https://unsplash.com/photos/a-woman-laying-on-the-floor-in-a-kitchen-xEdBbxFoY28 | Licença Unsplash | 01/11/2026 |
 | plano_topo.webp | Vitaly Gariev | https://unsplash.com/photos/a-man-sitting-on-the-floor-in-front-of-a-couch-05xfuxIsyB0 | Licença Unsplash | 01/11/2026 |
 | questionario_fim.webp | Vlada Karpovich | https://www.pexels.com/photo/sun-walk-swing-meditation-8939928/ | Licença Pexels | 01/11/2026 |
 
@@ -17,7 +17,7 @@ Todas as fotografias usadas na Vigoria têm licença de uso comercial gratuito. 
 
 | Ficheiro | Autor | Página do vídeo | Licença | Data de descarga |
 |---|---|---|---|---|
-| static/video/inicio.mp4 (e a capa inicio_capa.webp) | | | | |
+| static/video/inicio.mp4 (e a capa inicio_capa.webp) | Kampus Production | https://www.pexels.com/video/elderly-man-lifting-dumbbells-6892967/ | Licença Pexels | 01/11/2026 |
 
 ## Ícones
 
