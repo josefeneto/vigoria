@@ -4,7 +4,9 @@ Só aspeto: recebem textos já decididos e devolvem HTML. Todo o texto passa por
 html.escape (o do plano pode vir da LLM). Os ícones são decorativos (aria-hidden).
 """
 
+import base64
 from collections.abc import Iterable
+from functools import cache
 from html import escape
 from pathlib import Path
 
@@ -13,6 +15,7 @@ import streamlit as st
 from paginas.estilos import ICONES_ATIVIDADES, RAIZ, icone
 
 PASTA_FOTOS = RAIZ / "assets" / "img"
+PASTA_MARCA = RAIZ / "assets" / "marca"
 VIDEO_TOPO = RAIZ / "static" / "video" / "inicio.mp4"  # servido em app/static/video/
 
 # Vídeo do topo do início: sem som, em ciclo, com capa e botão de pausa (WCAG 2.2.2).
@@ -41,6 +44,18 @@ _VIDEO = """<div class="v-video">
   });
 })();
 </script>"""
+
+
+@cache
+def logotipo(alt: str, *, claro: bool = False, grande: bool = False) -> str:
+    """Logotipo completo (assets/marca/, gerado por scripts/gerar_logotipo.py) como <img>.
+
+    claro: para fundos escuros. grande: o do topo do início; sem ele, o dos topos das páginas.
+    """
+    nome = "vigoria_logo_claro.svg" if claro else "vigoria_logo.svg"
+    dados = base64.b64encode((PASTA_MARCA / nome).read_bytes()).decode("ascii")
+    classe = "v-logo v-logo-grande" if grande else "v-logo"
+    return f'<img class="{classe}" src="data:image/svg+xml;base64,{dados}" alt="{escape(alt)}">'
 
 
 def _icone(nome: str, cor: str = "principal", destaque: str = "terracota") -> str:

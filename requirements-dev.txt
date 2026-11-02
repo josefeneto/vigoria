@@ -4,3 +4,5 @@ pytest==9.1.1
 pytest-timeout==2.4.0  # 300 s por teste marcado «llm» (conftest.py)
 ruff==0.17.3
 playwright==1.64.1  # só scripts/capturas.py; usa o Chrome instalado (sem «playwright install»)
+fonttools==4.68.0  # só scripts/gerar_logotipo.py (palavra «Vigoria» em contornos)
+brotli==1.2.1  # para a fontTools ler a letra em .woff2

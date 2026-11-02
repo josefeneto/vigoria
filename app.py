@@ -4,13 +4,17 @@ As cores vêm de .streamlit/config.toml e de paginas/estilos.py; os textos, de p
 Fase 5: ainda sem contas; as respostas e o plano vivem só em st.session_state.
 """
 
+from pathlib import Path
+
 import streamlit as st
 
 from paginas import estilos
 from paginas import textos as t
 from vigoria.config import obter_configuracao
 
-st.set_page_config(page_title=t.MARCA, page_icon="🌿", layout="centered")
+FAVICON = Path(__file__).parent / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
+
+st.set_page_config(page_title=t.MARCA, page_icon=FAVICON, layout="centered")
 estilos.aplicar()
 
 # Na demonstração (Streamlit Community Cloud), em todas as páginas.

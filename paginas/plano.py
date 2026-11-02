@@ -194,6 +194,8 @@ def _acompanhamento(plano: Plano) -> None:
 
 # ---------------------------------------------------------------- Página
 
+st.html(componentes.logotipo(t.MARCA))
+
 resultado = st.session_state.get(comum.RESULTADO)
 if resultado is None:
     st.title(r["titulo"])

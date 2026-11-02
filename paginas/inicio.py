@@ -25,8 +25,8 @@ with st.container(key="faixa_topo"):
     texto, media = st.columns([1, 1], gap="large", vertical_alignment="center")
     with texto:
         st.html(
-            f'<p class="v-marca">{escape(t.MARCA)}</p>'
-            f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
+            componentes.logotipo(t.MARCA, claro=True, grande=True)
+            + f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
             f'<p class="v-faixa-texto">{escape(t.INICIO_TEXTO)}</p>'
         )
         _comecar("comecar")

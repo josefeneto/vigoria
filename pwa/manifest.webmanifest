@@ -1,0 +1,14 @@
+{
+  "name": "Vigoria",
+  "short_name": "Vigoria",
+  "lang": "pt-PT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F3EC",
+  "theme_color": "#123F45",
+  "icons": [
+    { "src": "/app/static/icones/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/static/icones/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/app/static/icones/icone-180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
