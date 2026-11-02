@@ -30,8 +30,10 @@ CORES = {"vigoria_logo": ("vigoria_simbolo.svg", "#123F45"),
 TAMANHOS_PNG = (32, 180, 192, 512)
 
 EM = 100  # unidades do SVG por em
-# Parte visível do símbolo na sua caixa 64×64 (traço de 9 com pontas redondas e círculo).
-SIMBOLO_X, SIMBOLO_Y, SIMBOLO_LADO = 5.5, 3.0, 53.5
+# Parte visível do símbolo na sua caixa 64×64 (traço de 9 com pontas redondas e círculo):
+# x de 5,5 a 59; o círculo começa em y = 3, o «V» vai de y = 13,5 (pontas) a 56,5 (vértice).
+SIMBOLO_X, SIMBOLO_LARGURA, SIMBOLO_TOPO = 5.5, 53.5, 3.0
+V_TOPO, V_FUNDO = 13.5, 56.5
 ESPACO = 16  # entre o símbolo e a palavra
 
 
@@ -57,8 +59,9 @@ def _kerning(fonte: TTFont, esquerda: str, direita: str) -> int:
     return 0
 
 
-def _palavra() -> tuple[str, float, float, float, float]:
-    """Caminho SVG da palavra com a linha de base em y = 0 (y para baixo), e os limites x/y."""
+def _palavra() -> tuple[str, float, float, float, float, float]:
+    """Caminho SVG da palavra com a linha de base em y = 0 (y para baixo), os limites x/y
+    e a altura das maiúsculas."""
     fonte = TTFont(LETRA)
     glifos = fonte.getGlyphSet()
     mapa = fonte.getBestCmap()
@@ -75,7 +78,8 @@ def _palavra() -> tuple[str, float, float, float, float]:
         if i + 1 < len(nomes):
             x += _kerning(fonte, nome, nomes[i + 1])
     xmin, ymin, xmax, ymax = limites.bounds
-    return caneta.getCommands(), xmin, xmax, ymin, ymax
+    maiusculas = fonte["OS/2"].sCapHeight * escala
+    return caneta.getCommands(), xmin, xmax, ymin, ymax, maiusculas
 
 
 def _simbolo(ficheiro: str) -> str:
@@ -85,23 +89,26 @@ def _simbolo(ficheiro: str) -> str:
 
 
 def gerar_logotipos() -> None:
-    caminho, xmin, xmax, ymin, ymax = _palavra()
-    # O símbolo ocupa a altura toda da palavra, do topo do «V» ao fundo do «g».
-    altura = ymax - ymin
-    escala = altura / SIMBOLO_LADO
-    x_palavra = SIMBOLO_LADO * escala + ESPACO - xmin
+    caminho, xmin, xmax, ymin, ymax, maiusculas = _palavra()
+    # O «V» do símbolo alinha como uma letra: vértice na linha de base, pontas à altura das
+    # maiúsculas; o círculo fica por cima, como o pingo do «i».
+    escala = maiusculas / (V_FUNDO - V_TOPO)
+    base = max(-ymin, (V_FUNDO - SIMBOLO_TOPO) * escala)  # y da linha de base no SVG
+    altura = base + ymax
+    y_simbolo = base - V_FUNDO * escala
+    x_palavra = SIMBOLO_LARGURA * escala + ESPACO - xmin
     largura = x_palavra + xmax
     for nome, (ficheiro, cor) in CORES.items():
         svg = (
             f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {largura:.1f} {altura:.1f}" '
             f'width="{largura:.0f}" height="{altura:.0f}" role="img" aria-label="Vigoria">\n'
-            f'  <g transform="translate({-SIMBOLO_X * escala:.2f} {-SIMBOLO_Y * escala:.2f}) '
+            f'  <g transform="translate({-SIMBOLO_X * escala:.2f} {y_simbolo:.2f}) '
             f'scale({escala:.4f})">\n'
             f"    {_simbolo(ficheiro)}\n  </g>\n"
-            f'  <path transform="translate({x_palavra:.2f} {-ymin:.2f})" fill="{cor}" '
+            f'  <path transform="translate({x_palavra:.2f} {base:.2f})" fill="{cor}" '
             f'd="{caminho}"/>\n</svg>\n'
         )
-        (MARCA / f"{nome}.svg").write_text(svg, encoding="utf-8")
+        (MARCA / f"{nome}.svg").write_text(svg, encoding="utf-8", newline="\n")
         print(f"  assets/marca/{nome}.svg ({largura:.0f}×{altura:.0f}, 1 em = {EM})")
 
 

@@ -44,14 +44,15 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
   .v-grelha-2 { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---- Início */
-/* Logotipo: a altura do SVG é 0,965 em da palavra (scripts/gerar_logotipo.py).
-   Topo do início: palavra a 36 px no telemóvel e 44 px no computador; topos das páginas: 26 px. */
-.v-logo { display: block; width: auto; height: 25px; margin: 0 0 .25rem; }
-.v-logo-grande { height: 35px; margin: 0 0 1.25rem; }
-@media (min-width: 640px) { .v-logo-grande { height: 42px; } }
-.v-promessa { font-size: 1.9rem; line-height: 1.2; font-weight: 700; margin: 0 0 .75rem;
+/* Logotipo: a altura do SVG é 1,12 em da palavra (scripts/gerar_logotipo.py).
+   Topo do início: palavra a 36 px no telemóvel e 44 px no computador; topos das páginas: 26 px.
+   A promessa, logo a seguir, fica sempre mais pequena do que a palavra (27 px e 31,5 px). */
+.v-logo { display: block; width: auto; height: 29px; margin: 0 0 .25rem; }
+.v-logo-grande { height: 40px; margin: 0 0 1.25rem; }
+@media (min-width: 640px) { .v-logo-grande { height: 49px; } }
+.v-promessa { font-size: 1.5rem; line-height: 1.25; font-weight: 700; margin: 0 0 .75rem;
   color: var(--v-principal-profundo); }
-@media (min-width: 640px) { .v-promessa { font-size: 2.25rem; } }
+@media (min-width: 640px) { .v-promessa { font-size: 1.75rem; } }
 
 /* ---- Questionário: cabeçalho do passo e barra de progresso */
 .v-passo { display: flex; gap: .9rem; align-items: center; }
