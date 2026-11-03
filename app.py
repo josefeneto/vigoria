@@ -14,10 +14,15 @@ from paginas import textos as t
 from vigoria.config import obter_configuracao
 from vigoria.dados.repositorios import Recusa
 
-FAVICON = Path(__file__).parent / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
+RAIZ = Path(__file__).parent
+FAVICON = RAIZ / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
+LOGOTIPO = RAIZ / "assets" / "marca" / "vigoria_logo.svg"
 
 st.set_page_config(page_title=t.MARCA, page_icon=FAVICON, layout="centered")
 estilos.aplicar()
+# Fixo no topo de todas as páginas (imagem de marca). Sem icon_image, para se ver sempre a
+# palavra Vigoria, mesmo com a barra lateral fechada (telemóvel).
+st.logo(str(LOGOTIPO), size="large")
 
 # Na demonstração (Streamlit Community Cloud), em todas as páginas.
 config = obter_configuracao()

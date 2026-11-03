@@ -519,7 +519,6 @@ if obter_configuracao().ambiente == "local":
     with st.sidebar:
         st.button(t.PREENCHER_PERSONA, help=t.PREENCHER_PERSONA_AJUDA, on_click=_preencher_persona)
 
-st.html(componentes.logotipo(t.MARCA))
 
 if st.session_state.get(comum.TERMINADO_GRAVIDEZ):
     st.title(t.GRAVIDEZ_TITULO)

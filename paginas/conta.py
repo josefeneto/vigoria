@@ -10,7 +10,7 @@ import json
 
 import streamlit as st
 
-from paginas import componentes, comum, sessao
+from paginas import comum, sessao
 from paginas import textos as t
 from vigoria.config import obter_auth0, obter_configuracao
 from vigoria.contas.auth0 import apagar_conta_auth0
@@ -64,7 +64,6 @@ def _apagar() -> None:
     st.session_state[comum.CONTA_APAGADA] = entrada_apagada
 
 
-st.html(componentes.logotipo(t.MARCA))
 st.title(t.CONTA_TITULO)
 uid = sessao.utilizador_id()
 quem = sessao.identidade()
@@ -82,8 +81,9 @@ atual = getattr(st.session_state.get(comum.RESULTADO), "id", None)
 por_confirmar = st.session_state.get(APAGAR_PLANO)
 for p in planos:
     data = t.data_hora(p.criado_em)
-    with st.container(horizontal=True, vertical_alignment="center", key=f"plano_{p.id}"):
-        st.markdown(t.CONTA_PLANO_DE.format(data=data), width="stretch")
+    # A data numa linha e os botões por baixo: no telemóvel não cabem os três lado a lado.
+    st.markdown(t.CONTA_PLANO_DE.format(data=data))
+    with st.container(horizontal=True, key=f"plano_{p.id}"):
         st.button(
             t.CONTA_ATUAL if p.id == atual else t.CONTA_ABRIR,
             key=f"abrir_{p.id}",
