@@ -101,7 +101,7 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 - Contas com email e palavra-passe só acedem depois de `email_verified` ser verdadeiro.
 - Se o mesmo email já existir com outro método de entrada, não juntar contas: mostrar «Já existe uma conta com este email. Entre com o método que usou da primeira vez.»
 - Todas as consultas a dados do utilizador passam por funções em `dados/` que recebem o `utilizador_id` obrigatório. Teste obrigatório: o utilizador A nunca consegue ler nem alterar dados do utilizador B.
-- `st.logout()` não termina a sessão no Auth0; o terminar sessão tem também de redirecionar para o endpoint de logout do Auth0.
+- `st.logout()` (Streamlit 1.66) termina também a sessão no Auth0 (OIDC end_session, regresso a `/oauth2callback`); exige no Auth0 a opção «RP-Initiated Logout End Session Endpoint Discovery» (`docs/GUIA_AUTH0.md`).
 
 ## Dados pessoais e RGPD
 
