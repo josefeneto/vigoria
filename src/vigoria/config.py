@@ -8,8 +8,9 @@ para nunca aparecerem em logs ou mensagens de erro.
 from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any, Literal
+from urllib.parse import urlparse
 
-from pydantic import SecretStr, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, SecretStr, field_validator, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -22,6 +23,18 @@ from pydantic_settings import (
 NomeProvedor = Literal["gemini", "groq", "mistral", "simulado"]
 
 
+def _segredos() -> dict[str, Any]:
+    """O .streamlit/secrets.toml como dicionário; vazio sem ficheiro ou sem Streamlit."""
+    try:
+        import streamlit as st
+
+        if not st.secrets.load_if_toml_exists():
+            return {}
+        return st.secrets.to_dict()
+    except Exception:  # sem Streamlit ou ficheiro inválido: segue sem st.secrets
+        return {}
+
+
 class _FonteSecretsStreamlit(PydanticBaseSettingsSource):
     """Chaves de topo do .streamlit/secrets.toml (as secções, como [auth], ficam de fora).
 
@@ -32,14 +45,7 @@ class _FonteSecretsStreamlit(PydanticBaseSettingsSource):
         return None, field_name, False
 
     def __call__(self) -> dict[str, Any]:
-        try:
-            import streamlit as st
-
-            if not st.secrets.load_if_toml_exists():
-                return {}
-            segredos = st.secrets.to_dict()
-        except Exception:  # sem Streamlit ou ficheiro inválido: segue sem st.secrets
-            return {}
+        segredos = _segredos()
         campos = self.settings_cls.model_fields
         return {
             k.lower(): v
@@ -67,6 +73,8 @@ class Configuracao(BaseSettings):
     email_nome_remetente: str = "Vigoria"
     app_url: str = "http://localhost:8501"
     ambiente: Literal["local", "demo", "producao"] = "local"
+    # Só para testes e desenvolvimento sem Auth0: entra como um utilizador fictício fixo.
+    vigoria_utilizador_local: bool = False
 
     @classmethod
     def settings_customise_sources(
@@ -109,6 +117,8 @@ class Configuracao(BaseSettings):
             raise ValueError("O fornecedor simulado não pode ser a reserva")
         if self.vigoria_provedor_llm == "simulado" and self.ambiente != "local":
             raise ValueError("O fornecedor simulado só é aceite com AMBIENTE=local")
+        if self.vigoria_utilizador_local and self.ambiente != "local":
+            raise ValueError("VIGORIA_UTILIZADOR_LOCAL só é aceite com AMBIENTE=local")
         return self
 
 
@@ -116,3 +126,34 @@ class Configuracao(BaseSettings):
 def obter_configuracao() -> Configuracao:
     """Devolve a configuração, lida uma única vez."""
     return Configuracao()
+
+
+# ---------------------------------------------------------------- Auth0 (st.secrets)
+
+
+class Auth0(BaseModel):
+    """O que a app precisa do Auth0 além do st.login: logout e, se houver, a Management API."""
+
+    model_config = ConfigDict(frozen=True)
+
+    dominio: str  # por exemplo vigoria.eu.auth0.com
+    client_id: str
+    gestao_client_id: str | None = None  # aplicação Machine to Machine ([auth0_gestao])
+    gestao_client_secret: SecretStr | None = None
+
+
+def obter_auth0() -> Auth0 | None:
+    """Lido das secções [auth.auth0] e [auth0_gestao]; None se o login não estiver configurado."""
+    segredos = _segredos()
+    auth0 = (segredos.get("auth") or {}).get("auth0") or {}
+    dominio = urlparse(str(auth0.get("server_metadata_url") or "")).hostname
+    if not dominio or not auth0.get("client_id"):
+        return None
+    gestao = segredos.get("auth0_gestao") or {}
+    segredo = gestao.get("client_secret")
+    return Auth0(
+        dominio=dominio,
+        client_id=auth0["client_id"],
+        gestao_client_id=gestao.get("client_id") or None,
+        gestao_client_secret=SecretStr(segredo) if segredo else None,
+    )
