@@ -12,7 +12,8 @@ from vigoria.regras.elegibilidade import Modo
 # ---------------------------------------------------------------- Geral
 
 MARCA = "Vigoria"
-PROMESSA = "O seu plano, à sua medida — para ganhar força e energia, sem sair de casa."
+# Espaço não separável antes do travessão: «— para…» nunca começa uma linha.
+PROMESSA = "O seu plano, à sua medida\u00a0— para ganhar força e energia, sem sair de casa."
 DEMO_AVISO = (
     "Versão de demonstração — não introduza dados reais de saúde. "
     "Os dados são processados em servidores fora da UE."

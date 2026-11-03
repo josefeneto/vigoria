@@ -185,3 +185,10 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
     assert "Como funciona" in html and "Pronto para começar?" in html
     assert [b.label for b in at.button].count("Começar o questionário") == 2
+
+
+def test_promessa_sem_travessao_no_inicio_da_linha() -> None:
+    from paginas import textos as t
+
+    assert "\u00a0— para" in t.PROMESSA
+    assert " — " not in t.PROMESSA
