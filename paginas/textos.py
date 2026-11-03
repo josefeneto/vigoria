@@ -81,6 +81,13 @@ CONTA_SEM_PLANOS = "Ainda não tem planos guardados."
 CONTA_PLANO_DE = "Plano de {data}"
 CONTA_ABRIR = "Abrir"
 CONTA_ATUAL = "Aberto"
+CONTA_APAGAR_PLANO = "Apagar"
+CONTA_APAGAR_PLANO_PERGUNTA = (
+    "Apagar o plano de {data}? Não é possível recuperá-lo. As suas respostas ficam guardadas."
+)
+CONTA_APAGAR_PLANO_SIM = "Sim, apagar o plano"
+CONTA_APAGAR_PLANO_NAO = "Cancelar"
+CONTA_PLANO_APAGADO = "O plano foi apagado."
 CONTA_EXPORTAR_TITULO = "Os meus dados"
 CONTA_EXPORTAR_TEXTO = (
     "Descarregue tudo o que guardámos sobre si (conta, consentimentos, respostas e planos) "

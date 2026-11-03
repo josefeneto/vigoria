@@ -1,4 +1,5 @@
-"""A minha conta: planos anteriores, descarregar os dados (JSON) e apagar a conta.
+"""A minha conta: planos anteriores (abrir ou apagar), descarregar os dados (JSON) e apagar
+a conta.
 
 Apagar pede confirmação dupla (caixa e a palavra APAGAR). A ordem é: primeiro os dados da
 Vigoria, depois a conta de entrada no Auth0; se o Auth0 falhar, a pessoa fica a saber que os
@@ -17,6 +18,7 @@ from vigoria.dados import repositorios
 
 CONFIRMA = "conta_apagar_confirma"
 PALAVRA = "conta_apagar_palavra"
+APAGAR_PLANO = "conta_apagar_plano"  # id do plano à espera de confirmação
 
 
 def _abrir(plano_id: int) -> None:
@@ -26,6 +28,27 @@ def _abrir(plano_id: int) -> None:
         st.session_state[comum.RESULTADO] = plano
         st.session_state.pop(comum.ERRO_GUARDAR, None)
         st.switch_page(comum.PAGINA_PLANO)
+
+
+def _pedir_apagar_plano(plano_id: int | None) -> None:
+    st.session_state[APAGAR_PLANO] = plano_id
+
+
+def _apagar_plano(plano_id: int) -> None:
+    uid = sessao.utilizador_id()
+    with sessao.fabrica().begin() as s:
+        apagado = repositorios.apagar_plano(s, uid, plano_id)
+        ultimo = repositorios.ultimo_plano(s, uid)
+    st.session_state.pop(APAGAR_PLANO, None)
+    if not apagado:
+        return
+    if getattr(st.session_state.get(comum.RESULTADO), "id", None) == plano_id:
+        # O plano aberto passa a ser o mais recente que ficou (ou nenhum).
+        if ultimo is None:
+            st.session_state.pop(comum.RESULTADO, None)
+        else:
+            st.session_state[comum.RESULTADO] = ultimo
+    st.toast(t.CONTA_PLANO_APAGADO, icon=":material/delete:")
 
 
 def _apagar() -> None:
@@ -56,9 +79,11 @@ st.subheader(t.CONTA_PLANOS)
 if not planos:
     st.caption(t.CONTA_SEM_PLANOS)
 atual = getattr(st.session_state.get(comum.RESULTADO), "id", None)
+por_confirmar = st.session_state.get(APAGAR_PLANO)
 for p in planos:
+    data = t.data_hora(p.criado_em)
     with st.container(horizontal=True, vertical_alignment="center", key=f"plano_{p.id}"):
-        st.markdown(t.CONTA_PLANO_DE.format(data=t.data_hora(p.criado_em)), width="stretch")
+        st.markdown(t.CONTA_PLANO_DE.format(data=data), width="stretch")
         st.button(
             t.CONTA_ATUAL if p.id == atual else t.CONTA_ABRIR,
             key=f"abrir_{p.id}",
@@ -67,6 +92,31 @@ for p in planos:
             on_click=_abrir,
             args=(p.id,),
         )
+        st.button(
+            t.CONTA_APAGAR_PLANO,
+            key=f"apagar_{p.id}",
+            icon=":material/delete:",
+            on_click=_pedir_apagar_plano,
+            args=(p.id,),
+        )
+    if p.id == por_confirmar:
+        with st.container(border=True, key=f"confirmar_{p.id}"):
+            st.write(t.CONTA_APAGAR_PLANO_PERGUNTA.format(data=data))
+            with st.container(horizontal=True):
+                st.button(
+                    t.CONTA_APAGAR_PLANO_SIM,
+                    key=f"apagar_sim_{p.id}",
+                    type="primary",
+                    icon=":material/delete_forever:",
+                    on_click=_apagar_plano,
+                    args=(p.id,),
+                )
+                st.button(
+                    t.CONTA_APAGAR_PLANO_NAO,
+                    key=f"apagar_nao_{p.id}",
+                    on_click=_pedir_apagar_plano,
+                    args=(None,),
+                )
 
 st.subheader(t.CONTA_EXPORTAR_TITULO)
 st.write(t.CONTA_EXPORTAR_TEXTO)

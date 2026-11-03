@@ -147,6 +147,30 @@ def test_conta_lista_planos_e_exporta(bd: str) -> None:
     assert len(at.get("download_button")) == 1
 
 
+def test_apagar_plano_pede_confirmacao_e_abre_o_anterior(bd: str) -> None:
+    at = _nova_sessao()
+    _gerar(at)
+    primeiro = at.session_state["resultado"].id
+    _gerar(at)
+    segundo = at.session_state["resultado"].id
+    at.switch_page(CONTA).run()
+    at.button(key=f"apagar_{segundo}").click().run()
+    assert _contar(bd, PlanoGuardado) == 2  # ainda só pediu
+    at.button(key=f"apagar_nao_{segundo}").click().run()
+    assert not [b for b in at.button if b.key == f"apagar_sim_{segundo}"]
+    at.button(key=f"apagar_{segundo}").click().run()
+    at.button(key=f"apagar_sim_{segundo}").click().run()
+    assert not at.exception
+    assert _contar(bd, PlanoGuardado) == 1
+    assert _contar(bd, QuestionarioGuardado) == 2  # as respostas ficam
+    assert at.session_state["resultado"].id == primeiro  # o aberto passa a ser o anterior
+    at.button(key=f"apagar_{primeiro}").click().run()
+    at.button(key=f"apagar_sim_{primeiro}").click().run()
+    assert _contar(bd, PlanoGuardado) == 0
+    assert "resultado" not in at.session_state
+    assert any("Ainda não tem planos" in c.value for c in at.caption)
+
+
 def test_apagar_conta_exige_confirmacao_dupla_e_apaga_tudo(bd: str) -> None:
     at = _nova_sessao()
     _gerar(at)

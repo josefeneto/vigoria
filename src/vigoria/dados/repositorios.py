@@ -185,6 +185,19 @@ def ultimo_plano(s: Session, utilizador_id: int) -> PlanoDaConta | None:
     return None if linha is None else _plano_da_conta(linha)
 
 
+def apagar_plano(s: Session, utilizador_id: int, plano_id: int) -> bool:
+    """Apaga um plano da pessoa; False se não existir ou for de outro utilizador.
+
+    O questionário que lhe deu origem fica: serve para preencher o próximo.
+    """
+    apagados = s.execute(
+        delete(PlanoGuardado).where(
+            PlanoGuardado.id == plano_id, PlanoGuardado.utilizador_id == utilizador_id
+        )
+    ).rowcount
+    return apagados == 1
+
+
 def _plano_da_conta(linha: PlanoGuardado) -> PlanoDaConta:
     return PlanoDaConta(
         id=linha.id,

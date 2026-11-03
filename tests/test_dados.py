@@ -182,6 +182,22 @@ def test_apagar_a_nao_toca_em_b(fabrica: sessionmaker[Session]) -> None:
 # ---------------------------------------------------------------- Exportar e apagar
 
 
+def test_apagar_plano_so_o_proprio_e_mantem_as_respostas(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid_a, plano_a = _com_plano(s, A)
+        uid_b, plano_b = _com_plano(s, B)
+    with fabrica.begin() as s:
+        assert r.apagar_plano(s, uid_a, plano_b.id) is False  # A não apaga o plano de B
+        assert r.obter_plano(s, uid_b, plano_b.id) is not None
+    with fabrica.begin() as s:
+        assert r.apagar_plano(s, uid_a, plano_a.id) is True
+        assert r.apagar_plano(s, uid_a, plano_a.id) is False  # já não existe
+    with fabrica.begin() as s:
+        assert r.listar_planos(s, uid_a) == []
+        assert r.ultimo_questionario(s, uid_a) == _questionario()
+        assert [p.id for p in r.listar_planos(s, uid_b)] == [plano_b.id]
+
+
 def test_exportar_traz_tudo_e_e_json(fabrica: sessionmaker[Session]) -> None:
     import json
 
