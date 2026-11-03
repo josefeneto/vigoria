@@ -18,10 +18,13 @@ QUESTIONARIO = "paginas/questionario.py"
 
 
 @pytest.fixture(autouse=True)
-def _simulado(monkeypatch: pytest.MonkeyPatch) -> None:
+def _simulado(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Fornecedor simulado, utilizador local fictício e uma base SQLite nova por teste."""
     monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "simulado")
     monkeypatch.setenv("VIGORIA_PROVEDOR_RESERVA", "")
     monkeypatch.setenv("AMBIENTE", "local")
+    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "1")
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'vigoria.db'}")
     obter_configuracao.cache_clear()
     yield
     obter_configuracao.cache_clear()
@@ -128,7 +131,8 @@ def test_revisao_mostra_decisoes_e_gera_plano_simulado() -> None:
     assert not at.exception
     resultado = at.session_state["resultado"]
     assert resultado.plano.provedor == "simulado"
-    assert resultado.chamadas == 1
+    assert resultado.id > 0  # guardado na conta
+    assert "erro_guardar" not in at.session_state
 
 
 def test_plano_mostra_faixa_simulado_e_avisos_em_cada_seccao() -> None:
@@ -162,8 +166,9 @@ def test_faixa_de_demonstracao_so_em_demo(monkeypatch: pytest.MonkeyPatch) -> No
     assert not any(aviso in w.value for w in at.warning)
     monkeypatch.setenv("AMBIENTE", "demo")
     monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
+    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")  # sem sessão: só as páginas públicas
     obter_configuracao.cache_clear()
-    for pagina in ("paginas/inicio.py", QUESTIONARIO, "paginas/plano.py", "paginas/privacidade.py"):
+    for pagina in ("paginas/inicio.py", "paginas/privacidade.py"):
         at.switch_page(pagina).run()
         assert not at.exception
         assert any(aviso in w.value for w in at.warning), pagina

@@ -1,7 +1,8 @@
 """Capturas da interface a 390 px (telemóvel) e a 1280 px (computador), só em desenvolvimento.
 
-Arranca o Streamlit com o fornecedor simulado (nunca chama uma LLM real), percorre os
-passos do questionário e as secções do plano e guarda PNG em saidas/capturas/.
+Arranca o Streamlit com o fornecedor simulado (nunca chama uma LLM real) e o utilizador local
+fictício (sem Auth0), numa base SQLite própria em saidas/capturas/, percorre os passos do
+questionário, as secções do plano e a conta e guarda PNG em saidas/capturas/.
 Usa o Google Chrome instalado (channel="chrome"): não é preciso «playwright install».
 
     python scripts/capturas.py            # em saidas/capturas/
@@ -32,6 +33,8 @@ def _arrancar() -> subprocess.Popen[bytes]:
         "VIGORIA_PROVEDOR_LLM": "simulado",
         "VIGORIA_PROVEDOR_RESERVA": "",
         "AMBIENTE": "local",
+        "VIGORIA_UTILIZADOR_LOCAL": "1",
+        "DATABASE_URL": f"sqlite:///{(SAIDA / 'capturas.db').as_posix()}",  # nunca a do José
     }
     comando = [sys.executable, "-m", "streamlit", "run", "app.py", "--server.headless=true"]
     comando += [f"--server.port={PORTA}", "--browser.gatherUsageStats=false"]
@@ -113,12 +116,19 @@ def _percorrer(page: Page, largura: str) -> None:
     _esperar(page)
     _capturar(page, largura, "17_privacidade")
 
+    page.goto(f"{URL}/conta")
+    _esperar(page)
+    page.get_by_role("button", name="Apagar a conta e os dados").wait_for()
+    page.wait_for_timeout(600)
+    _capturar(page, largura, "18_conta")
+
 
 def main() -> None:
     global SAIDA
     if len(sys.argv) > 1:
         SAIDA = SAIDA / sys.argv[1]
     SAIDA.mkdir(parents=True, exist_ok=True)
+    (SAIDA / "capturas.db").unlink(missing_ok=True)
     processo = _arrancar()
     try:
         with sync_playwright() as p:

@@ -1,4 +1,4 @@
-"""Política de privacidade — RASCUNHO (Fase 5), a rever juridicamente antes do beta."""
+"""Política de privacidade — RASCUNHO (Fases 5 e 6), a rever juridicamente antes do beta."""
 
 import streamlit as st
 
@@ -52,12 +52,16 @@ antes do lançamento.
 
 ### Onde ficam e durante quanto tempo
 
-Os dados ficam em servidores na União Europeia. Guardamo-los enquanto tiver conta; ao apagar
-a conta, apagamos também as respostas, os planos e os registos. O prazo exato de conservação
-será indicado aqui antes do lançamento.
+As respostas, os planos e os registos ficam guardados numa base de dados na União Europeia
+(Frankfurt, Alemanha). A entrada na conta é tratada pelo Auth0, um serviço de autenticação
+que usamos como subcontratante, num servidor da região europeia.
 
-Nesta versão de teste, as respostas e o plano ficam só na janela do browser e perdem-se ao
-fechá-la.
+A versão de demonstração da Vigoria corre em servidores fora da União Europeia: nessa
+versão, não introduza dados reais de saúde.
+
+Guardamos os dados enquanto tiver conta. Em «A minha conta», pode descarregá-los ou apagar a
+conta: ao apagá-la, apagamos as respostas, os planos e os registos, e também a conta de
+entrada no Auth0. O prazo exato de conservação será indicado aqui antes do lançamento.
 
 ### Os seus direitos
 

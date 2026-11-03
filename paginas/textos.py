@@ -4,6 +4,10 @@ Os textos de segurança, os avisos e os rótulos do plano não estão aqui: vêm
 conteudo/avisos.yaml, através de vigoria.regras.textos e de carregar_avisos().rotulos.
 """
 
+from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
+
+from vigoria.dados.repositorios import Recusa
 from vigoria.interface.erros import TipoErroUtilizador
 from vigoria.interface.passos import CodigoErro, ErroCampo
 from vigoria.regras.calculos import ClasseImc
@@ -33,8 +37,75 @@ PAGINAS = {
     "inicio": "Início",
     "questionario": "Questionário",
     "plano": "O meu plano",
+    "conta": "A minha conta",
+    "sair": "Terminar sessão",
     "privacidade": "Privacidade",
 }
+
+# ---------------------------------------------------------------- Conta e sessão
+
+ENTRAR = "Entrar ou criar conta"
+LOGIN_POR_CONFIGURAR = (
+    "A entrada com conta ainda não está configurada neste servidor (falta a secção [auth] do "
+    "secrets.toml)."
+)
+RECUSAS = {
+    Recusa.EMAIL_POR_VERIFICAR: (
+        "Confirme o seu email",
+        "Enviámos-lhe um email para confirmar o endereço. Abra-o, carregue na ligação e "
+        "depois entre de novo.",
+        "Já confirmei: entrar de novo",
+    ),
+    Recusa.EMAIL_NOUTRO_METODO: (
+        "Esta conta já existe",
+        "Já existe uma conta com este email. Entre com o método que usou da primeira vez.",
+        "Entrar com outro método",
+    ),
+}
+UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
+# Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.
+VERSAO_CONSENTIMENTO = "2026-11-03"
+ERRO_GUARDAR = (
+    "O plano foi preparado, mas não conseguimos guardá-lo na sua conta. Pode vê-lo agora; "
+    "se fechar a janela, perde-se. Tente gerá-lo de novo mais tarde."
+)
+
+CONTA_TITULO = "A minha conta"
+CONTA_EMAIL = "Entrou como **{email}**."
+CONTA_PLANOS = "Os meus planos"
+CONTA_SEM_PLANOS = "Ainda não tem planos guardados."
+CONTA_PLANO_DE = "Plano de {data}"
+CONTA_ABRIR = "Abrir"
+CONTA_ATUAL = "Aberto"
+CONTA_EXPORTAR_TITULO = "Os meus dados"
+CONTA_EXPORTAR_TEXTO = (
+    "Descarregue tudo o que guardámos sobre si (conta, consentimentos, respostas e planos) "
+    "num ficheiro JSON."
+)
+CONTA_EXPORTAR = "Descarregar os meus dados"
+CONTA_EXPORTAR_FICHEIRO = "vigoria_os_meus_dados.json"
+CONTA_APAGAR_TITULO = "Apagar a conta"
+CONTA_APAGAR_TEXTO = (
+    "Apaga a sua conta e todos os dados: respostas, planos e registos. Não é possível "
+    "recuperá-los. A conta de entrada (Google ou email e palavra-passe) também é apagada."
+)
+CONTA_APAGAR_CONFIRMA = "Compreendo que apagar a conta é definitivo."
+CONTA_APAGAR_PALAVRA = "APAGAR"
+CONTA_APAGAR_ESCREVA = "Para confirmar, escreva APAGAR"
+CONTA_APAGAR = "Apagar a conta e os dados"
+CONTA_APAGADA = "A sua conta e os seus dados foram apagados."
+CONTA_APAGADA_AUTH0_PENDENTE = (
+    "Os seus dados foram apagados. A conta de entrada será removida em breve."
+)
+CONTA_APAGADA_SAIR = "Sair"
+
+
+def data_hora(momento: datetime) -> str:
+    """«03/11/2026, 14:05», na hora de Portugal continental (a base guarda em UTC)."""
+    if momento.tzinfo is None:  # o SQLite devolve sem fuso
+        momento = momento.replace(tzinfo=UTC)
+    return momento.astimezone(ZoneInfo("Europe/Lisbon")).strftime("%d/%m/%Y, %H:%M")
+
 
 INICIO_TEXTO = (
     "Um plano pessoal de 16 semanas para cuidar da sua saúde e vitalidade, com exercícios "
@@ -89,8 +160,8 @@ ALT_FOTO_FIM = (
     "Pessoa ao ar livre, à sombra de uma árvore, a beber água com um tapete debaixo do braço."
 )
 INICIO_SESSAO = (
-    "Nesta versão de teste, as respostas ficam apenas nesta janela do browser: se a fechar, "
-    "perdem-se."
+    "Para guardar o seu plano, entre com a conta Google ou com email e palavra-passe. "
+    "Pode descarregar ou apagar os seus dados a qualquer momento."
 )
 
 PASSO_DE = "Passo {n} de {total}"
@@ -124,6 +195,7 @@ ROTULOS_CONSENTIMENTO = {
     "confirma_maior_idade": "Confirmo que tenho 18 anos ou mais.",
 }
 LER_PRIVACIDADE = "Ler a política de privacidade"
+AJUDA_TEXTO_LIVRE = "Não escreva o seu nome nem contactos."
 TERMOS_EM_PREPARACAO = "Os termos de utilização estão em preparação (versão de teste)."
 
 # ---------------------------------------------------------------- Passo 1
@@ -504,7 +576,7 @@ ESCOLHER_FASE = "Fase"
 ESCOLHER = "Escolha uma opção"
 MINUTOS_COLUNA = "Minutos"
 DETALHES_SEMANA = "Ver o que fazer em cada dia"
-NOTA_SESSAO_PLANO = "O plano fica só nesta janela do browser: se a fechar, perde-se."
+NOTA_SESSAO_PLANO = "Plano de {data}, guardado na sua conta."
 FREQUENCIA_PLANO = {"semanal": "Registo semanal", "a_cada_4_semanas": "Registo a cada 4 semanas"}
 PERGUNTAS_REVISAO = "Perguntas para cada revisão"
 VOLTAR_QUESTIONARIO = "Voltar ao questionário"

@@ -6,7 +6,7 @@ desenhada. Os avisos de segurança ficam no fim de cada secção. Sem tabelas: a
 semana-tipo e os exercícios leem-se melhor em lista e em cartões.
 
 Os rótulos vêm de avisos.yaml (`rotulos`), como no Markdown da CLI; o plano vem de
-st.session_state (ainda sem contas, Fase 5).
+st.session_state (o acabado de gerar, ou o último guardado na conta: comum.carregar_da_conta).
 """
 
 import streamlit as st
@@ -208,7 +208,10 @@ if plano.provedor == "simulado":
     st.warning(t.PLANO_SIMULADO_NOTA, title=t.PLANO_SIMULADO, icon=":material/science:")
 componentes.fotografia("plano_topo", t.ALT_FOTO_PLANO, proporcao="8 / 3")
 st.title(r["titulo"])
-st.caption(t.NOTA_SESSAO_PLANO)
+if st.session_state.get(comum.ERRO_GUARDAR):
+    st.error(t.ERRO_GUARDAR, icon=":material/cloud_off:")
+else:
+    st.caption(t.NOTA_SESSAO_PLANO.format(data=t.data_hora(resultado.criado_em)))
 intensidade = resultado.estrategia.intensidade_efetiva
 st.html(
     componentes.numeros(

@@ -102,7 +102,7 @@ def test_obter_auth0_sem_e_com_gestao(monkeypatch: pytest.MonkeyPatch) -> None:
     _secrets(monkeypatch, AUTH)
     auth0 = obter_auth0()
     assert auth0 is not None
-    assert (auth0.dominio, auth0.client_id) == ("vigoria.eu.auth0.com", "app")
+    assert auth0.dominio == "vigoria.eu.auth0.com"
     assert auth0.gestao_client_id is None and auth0.gestao_client_secret is None
     _secrets(monkeypatch, AUTH | {"auth0_gestao": {"client_id": "m2m", "client_secret": "seg"}})
     auth0 = obter_auth0()

@@ -1,4 +1,7 @@
-"""Auth0 fora do st.login: endereço de logout e apagar a conta de entrada (Management API).
+"""Apagar a conta de entrada no Auth0 (Management API).
+
+Terminar sessão não precisa de código aqui: o st.logout() do Streamlit 1.66 termina também
+a sessão no Auth0 (end_session_endpoint do OIDC) e volta a /oauth2callback.
 
 A aplicação Machine to Machine tem só a permissão delete:users (docs/GUIA_AUTH0.md, §8).
 Se o Auth0 falhar, regista-se só o `sub` (identificador técnico, nunca o email) para o
@@ -6,7 +9,7 @@ José apagar a conta à mão no painel.
 """
 
 import logging
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 import httpx
 
@@ -15,12 +18,6 @@ from vigoria.config import Auth0
 registo = logging.getLogger(__name__)
 
 TIMEOUT_S = 15
-
-
-def url_logout(auth0: Auth0, regresso: str) -> str:
-    """Termina a sessão no Auth0 e volta a `regresso` (tem de estar nas Allowed Logout URLs)."""
-    consulta = urlencode({"client_id": auth0.client_id, "returnTo": regresso})
-    return f"https://{auth0.dominio}/v2/logout?{consulta}"
 
 
 def apagar_conta_auth0(sub: str, auth0: Auth0 | None, cliente: httpx.Client | None = None) -> bool:

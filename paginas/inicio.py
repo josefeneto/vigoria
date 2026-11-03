@@ -4,21 +4,30 @@ Topo em petróleo profundo (promessa, botão e vídeo), benefícios, «Como func
 convite final. No telemóvel, o texto e o botão vêm antes do vídeo, para o botão caber no
 primeiro ecrã; no computador, ficam lado a lado. As faixas e a largura maior só existem
 nesta página (estilos.css, pelas chaves faixa_*).
+
+Sem sessão iniciada, o botão principal é «Entrar ou criar conta» (st.login, Auth0).
 """
 
 from html import escape
 
 import streamlit as st
 
-from paginas import componentes, comum
+from paginas import componentes, comum, sessao
 from paginas import textos as t
+from vigoria.config import obter_auth0
 
 
 def _comecar(chave: str) -> None:
-    if st.button(
-        t.COMECAR, type="primary", icon=":material/arrow_forward:", width="stretch", key=chave
-    ):
-        st.switch_page(comum.PAGINA_QUESTIONARIO)
+    if sessao.UTILIZADOR in st.session_state:
+        if st.button(
+            t.COMECAR, type="primary", icon=":material/arrow_forward:", width="stretch", key=chave
+        ):
+            st.switch_page(comum.PAGINA_QUESTIONARIO)
+    elif st.button(t.ENTRAR, type="primary", icon=":material/login:", width="stretch", key=chave):
+        if obter_auth0() is None:
+            st.error(t.LOGIN_POR_CONFIGURAR, icon=":material/key_off:")
+        else:
+            st.login("auth0")
 
 
 with st.container(key="faixa_topo"):

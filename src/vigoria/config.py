@@ -132,12 +132,11 @@ def obter_configuracao() -> Configuracao:
 
 
 class Auth0(BaseModel):
-    """O que a app precisa do Auth0 além do st.login: logout e, se houver, a Management API."""
+    """O que a app precisa do Auth0 além do st.login: a Management API, para apagar contas."""
 
     model_config = ConfigDict(frozen=True)
 
     dominio: str  # por exemplo vigoria.eu.auth0.com
-    client_id: str
     gestao_client_id: str | None = None  # aplicação Machine to Machine ([auth0_gestao])
     gestao_client_secret: SecretStr | None = None
 
@@ -153,7 +152,6 @@ def obter_auth0() -> Auth0 | None:
     segredo = gestao.get("client_secret")
     return Auth0(
         dominio=dominio,
-        client_id=auth0["client_id"],
         gestao_client_id=gestao.get("client_id") or None,
         gestao_client_secret=SecretStr(segredo) if segredo else None,
     )

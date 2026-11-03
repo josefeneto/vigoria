@@ -5,16 +5,18 @@ as decisões e a geração vêm de vigoria.interface e vigoria.motor.
 """
 
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import streamlit as st
 
-from paginas import componentes, comum
+from paginas import componentes, comum, sessao
 from paginas import textos as t
 from paginas.estilos import ICONES_PASSOS
 from vigoria.config import obter_configuracao
 from vigoria.conteudo.carregar import carregar_avisos
+from vigoria.dados import repositorios
 from vigoria.interface.decisoes import avisos_passo_objetivo, decisoes_estrategia, imc_com_classe
 from vigoria.interface.erros import classificar_erro
 from vigoria.interface.estado import (
@@ -39,7 +41,7 @@ from vigoria.interface.passos import (
 from vigoria.llm.escolha import criar_provedor
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
-from vigoria.motor.pipeline import gerar_plano_verificado
+from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
 from vigoria.regras import textos as avisos_motor
 from vigoria.regras.textos import numero
 
@@ -159,7 +161,7 @@ def _espirituosas() -> None:
 
 
 def _texto(campo: str, maximo: int = 200) -> None:
-    st.text_input(t.ROTULOS[campo], max_chars=maximo, **W(campo))
+    st.text_input(t.ROTULOS[campo], max_chars=maximo, placeholder=t.AJUDA_TEXTO_LIVRE, **W(campo))
     comum.erro(campo)
 
 
@@ -416,9 +418,31 @@ def _gerar(q: Questionario) -> None:
         finally:
             st.session_state[A_GERAR] = False
     if resultado is not None:
-        st.session_state[comum.RESULTADO] = resultado
+        st.session_state[comum.RESULTADO] = _guardar(q, resultado)
         st.switch_page(comum.PAGINA_PLANO)
     st.rerun()
+
+
+def _guardar(q: Questionario, resultado: ResultadoPipeline) -> repositorios.PlanoDaConta:
+    """Consentimentos, respostas e plano na conta, numa só transação (só depois de gerar)."""
+    uid = sessao.utilizador_id()
+    st.session_state.pop(comum.ERRO_GUARDAR, None)
+    try:
+        with sessao.fabrica().begin() as s:
+            repositorios.guardar_consentimentos(s, uid, t.VERSAO_CONSENTIMENTO)
+            qid = repositorios.guardar_questionario(s, uid, q)
+            return repositorios.guardar_plano(
+                s, uid, qid, resultado.plano, resultado.estrategia, resultado.modelo
+            )
+    except Exception as e:  # sem o conteúdo: só o tipo do erro
+        registo.error("plano não guardado: %s", type(e).__name__)
+        st.session_state[comum.ERRO_GUARDAR] = True
+        return repositorios.PlanoDaConta(
+            id=0,
+            criado_em=datetime.now(UTC),
+            plano=resultado.plano,
+            estrategia=resultado.estrategia,
+        )
 
 
 def _a_preparar() -> None:

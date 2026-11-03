@@ -4,19 +4,26 @@ from typing import Any
 
 import streamlit as st
 
+from paginas import sessao
 from vigoria.conteudo.carregar import carregar_avisos
-from vigoria.interface.estado import PREFIXO, chave, estado_inicial, para_respostas
+from vigoria.dados import repositorios
+from vigoria.interface.estado import PREFIXO, chave, estado_inicial, para_estado, para_respostas
+from vigoria.interface.passos import CAMPOS, respostas_de_questionario
 from vigoria.modelos.plano import Plano
 
 ERROS = "erros_passo"  # {campo: mensagem}, preenchido ao carregar em «Seguinte»
 PASSO = "passo"
-RESULTADO = "resultado"  # ResultadoPipeline do último plano gerado
+RESULTADO = "resultado"  # PlanoDaConta (dados/repositorios.py) do plano que se está a ver
+ERRO_GUARDAR = "erro_guardar"  # o plano gerado não ficou guardado na conta
+CONTA_APAGADA = "conta_apagada"  # True/False: a conta de entrada no Auth0 também foi apagada
+CARREGADO = "conta_carregada"  # o último plano e as últimas respostas já vieram da conta
 TERMINADO_GRAVIDEZ = "terminado_gravidez"
 
 PAGINA_INICIO = "paginas/inicio.py"
 PAGINA_QUESTIONARIO = "paginas/questionario.py"
 PAGINA_PLANO = "paginas/plano.py"
 PAGINA_PRIVACIDADE = "paginas/privacidade.py"
+PAGINA_CONTA = "paginas/conta.py"
 
 
 def iniciar_estado() -> None:
@@ -24,6 +31,25 @@ def iniciar_estado() -> None:
     for k, v in estado_inicial().items():
         st.session_state.setdefault(k, v)
     st.session_state.setdefault(PASSO, "0")
+
+
+def carregar_da_conta(utilizador_id: int) -> None:
+    """No início da sessão: o último plano guardado e as últimas respostas, sem gerar de novo.
+
+    Os consentimentos do passo 0 não vêm preenchidos: voltam a marcar-se em cada plano.
+    """
+    if st.session_state.get(CARREGADO):
+        return
+    st.session_state[CARREGADO] = True
+    with sessao.fabrica().begin() as s:
+        plano = repositorios.ultimo_plano(s, utilizador_id)
+        q = repositorios.ultimo_questionario(s, utilizador_id)
+    if plano is not None:
+        st.session_state[RESULTADO] = plano
+    if q is not None:
+        consentimentos = {chave(c) for c in CAMPOS["0"]}
+        for k, v in para_estado(respostas_de_questionario(q)).items():
+            st.session_state[k] = False if k in consentimentos else v
 
 
 def respostas() -> dict[str, Any]:

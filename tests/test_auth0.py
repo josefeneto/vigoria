@@ -1,18 +1,16 @@
-"""Auth0: logout e apagar a conta pela Management API (sem rede: httpx.MockTransport)."""
+"""Auth0: apagar a conta pela Management API (sem rede: httpx.MockTransport)."""
 
 import logging
-from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
 from pydantic import SecretStr
 
 from vigoria.config import Auth0
-from vigoria.contas.auth0 import apagar_conta_auth0, url_logout
+from vigoria.contas.auth0 import apagar_conta_auth0
 
 AUTH0 = Auth0(
     dominio="vigoria.eu.auth0.com",
-    client_id="cliente-app",
     gestao_client_id="cliente-m2m",
     gestao_client_secret=SecretStr("segredo-m2m"),
 )
@@ -28,15 +26,6 @@ def _cliente(pedidos: list[httpx.Request], estado_delete: int = 204) -> httpx.Cl
         return httpx.Response(estado_delete)
 
     return httpx.Client(transport=httpx.MockTransport(responder))
-
-
-def test_url_logout() -> None:
-    url = urlparse(url_logout(AUTH0, "http://localhost:8501/sair"))
-    assert (url.scheme, url.hostname, url.path) == ("https", "vigoria.eu.auth0.com", "/v2/logout")
-    assert parse_qs(url.query) == {
-        "client_id": ["cliente-app"],
-        "returnTo": ["http://localhost:8501/sair"],
-    }
 
 
 def test_apaga_com_token_e_sub_codificado() -> None:
