@@ -17,11 +17,14 @@ from paginas.estilos import ICONES_ATIVIDADES, RAIZ, icone
 PASTA_FOTOS = RAIZ / "assets" / "img"
 PASTA_MARCA = RAIZ / "assets" / "marca"
 VIDEO_TOPO = RAIZ / "static" / "video" / "inicio.mp4"  # servido em app/static/video/
+CAPA_VIDEO = VIDEO_TOPO.with_name("inicio_capa.webp")
 
 # Vídeo do topo do início: sem som, em ciclo, com capa e botão de pausa (WCAG 2.2.2).
 # Só arranca por código e só se o sistema não pedir menos movimento; sem código, fica a capa.
-_VIDEO = """<div class="v-video">
-<video muted loop playsinline preload="auto" poster="app/static/video/inicio_capa.webp"
+# A capa vai embutida como fundo da caixa: vê-se mesmo que o servidor demore ou o vídeo falhe
+# (no Community Cloud, logo a seguir a entrar ou sair); com erro, o vídeo e o botão saem.
+_VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
+<video muted loop playsinline preload="auto"
  aria-label="%(descricao)s"><source src="app/static/video/inicio.mp4" type="video/mp4"></video>
 <button type="button" class="v-video-botao" data-pausar="%(pausar)s"
  data-reproduzir="%(reproduzir)s">%(reproduzir)s</button></div>
@@ -32,6 +35,9 @@ _VIDEO = """<div class="v-video">
     caixa.dataset.pronto = "1";
     const video = caixa.querySelector("video");
     const botao = caixa.querySelector("button");
+    const falhou = () => { video.remove(); botao.remove(); };
+    caixa.querySelector("source").addEventListener("error", falhou);
+    video.addEventListener("error", falhou);
     const mostrar = (aCorrer) => {
       botao.textContent = aCorrer ? botao.dataset.pausar : botao.dataset.reproduzir;
       botao.classList.toggle("a-correr", aCorrer);
@@ -88,8 +94,16 @@ def video_topo(descricao: str, pausar: str, reproduzir: str) -> bool:
     if not VIDEO_TOPO.exists():
         return False
     textos = {"descricao": descricao, "pausar": pausar, "reproduzir": reproduzir}
-    st.html(_VIDEO % {k: escape(v) for k, v in textos.items()}, unsafe_allow_javascript=True)
+    valores = {k: escape(v) for k, v in textos.items()} | {"capa": _capa_video()}
+    st.html(_VIDEO % valores, unsafe_allow_javascript=True)
     return True
+
+
+@cache
+def _capa_video() -> str:
+    """A capa do vídeo como data URI (cerca de 40 KB): não depende de um segundo pedido."""
+    dados = base64.b64encode(CAPA_VIDEO.read_bytes()).decode("ascii")
+    return f"data:image/webp;base64,{dados}"
 
 
 def cabecalho_passo(nome_icone: str, rotulo: str, titulo: str, indice: int, total: int) -> str:

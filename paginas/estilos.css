@@ -173,7 +173,7 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 
 /* ---- Vídeo do topo: capa enquanto carrega, botão de pausa sempre visível */
 .v-video { position: relative; border-radius: var(--v-raio); overflow: hidden; aspect-ratio: 16 / 9;
-  background: var(--v-principal); box-shadow: 0 12px 32px rgba(0,0,0,.25); }
+  background: var(--v-principal) center / cover no-repeat; box-shadow: 0 12px 32px rgba(0,0,0,.25); }
 .v-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .v-video-botao { position: absolute; right: .75rem; bottom: .75rem; min-height: 2.75rem;
   padding: .45rem 1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45);

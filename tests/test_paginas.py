@@ -186,7 +186,9 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert not at.exception
     html = "\n".join(h.proto.body for h in at.get("html"))
     assert "<video" in html and "app/static/video/inicio.mp4" in html
-    assert 'poster="app/static/video/inicio_capa.webp"' in html
+    # A capa vem embutida como fundo da caixa: vê-se mesmo que o vídeo demore ou falhe.
+    assert 'class="v-video" style="background-image:url(data:image/webp;base64,' in html
+    assert 'addEventListener("error"' in html
     assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
     assert "Como funciona" in html and "Pronto para começar?" in html
     assert [b.label for b in at.button].count("Começar o questionário") == 2

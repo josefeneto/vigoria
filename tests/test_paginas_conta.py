@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from streamlit.testing.v1 import AppTest
 
 from paginas import sessao
+from vigoria import config
 from vigoria.config import obter_configuracao
 from vigoria.dados.bd import criar_motor, migrar
 from vigoria.dados.tabelas import PlanoGuardado, QuestionarioGuardado, Utilizador
@@ -76,6 +77,8 @@ def _nova_sessao() -> AppTest:
 
 def test_sem_sessao_so_paginas_publicas(bd: str, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
+    # Sem login configurado, mesmo que exista um .streamlit/secrets.toml local.
+    monkeypatch.setattr(config, "obter_auth0", lambda: None)
     obter_configuracao.cache_clear()
     at = _nova_sessao()
     assert sessao.UTILIZADOR not in at.session_state
@@ -83,7 +86,7 @@ def test_sem_sessao_so_paginas_publicas(bd: str, monkeypatch: pytest.MonkeyPatch
     assert "Entrar ou criar conta" in rotulos
     assert "Começar o questionário" not in rotulos
     _botao(at, "Entrar ou criar conta").click().run()
-    assert any("não está configurada" in e.value for e in at.error)  # sem [auth] nos testes
+    assert any("não está configurada" in e.value for e in at.error)
     assert _contar(bd, Utilizador) == 0
 
 
