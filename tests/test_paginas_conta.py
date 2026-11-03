@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
 from streamlit.testing.v1 import AppTest
 
 from paginas import sessao
@@ -88,6 +89,21 @@ def test_sem_sessao_so_paginas_publicas(bd: str, monkeypatch: pytest.MonkeyPatch
     _botao(at, "Entrar ou criar conta").click().run()
     assert any("não está configurada" in e.value for e in at.error)
     assert _contar(bd, Utilizador) == 0
+
+
+def test_base_de_dados_indisponivel_mostra_mensagem_em_vez_de_rodar(
+    bd: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    def falha() -> None:
+        raise OperationalError("SELECT 1", {}, ConnectionError("timeout"))
+
+    monkeypatch.setattr(sessao, "entrar", falha)
+    with caplog.at_level(logging.WARNING):
+        at = _nova_sessao()
+    assert any("Não foi possível ligar à base de dados" in e.value for e in at.error)
+    assert "Tentar de novo" in [b.label for b in at.button]
+    assert "Começar o questionário" not in [b.label for b in at.button]
+    assert "base de dados indisponível: ConnectionError" in caplog.text
 
 
 # ---------------------------------------------------------------- Guardar e voltar

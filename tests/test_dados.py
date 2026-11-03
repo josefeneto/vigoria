@@ -6,7 +6,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from sqlalchemy import func, inspect, select
+from sqlalchemy import create_engine, func, inspect, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.contas.entrada import Identidade
@@ -231,3 +231,21 @@ def test_migracoes_criam_o_esquema_das_tabelas(tmp_path: Path) -> None:
     for nome, tabela in Base.metadata.tables.items():
         assert {c["name"] for c in insp.get_columns(nome)} == {c.name for c in tabela.columns}
     motor.dispose()
+
+
+def test_postgresql_com_limite_de_tempo_e_ligacoes_verificadas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Sem limite, uma página fica a rodar enquanto o Neon acorda (ou se não responder)."""
+    from vigoria.dados import bd
+
+    opcoes: dict[str, object] = {}
+
+    def espiao(_url: str, **o: object) -> object:
+        opcoes.update(o)
+        return create_engine("sqlite://")
+
+    monkeypatch.setattr(bd, "create_engine", espiao)
+    bd.criar_motor("postgresql+psycopg://u:p@exemplo.invalid/bd")
+    assert opcoes["connect_args"] == {"connect_timeout": bd.TIMEOUT_LIGACAO_S}
+    assert opcoes["pool_pre_ping"] is True

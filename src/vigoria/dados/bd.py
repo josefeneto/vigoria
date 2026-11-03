@@ -12,6 +12,8 @@ from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+TIMEOUT_LIGACAO_S = 10  # o Neon gratuito pode estar a acordar; sem limite, a página fica a rodar
+
 
 def criar_motor(url: str) -> Engine:
     """O motor da base de dados. «sqlite://» (em memória) partilha uma só ligação (testes)."""
@@ -22,6 +24,7 @@ def criar_motor(url: str) -> Engine:
         opcoes["connect_args"] = {"check_same_thread": False}
     else:
         opcoes["pool_pre_ping"] = True  # o Neon fecha as ligações paradas
+        opcoes["connect_args"] = {"connect_timeout": TIMEOUT_LIGACAO_S}
     motor = create_engine(url, **opcoes)
     if motor.dialect.name == "sqlite":
         event.listen(motor, "connect", _ligar_chaves_estrangeiras)

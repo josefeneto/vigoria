@@ -45,6 +45,10 @@ PAGINAS = {
 # ---------------------------------------------------------------- Conta e sessão
 
 ENTRAR = "Entrar ou criar conta"
+BD_INDISPONIVEL = (
+    "Não foi possível ligar à base de dados. Tente de novo dentro de momentos: "
+    "os seus dados estão guardados."
+)
 LOGIN_POR_CONFIGURAR = (
     "A entrada com conta ainda não está configurada neste servidor (falta a secção [auth] do "
     "secrets.toml)."

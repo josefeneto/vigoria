@@ -5,15 +5,22 @@ st.session_state. Com VIGORIA_UTILIZADOR_LOCAL=1 (só AMBIENTE=local), entra-se 
 utilizador fictício, sem Auth0: serve para os testes das páginas (AppTest não faz login).
 """
 
+import logging
+from typing import NoReturn
+
 import streamlit as st
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
+from paginas import textos as t
 from vigoria.config import obter_configuracao
 from vigoria.contas.entrada import Identidade, identidade_de
 from vigoria.dados import repositorios
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.repositorios import Recusa
 from vigoria.dados.tabelas import Utilizador
+
+registo = logging.getLogger(__name__)
 
 UTILIZADOR = "utilizador"  # (sub, id) do utilizador desta sessão
 UTILIZADOR_LOCAL = Identidade(
@@ -62,6 +69,14 @@ def entrar() -> int | Recusa | None:
 def utilizador_id() -> int:
     """Nas páginas que só existem com sessão iniciada (app.py garante-o)."""
     return st.session_state[UTILIZADOR][1]
+
+
+def base_indisponivel(erro: OperationalError) -> NoReturn:
+    """Base de dados sem resposta (o Neon a acordar, rede): mensagem clara em vez de rodar."""
+    registo.warning("base de dados indisponível: %s", type(erro.orig).__name__)
+    st.error(t.BD_INDISPONIVEL, icon=":material/cloud_off:")
+    st.button(t.TENTAR_DE_NOVO, icon=":material/refresh:")  # carregar já volta a correr a app
+    st.stop()
 
 
 def esquecer() -> None:

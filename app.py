@@ -7,6 +7,7 @@ Sem sessão iniciada só se veem o Início e a Privacidade (Fase 6); o resto exi
 from pathlib import Path
 
 import streamlit as st
+from sqlalchemy.exc import OperationalError
 
 from paginas import comum, estilos, sessao
 from paginas import textos as t
@@ -44,14 +45,20 @@ if comum.CONTA_APAGADA in st.session_state:
     if st.button(t.CONTA_APAGADA_SAIR, type="primary", icon=":material/logout:"):
         _sair()
 else:
-    entrada = sessao.entrar()
+    try:
+        entrada = sessao.entrar()
+    except OperationalError as erro:
+        sessao.base_indisponivel(erro)
 if isinstance(entrada, Recusa):
     titulo, texto, botao = t.RECUSAS[entrada]
     st.warning(texto, title=titulo, icon=":material/mark_email_unread:")
     if st.button(botao, icon=":material/login:"):
         _sair()
 elif entrada is not None:
-    comum.carregar_da_conta(entrada)
+    try:
+        comum.carregar_da_conta(entrada)
+    except OperationalError as erro:
+        sessao.base_indisponivel(erro)
     if config.vigoria_utilizador_local:
         st.sidebar.caption(t.UTILIZADOR_LOCAL)
 
@@ -77,4 +84,7 @@ if isinstance(entrada, int):
 else:
     paginas = [inicio, privacidade]
 
-st.navigation(paginas, position="top").run()
+try:
+    st.navigation(paginas, position="top").run()
+except OperationalError as erro:
+    sessao.base_indisponivel(erro)
