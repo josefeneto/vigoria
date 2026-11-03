@@ -90,6 +90,15 @@ class Configuracao(BaseSettings):
     def _reserva_vazia(cls, valor: object) -> object:
         return None if valor == "" else valor
 
+    @field_validator("database_url")
+    @classmethod
+    def _postgresql_com_psycopg(cls, valor: str) -> str:
+        """O Neon dá «postgresql://…»; o SQLAlchemy precisa do controlador (psycopg 3)."""
+        for prefixo in ("postgres://", "postgresql://"):
+            if valor.startswith(prefixo):
+                return "postgresql+psycopg://" + valor.removeprefix(prefixo)
+        return valor
+
     @model_validator(mode="after")
     def _reserva_diferente(self) -> Configuracao:
         if self.vigoria_provedor_reserva == self.vigoria_provedor_llm:

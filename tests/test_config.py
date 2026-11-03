@@ -47,3 +47,22 @@ def test_sem_secrets_toml_usa_os_valores_por_omissao(monkeypatch: pytest.MonkeyP
     _secrets(monkeypatch, None)
     monkeypatch.delenv("AMBIENTE", raising=False)
     assert Configuracao(_env_file=None).ambiente == "local"  # type: ignore[call-arg]
+
+
+@pytest.mark.parametrize(
+    ("url", "esperado"),
+    [
+        (
+            "postgresql://u:p@ep-x.eu-central-1.aws.neon.tech/vigoria?sslmode=require",
+            "postgresql+psycopg://u:p@ep-x.eu-central-1.aws.neon.tech/vigoria?sslmode=require",
+        ),
+        ("postgres://u:p@h/db", "postgresql+psycopg://u:p@h/db"),
+        ("postgresql+psycopg://u:p@h/db", "postgresql+psycopg://u:p@h/db"),
+        ("sqlite:///vigoria_local.db", "sqlite:///vigoria_local.db"),
+    ],
+)
+def test_database_url_do_neon_usa_psycopg(
+    monkeypatch: pytest.MonkeyPatch, url: str, esperado: str
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", url)
+    assert Configuracao().database_url == esperado

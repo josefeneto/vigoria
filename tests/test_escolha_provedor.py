@@ -81,6 +81,7 @@ def test_falha_definitiva_usa_reserva(erro: ErroLLM) -> None:
     assert _plano(provedor) == "groq"
     assert (principal.chamadas, reserva.chamadas) == (1, 1)
     assert provedor.ultimo_provedor == "groq"
+    assert provedor.ultimo_modelo == reserva.modelo
     assert "a usar a reserva groq" in progresso[0]
     assert progresso[-1] == "resposta gerada por: groq (modelo modelo-falso)"
 

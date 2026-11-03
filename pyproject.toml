@@ -15,6 +15,7 @@ where = ["src"]
 "vigoria.conteudo" = ["*.yaml", "dicionario/*"]
 "vigoria.prompts" = ["*.md"]
 "vigoria.llm" = ["resposta_simulada.json"]
+"vigoria.dados" = ["migracoes/*.py", "migracoes/*.mako", "migracoes/versions/*.py"]
 
 [tool.ruff]
 line-length = 100

@@ -52,6 +52,7 @@ class ResultadoPipeline(BaseModel):
     plano: Plano
     estrategia: Estrategia
     chamadas: int
+    modelo: str = ""  # o modelo que respondeu à última chamada (guardado com o plano)
     motivos_regeneracao: tuple[str, ...] = ()  # vazio se passou à primeira
     reserva_na_verificacao: bool = False  # a terceira chamada foi para a reserva
     correcoes_estilo: tuple[str, ...] = ()  # feitas pelo motor (voz.py)
@@ -75,6 +76,11 @@ class _ProvedorContado:
     @property
     def ultimo_provedor(self) -> str | None:
         return self._provedor.ultimo_provedor
+
+    @property
+    def ultimo_modelo(self) -> str:
+        """O modelo que respondeu (com reserva, pode não ser o do principal)."""
+        return getattr(self._provedor, "ultimo_modelo", None) or self._provedor.modelo
 
     def gerar_json[M: BaseModel](self, sistema: str, pedido: str, schema: type[M]) -> M:
         if self.chamadas >= self._maximo:
@@ -130,6 +136,7 @@ def gerar_plano_verificado(
         plano=plano,
         estrategia=e,
         chamadas=contado.chamadas,
+        modelo=contado.ultimo_modelo,
         motivos_regeneracao=motivos,
         reserva_na_verificacao=usou_reserva,
         correcoes_estilo=revisao.correcoes,

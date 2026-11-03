@@ -52,6 +52,7 @@ class ProvedorComReserva:
         self.nome = principal.nome
         self.modelo = principal.modelo
         self.ultimo_provedor: str | None = None
+        self.ultimo_modelo: str | None = None
         self._progresso = progresso
 
     def gerar_json[M: BaseModel](self, sistema: str, pedido: str, schema: type[M]) -> M:
@@ -75,6 +76,7 @@ class ProvedorComReserva:
                     tipo=erro_reserva.tipo,
                 ) from None
         self.ultimo_provedor = usado.nome
+        self.ultimo_modelo = usado.modelo
         self._progresso(f"resposta gerada por: {usado.nome} (modelo {usado.modelo})")
         return resultado
 
