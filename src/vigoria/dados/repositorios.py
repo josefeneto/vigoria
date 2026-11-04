@@ -32,6 +32,7 @@ TIPOS_CONSENTIMENTO = ("termos", "saude", "maior_idade")
 class Recusa(StrEnum):
     EMAIL_POR_VERIFICAR = "email_por_verificar"
     EMAIL_NOUTRO_METODO = "email_noutro_metodo"
+    NAO_CONVIDADO = "nao_convidado"  # fora da lista de convidados (decidido em paginas/sessao.py)
 
 
 class PlanoDaConta(BaseModel):

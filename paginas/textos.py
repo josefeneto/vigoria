@@ -66,6 +66,9 @@ RECUSAS = {
         "Entrar com outro método",
     ),
 }
+SO_POR_CONVITE = (
+    "A Vigoria está em fase de testes, apenas por convite. Se quiser participar, contacte-nos."
+)
 UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
 # Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.
 VERSAO_CONSENTIMENTO = "2026-11-03"
@@ -93,7 +96,7 @@ CONTA_EXPORTAR_TEXTO = (
     "Descarregue tudo o que guardámos sobre si (conta, consentimentos, respostas e planos) "
     "num ficheiro JSON."
 )
-CONTA_EXPORTAR = "Descarregar os meus dados"
+CONTA_EXPORTAR = "Descarregar os meus dados (formato técnico, JSON)"
 CONTA_EXPORTAR_FICHEIRO = "vigoria_os_meus_dados.json"
 CONTA_APAGAR_TITULO = "Apagar a conta"
 CONTA_APAGAR_TEXTO = (

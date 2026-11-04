@@ -110,3 +110,34 @@ def test_obter_auth0_sem_e_com_gestao(monkeypatch: pytest.MonkeyPatch) -> None:
     assert auth0.gestao_client_id == "m2m"
     assert auth0.gestao_client_secret.get_secret_value() == "seg"
     assert "seg" not in repr(auth0)
+
+
+@pytest.mark.parametrize(
+    ("valor", "esperado"),
+    [
+        (" Ana@Exemplo.PT , rui@exemplo.pt;;", {"ana@exemplo.pt", "rui@exemplo.pt"}),
+        ("", set()),
+        (",  ,", set()),
+    ],
+)
+def test_emails_permitidos_do_ambiente(
+    monkeypatch: pytest.MonkeyPatch, valor: str, esperado: set[str]
+) -> None:
+    _secrets(monkeypatch, None)
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", valor)
+    config = Configuracao(_env_file=None)  # type: ignore[call-arg]
+    assert config.vigoria_emails_permitidos == frozenset(esperado)
+
+
+def test_emails_permitidos_dos_secrets_em_lista_ou_texto(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("VIGORIA_EMAILS_PERMITIDOS", raising=False)
+    for valor in (["Ana@exemplo.pt", " rui@exemplo.pt "], "ana@exemplo.pt,\nrui@exemplo.pt"):
+        _secrets(monkeypatch, {"VIGORIA_EMAILS_PERMITIDOS": valor})
+        config = Configuracao(_env_file=None)  # type: ignore[call-arg]
+        assert config.vigoria_emails_permitidos == {"ana@exemplo.pt", "rui@exemplo.pt"}
+
+
+def test_sem_lista_de_emails_todos_permitidos(monkeypatch: pytest.MonkeyPatch) -> None:
+    _secrets(monkeypatch, None)
+    monkeypatch.delenv("VIGORIA_EMAILS_PERMITIDOS", raising=False)
+    assert Configuracao(_env_file=None).vigoria_emails_permitidos == frozenset()  # type: ignore[call-arg]

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from paginas import textos as t
 from vigoria.config import obter_configuracao
-from vigoria.contas.entrada import Identidade, identidade_de
+from vigoria.contas.entrada import Identidade, convidado, identidade_de
 from vigoria.dados import repositorios
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.repositorios import Recusa
@@ -55,6 +55,12 @@ def entrar() -> int | Recusa | None:
     if quem is None:
         st.session_state.pop(UTILIZADOR, None)
         return None
+    permitidos = obter_configuracao().vigoria_emails_permitidos
+    if quem.email_verificado and not convidado(quem, permitidos):
+        # Antes da base de dados: quem não está na lista não fica com registo nenhum.
+        # Email por verificar segue para repositorios.entrar, que pede a confirmação.
+        st.session_state.pop(UTILIZADOR, None)
+        return Recusa.NAO_CONVIDADO
     guardado = st.session_state.get(UTILIZADOR)
     if guardado is not None and guardado[0] == quem.sub:
         return guardado[1]

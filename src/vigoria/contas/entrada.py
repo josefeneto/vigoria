@@ -25,6 +25,21 @@ class Identidade(BaseModel):
         return self.sub.split("|", 1)[0]
 
 
+def normalizar_email(email: str) -> str:
+    """Para comparar: sem maiúsculas nem espaços (incluindo os do meio)."""
+    return "".join(email.split()).lower()
+
+
+def convidado(identidade: Identidade, permitidos: frozenset[str]) -> bool:
+    """Lista de convidados (fase de testes): vazia = todos; senão, só emails verificados da lista.
+
+    `permitidos` já vem normalizado (config.py).
+    """
+    if not permitidos:
+        return True
+    return identidade.email_verificado and normalizar_email(identidade.email) in permitidos
+
+
 def identidade_de(claims: Mapping[str, Any]) -> Identidade:
     """Levanta ValueError se faltar o sub ou o email (configuração errada no Auth0)."""
     sub = str(claims.get("sub") or "")

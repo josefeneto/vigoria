@@ -5,18 +5,22 @@ alternativa, de st.secrets (Streamlit Community Cloud, AMBIENTE=demo, sem .env).
 para nunca aparecerem em logs ou mensagens de erro.
 """
 
+import re
 from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, SecretStr, field_validator, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
+    NoDecode,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
+
+from vigoria.contas.entrada import normalizar_email
 
 # Fornecedores de LLM: cada um tem <nome>_api_key e <nome>_model (llm/escolha.py).
 # «simulado» (llm/simulado.py) não tem chave nem modelo e só é aceite com AMBIENTE=local.
@@ -75,6 +79,9 @@ class Configuracao(BaseSettings):
     ambiente: Literal["local", "demo", "producao"] = "local"
     # Só para testes e desenvolvimento sem Auth0: entra como um utilizador fictício fixo.
     vigoria_utilizador_local: bool = False
+    # Fase de testes só por convite: emails separados por vírgulas (ou lista TOML nos secrets).
+    # Vazia ou ausente: todos podem entrar.
+    vigoria_emails_permitidos: Annotated[frozenset[str], NoDecode] = frozenset()
 
     @classmethod
     def settings_customise_sources(
@@ -97,6 +104,16 @@ class Configuracao(BaseSettings):
     @classmethod
     def _reserva_vazia(cls, valor: object) -> object:
         return None if valor == "" else valor
+
+    @field_validator("vigoria_emails_permitidos", mode="before")
+    @classmethod
+    def _lista_de_emails(cls, valor: object) -> object:
+        """«a@x.pt, b@y.pt» ou ["a@x.pt", "b@y.pt"] → conjunto normalizado (sem vazios)."""
+        if isinstance(valor, str):
+            valor = re.split(r"[,;\n]", valor)
+        if isinstance(valor, (list, tuple, set, frozenset)):
+            return frozenset(normalizar_email(str(e)) for e in valor if str(e).strip())
+        return valor
 
     @field_validator("database_url")
     @classmethod

@@ -106,6 +106,35 @@ def test_base_de_dados_indisponivel_mostra_mensagem_em_vez_de_rodar(
     assert "base de dados indisponível: ConnectionError" in caplog.text
 
 
+def test_fora_da_lista_de_convidados_so_ve_a_mensagem(
+    bd: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "ana@exemplo.pt, rui@exemplo.pt")
+    obter_configuracao.cache_clear()
+    at = _nova_sessao()
+    assert any("apenas por convite" in i.value for i in at.info)
+    assert [b.label for b in at.button] == ["Terminar sessão"]
+    # Nem o Início por baixo: o único html é o dos estilos.
+    html = "\n".join(h.proto.body for h in at.get("html"))
+    assert "Como funciona" not in html and 'class="v-promessa"' not in html
+    assert sessao.UTILIZADOR not in at.session_state
+    assert _contar(bd, Utilizador) == 0  # sem registo na base de dados
+    at.switch_page(QUESTIONARIO).run()
+    assert [b.label for b in at.button] == ["Terminar sessão"]
+    assert _contar(bd, Utilizador) == 0
+
+
+def test_na_lista_de_convidados_entra_sem_ligar_a_maiusculas(
+    bd: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "ana@exemplo.pt; LOCAL@Vigoria.invalid ")
+    obter_configuracao.cache_clear()
+    at = _nova_sessao()
+    assert not any("apenas por convite" in i.value for i in at.info)
+    assert "Começar o questionário" in [b.label for b in at.button]
+    assert _contar(bd, Utilizador) == 1
+
+
 # ---------------------------------------------------------------- Guardar e voltar
 
 

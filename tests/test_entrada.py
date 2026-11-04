@@ -2,7 +2,7 @@
 
 import pytest
 
-from vigoria.contas.entrada import identidade_de
+from vigoria.contas.entrada import Identidade, convidado, identidade_de, normalizar_email
 
 
 def test_email_e_palavra_passe_verificado() -> None:
@@ -31,3 +31,28 @@ def test_google_conta_como_verificado() -> None:
 def test_sem_sub_ou_email_e_erro_de_configuracao(claims: dict[str, str]) -> None:
     with pytest.raises(ValueError, match="sub ou email"):
         identidade_de(claims)
+
+
+# ---------------------------------------------------------------- Lista de convidados
+
+ANA = Identidade(sub="auth0|1", email="ana@exemplo.pt", email_verificado=True)
+LISTA = frozenset({"ana@exemplo.pt", "rui@exemplo.pt"})
+
+
+def test_sem_lista_todos_entram() -> None:
+    assert convidado(ANA, frozenset())
+    assert convidado(ANA.model_copy(update={"email": "outro@exemplo.pt"}), frozenset())
+
+
+def test_so_entra_quem_esta_na_lista() -> None:
+    assert convidado(ANA, LISTA)
+    assert not convidado(ANA.model_copy(update={"email": "outro@exemplo.pt"}), LISTA)
+
+
+def test_lista_exige_email_verificado() -> None:
+    assert not convidado(ANA.model_copy(update={"email_verificado": False}), LISTA)
+
+
+def test_comparacao_sem_maiusculas_nem_espacos() -> None:
+    assert normalizar_email("  Ana @Exemplo.PT ") == "ana@exemplo.pt"
+    assert convidado(ANA.model_copy(update={"email": "ANA@exemplo.pt "}), LISTA)

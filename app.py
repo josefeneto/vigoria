@@ -54,7 +54,13 @@ else:
         entrada = sessao.entrar()
     except OperationalError as erro:
         sessao.base_indisponivel(erro)
-if isinstance(entrada, Recusa):
+if entrada is Recusa.NAO_CONVIDADO:
+    # Só a mensagem e o botão: sem questionário, plano, conta nem outras páginas.
+    st.info(t.SO_POR_CONVITE, icon=":material/lock:")
+    if st.button(t.PAGINAS["sair"], type="primary", icon=":material/logout:"):
+        _sair()
+    st.stop()
+elif isinstance(entrada, Recusa):
     titulo, texto, botao = t.RECUSAS[entrada]
     st.warning(texto, title=titulo, icon=":material/mark_email_unread:")
     if st.button(botao, icon=":material/login:"):
