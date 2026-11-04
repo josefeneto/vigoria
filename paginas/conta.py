@@ -99,6 +99,7 @@ for p in planos:
             on_click=_pedir_apagar_plano,
             args=(p.id,),
         )
+        comum.botao_pdf(p.criado_em, plano_id=p.id, chave=f"pdf_{p.id}")
     if p.id == por_confirmar:
         with st.container(border=True, key=f"confirmar_{p.id}"):
             st.write(t.CONTA_APAGAR_PLANO_PERGUNTA.format(data=data))

@@ -1,12 +1,19 @@
 """Apoio comum às páginas: estado da sessão, erros junto aos campos e avisos do plano."""
 
+from collections.abc import Callable
+from datetime import UTC, datetime
+from functools import partial
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import streamlit as st
+from sqlalchemy.orm import Session, sessionmaker
 
 from paginas import sessao
+from paginas import textos as t
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.dados import repositorios
+from vigoria.exportacao.pdf import plano_pdf
 from vigoria.interface.estado import PREFIXO, chave, estado_inicial, para_estado, para_respostas
 from vigoria.interface.passos import CAMPOS, respostas_de_questionario
 from vigoria.modelos.plano import Plano
@@ -86,3 +93,47 @@ def avisos(plano: Plano, chave: str) -> None:
             title=carregar_avisos().rotulos.plano["avisos"],
             icon=":material/health_and_safety:",
         )
+
+
+# ---------------------------------------------------------------- Plano em PDF
+
+
+def _pdf_guardado(fabrica: sessionmaker[Session], utilizador_id: int, plano_id: int) -> bytes:
+    """Lê o plano da conta e gera o PDF (corre fora do script, ao carregar no botão)."""
+    with fabrica.begin() as s:
+        guardado = repositorios.obter_plano(s, utilizador_id, plano_id)
+    if guardado is None:  # apagado entretanto, ou de outro utilizador
+        return b""
+    return plano_pdf(guardado.plano, guardado.criado_em)
+
+
+def botao_pdf(
+    criado_em: datetime,
+    *,
+    chave: str,
+    plano: Plano | None = None,
+    plano_id: int | None = None,
+) -> None:
+    """«Descarregar o plano (PDF)». O PDF só se gera quando a pessoa carrega no botão.
+
+    Com `plano`, o que está em memória; com `plano_id`, lê-o da conta desta sessão.
+    """
+    gerar: Callable[[], bytes]
+    if plano is not None:
+        gerar = partial(plano_pdf, plano, criado_em)
+    else:
+        assert plano_id is not None
+        # A fábrica e o utilizador lidos aqui: a função corre noutra thread, sem a sessão.
+        gerar = partial(_pdf_guardado, sessao.fabrica(), sessao.utilizador_id(), plano_id)
+    if criado_em.tzinfo is None:
+        criado_em = criado_em.replace(tzinfo=UTC)
+    dia = criado_em.astimezone(ZoneInfo("Europe/Lisbon")).date().isoformat()
+    st.download_button(
+        t.DESCARREGAR_PDF,
+        data=gerar,
+        file_name=t.PDF_FICHEIRO.format(data=dia),
+        mime="application/pdf",
+        icon=":material/picture_as_pdf:",
+        key=chave,
+        on_click="ignore",
+    )

@@ -200,6 +200,18 @@ rotulos:
     notas: Notas para si
     avisos: Avisos importantes
     gerado_por: "Plano gerado com {provedor} (prompt versão {versao})."
+    # Só no PDF (exportacao/pdf.py). Sem dados identificativos: nem nome nem email.
+    pdf_titulo: O seu plano Vigoria
+    pdf_subtitulo: Programa de 16 semanas para ganhar força e energia em casa
+    pdf_data: "Criado a {data}"
+    pdf_capa_nota: "Os avisos importantes estão na última página: leia-os antes de começar."
+    pdf_rodape: "O seu plano Vigoria · página {pagina} de {total}"
+    pdf_fases: As 4 fases do programa
+    pdf_fase_semanas: "Fase {n} · semanas {min} a {max}"
+    pdf_cintura_fases: "Cintura, no fim de cada fase: {texto}"
+    pdf_registo_semanal: Registo semanal
+    pdf_registo_4_semanas: Registo a cada 4 semanas
+    pdf_perguntas_revisao: Perguntas para cada revisão
   # Semana-tipo (motor/semana.py, Fase 4C): atividade e descrição de cada tipo de dia.
   semana:
     forca:

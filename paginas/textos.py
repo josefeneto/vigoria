@@ -97,6 +97,8 @@ CONTA_EXPORTAR_TEXTO = (
     "num ficheiro JSON."
 )
 CONTA_EXPORTAR = "Descarregar os meus dados (formato técnico, JSON)"
+DESCARREGAR_PDF = "Descarregar o plano (PDF)"
+PDF_FICHEIRO = "vigoria_plano_{data}.pdf"
 CONTA_EXPORTAR_FICHEIRO = "vigoria_os_meus_dados.json"
 CONTA_APAGAR_TITULO = "Apagar a conta"
 CONTA_APAGAR_TEXTO = (

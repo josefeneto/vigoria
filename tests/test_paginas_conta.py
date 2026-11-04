@@ -10,10 +10,10 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from streamlit.testing.v1 import AppTest
 
-from paginas import sessao
+from paginas import comum, sessao
 from vigoria import config
 from vigoria.config import obter_configuracao
-from vigoria.dados.bd import criar_motor, migrar
+from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.tabelas import PlanoGuardado, QuestionarioGuardado, Utilizador
 from vigoria.interface.estado import chave, para_estado
 from vigoria.interface.passos import respostas_de_questionario
@@ -217,7 +217,32 @@ def test_conta_lista_planos_e_exporta(bd: str) -> None:
     assert any("local@vigoria.invalid" in m.value for m in at.markdown)
     assert any(m.value.startswith("Plano de ") for m in at.markdown)
     assert _botao(at, "Aberto").disabled  # o plano que se está a ver
-    assert len(at.get("download_button")) == 1
+    rotulos = [d.proto.label for d in at.get("download_button")]
+    assert rotulos == [
+        "Descarregar o plano (PDF)",
+        "Descarregar os meus dados (formato técnico, JSON)",
+    ]
+
+
+def test_plano_tem_o_botao_do_pdf(bd: str) -> None:
+    at = _nova_sessao()
+    _gerar(at)
+    at.switch_page("paginas/plano.py").run()
+    assert not at.exception
+    (botao,) = at.get("download_button")
+    assert botao.proto.label == "Descarregar o plano (PDF)"
+
+
+def test_pdf_de_um_plano_da_conta_so_para_o_dono(bd: str) -> None:
+    at = _nova_sessao()
+    _gerar(at)
+    plano_id = at.session_state["resultado"].id
+    motor = criar_motor(bd)
+    fabrica = fabrica_sessoes(motor)
+    uid = at.session_state[sessao.UTILIZADOR][1]
+    assert comum._pdf_guardado(fabrica, uid, plano_id).startswith(b"%PDF-")
+    assert comum._pdf_guardado(fabrica, uid + 1, plano_id) == b""  # outro utilizador: nada
+    motor.dispose()
 
 
 def test_apagar_plano_pede_confirmacao_e_abre_o_anterior(bd: str) -> None:

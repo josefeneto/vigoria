@@ -211,6 +211,7 @@ if st.session_state.get(comum.ERRO_GUARDAR):
     st.error(t.ERRO_GUARDAR, icon=":material/cloud_off:")
 else:
     st.caption(t.NOTA_SESSAO_PLANO.format(data=t.data_hora(resultado.criado_em)))
+comum.botao_pdf(resultado.criado_em, plano=plano, chave="plano_pdf")
 intensidade = resultado.estrategia.intensidade_efetiva
 st.html(
     componentes.numeros(
