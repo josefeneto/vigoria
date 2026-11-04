@@ -12,6 +12,7 @@ from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+POOL_RECYCLE_S = 240
 TIMEOUT_LIGACAO_S = 10  # o Neon gratuito pode estar a acordar; sem limite, a página fica a rodar
 
 
@@ -23,7 +24,10 @@ def criar_motor(url: str) -> Engine:
     elif url.startswith("sqlite"):
         opcoes["connect_args"] = {"check_same_thread": False}
     else:
-        opcoes["pool_pre_ping"] = True  # o Neon fecha as ligações paradas
+        # O Neon adormece e fecha as ligações paradas: verificar antes de usar e renovar ao
+        # fim de 4 minutos (antes dos 5 minutos sem uso em que o Neon gratuito suspende).
+        opcoes["pool_pre_ping"] = True
+        opcoes["pool_recycle"] = POOL_RECYCLE_S
         opcoes["connect_args"] = {"connect_timeout": TIMEOUT_LIGACAO_S}
     motor = create_engine(url, **opcoes)
     if motor.dialect.name == "sqlite":

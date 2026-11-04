@@ -265,3 +265,4 @@ def test_postgresql_com_limite_de_tempo_e_ligacoes_verificadas(
     bd.criar_motor("postgresql+psycopg://u:p@exemplo.invalid/bd")
     assert opcoes["connect_args"] == {"connect_timeout": bd.TIMEOUT_LIGACAO_S}
     assert opcoes["pool_pre_ping"] is True
+    assert opcoes["pool_recycle"] == bd.POOL_RECYCLE_S == 240
