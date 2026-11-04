@@ -174,7 +174,11 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 /* ---- Vídeo do topo: capa enquanto carrega, botão de pausa sempre visível */
 .v-video { position: relative; border-radius: var(--v-raio); overflow: hidden; aspect-ratio: 16 / 9;
   background: var(--v-principal) center / cover no-repeat; box-shadow: 0 12px 32px rgba(0,0,0,.25); }
-.v-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Os vídeos sobrepõem-se e revezam-se: só o .visivel se vê (transição suave). */
+.v-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  display: block; opacity: 0; transition: opacity .6s ease; }
+.v-video video.visivel { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .v-video video { transition: none; } }
 .v-video-botao { position: absolute; right: .75rem; bottom: .75rem; min-height: 2.75rem;
   padding: .45rem 1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.45);
   background: rgba(18,63,69,.88); color: var(--v-fundo); font: inherit; font-size: .95rem;

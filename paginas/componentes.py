@@ -16,16 +16,21 @@ from paginas.estilos import ICONES_ATIVIDADES, RAIZ, icone
 
 PASTA_FOTOS = RAIZ / "assets" / "img"
 PASTA_MARCA = RAIZ / "assets" / "marca"
-VIDEO_TOPO = RAIZ / "static" / "video" / "inicio.mp4"  # servido em app/static/video/
-CAPA_VIDEO = VIDEO_TOPO.with_name("inicio_capa.webp")
+PASTA_VIDEO = RAIZ / "static" / "video"  # servida em app/static/video/
+# Vídeos do topo do início, que alternam (um homem e uma mulher): scripts/converter_video.py.
+VIDEOS_TOPO = ("inicio", "inicio_mulher")
+CAPA_VIDEO = PASTA_VIDEO / "inicio_capa.webp"
 
-# Vídeo do topo do início: sem som, em ciclo, com capa e botão de pausa (WCAG 2.2.2).
-# Só arranca por código e só se o sistema não pedir menos movimento; sem código, fica a capa.
-# A capa vai embutida como fundo da caixa: vê-se mesmo que o servidor demore ou o vídeo falhe
-# (no Community Cloud, logo a seguir a entrar ou sair); com erro, o vídeo e o botão saem.
+# Vídeos do topo do início: sem som, um a seguir ao outro em ciclo, com capa e botão de pausa
+# (WCAG 2.2.2). Só arrancam por código e só se o sistema não pedir menos movimento; sem
+# código, fica a capa. O segundo só começa a descarregar quando o primeiro já está a passar.
+# A capa do primeiro vai embutida como fundo da caixa: vê-se mesmo que o servidor demore ou
+# os vídeos falhem (no Community Cloud, logo a seguir a entrar ou sair); um vídeo com erro
+# sai do ciclo e, sem nenhum, saem também o botão e os vídeos.
+_UM_VIDEO = """<video muted playsinline preload="%(preload)s" poster="%(poster)s"
+ aria-label="%(descricao)s"><source src="app/static/video/%(nome)s.mp4" type="video/mp4"></video>"""
 _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
-<video muted loop playsinline preload="auto"
- aria-label="%(descricao)s"><source src="app/static/video/inicio.mp4" type="video/mp4"></video>
+%(videos)s
 <button type="button" class="v-video-botao" data-pausar="%(pausar)s"
  data-reproduzir="%(reproduzir)s">%(reproduzir)s</button></div>
 <script>
@@ -33,20 +38,45 @@ _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
   const menos = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll(".v-video:not([data-pronto])").forEach((caixa) => {
     caixa.dataset.pronto = "1";
-    const video = caixa.querySelector("video");
     const botao = caixa.querySelector("button");
-    const falhou = () => { video.remove(); botao.remove(); };
-    caixa.querySelector("source").addEventListener("error", falhou);
-    video.addEventListener("error", falhou);
+    let videos = [...caixa.querySelectorAll("video")];
+    let atual = videos[0];
     const mostrar = (aCorrer) => {
       botao.textContent = aCorrer ? botao.dataset.pausar : botao.dataset.reproduzir;
       botao.classList.toggle("a-correr", aCorrer);
     };
-    botao.addEventListener("click", () => {
-      if (video.paused) { video.play().then(() => mostrar(true)).catch(() => mostrar(false)); }
-      else { video.pause(); mostrar(false); }
+    const tocar = (video) => video.play().then(() => mostrar(true)).catch(() => mostrar(false));
+    const visivel = (video) => videos.forEach((v) => {
+      v.classList.toggle("visivel", v === video);
+      v.setAttribute("aria-hidden", v === video ? "false" : "true");
     });
-    if (!menos) video.play().then(() => mostrar(true)).catch(() => mostrar(false));
+    const seguinte = () => {
+      const proximo = videos[(videos.indexOf(atual) + 1) %% videos.length];
+      proximo.currentTime = 0;
+      atual = proximo;
+      visivel(atual);
+      tocar(atual);
+    };
+    const falhou = (video) => {
+      videos = videos.filter((v) => v !== video);
+      video.remove();
+      if (!videos.length) { botao.remove(); return; }
+      if (video === atual) { atual = videos[0]; visivel(atual); if (!menos) tocar(atual); }
+    };
+    videos.forEach((video) => {
+      video.querySelector("source").addEventListener("error", () => falhou(video));
+      video.addEventListener("error", () => falhou(video));
+      video.addEventListener("ended", seguinte);
+    });
+    // O segundo vídeo só se descarrega depois de o primeiro começar (poupa dados no telemóvel).
+    videos[0].addEventListener("playing", () => videos.slice(1).forEach((v) => {
+      if (v.preload === "none") { v.preload = "auto"; v.load(); }
+    }), { once: true });
+    botao.addEventListener("click", () => {
+      if (atual.paused) { tocar(atual); } else { atual.pause(); mostrar(false); }
+    });
+    visivel(atual);
+    if (!menos) tocar(atual);
   });
 })();
 </script>"""
@@ -89,19 +119,44 @@ def fotografia(
         st.html(f'<div class="v-marcador" style="--proporcao:{proporcao}">{desenho}</div>')
 
 
-def video_topo(descricao: str, pausar: str, reproduzir: str) -> bool:
-    """Vídeo do topo do início; devolve False se ainda não houver vídeo convertido."""
-    if not VIDEO_TOPO.exists():
+def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> bool:
+    """Vídeos do topo do início, que alternam; False se ainda não houver nenhum convertido.
+
+    `descricoes`: uma por vídeo de VIDEOS_TOPO, pela mesma ordem (para leitores de ecrã).
+    """
+    existentes = [
+        (nome, descricao)
+        for nome, descricao in zip(VIDEOS_TOPO, descricoes, strict=True)
+        if (PASTA_VIDEO / f"{nome}.mp4").exists()
+    ]
+    if not existentes or not CAPA_VIDEO.exists():
         return False
-    textos = {"descricao": descricao, "pausar": pausar, "reproduzir": reproduzir}
-    valores = {k: escape(v) for k, v in textos.items()} | {"capa": _capa_video()}
-    st.html(_VIDEO % valores, unsafe_allow_javascript=True)
+    videos = "\n".join(
+        _UM_VIDEO
+        % {
+            "nome": nome,
+            "descricao": escape(descricao),
+            "preload": "auto" if i == 0 else "none",
+            "poster": f"app/static/video/{nome}_capa.webp",
+        }
+        for i, (nome, descricao) in enumerate(existentes)
+    )
+    st.html(
+        _VIDEO
+        % {
+            "capa": _capa_video(),
+            "videos": videos,
+            "pausar": escape(pausar),
+            "reproduzir": escape(reproduzir),
+        },
+        unsafe_allow_javascript=True,
+    )
     return True
 
 
 @cache
 def _capa_video() -> str:
-    """A capa do vídeo como data URI (cerca de 40 KB): não depende de um segundo pedido."""
+    """A capa do primeiro vídeo como data URI (cerca de 40 KB): não depende de outro pedido."""
     dados = base64.b64encode(CAPA_VIDEO.read_bytes()).decode("ascii")
     return f"data:image/webp;base64,{dados}"
 

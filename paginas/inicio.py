@@ -47,7 +47,7 @@ with st.container(key="faixa_topo"):
                 width="stretch",
             )
     with media:
-        if not componentes.video_topo(t.VIDEO_DESCRICAO, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR):
+        if not componentes.video_topo(t.VIDEO_DESCRICOES, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR):
             componentes.fotografia("inicio_topo", t.ALT_FOTO_INICIO)
 
 with st.container(key="faixa_beneficios"):

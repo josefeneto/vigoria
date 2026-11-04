@@ -145,8 +145,10 @@ COMO_FUNCIONA = (
     ),
 )
 FINAL_TITULO = "Pronto para começar?"
-VIDEO_DESCRICAO = (
-    "Pessoa de cabelo grisalho a levantar halteres acima da cabeça, devagar e com controlo."
+VIDEO_DESCRICOES = (  # pela ordem de componentes.VIDEOS_TOPO
+    "Homem de cabelo grisalho a levantar halteres acima da cabeça, devagar e com controlo.",
+    "Mulher a fazer agachamentos com uma banda elástica à volta das pernas, numa varanda, "
+    "devagar e com controlo.",
 )
 VIDEO_PAUSAR = "Pausar o vídeo"
 VIDEO_REPRODUZIR = "Ver o vídeo"

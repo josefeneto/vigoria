@@ -18,6 +18,7 @@ Todas as fotografias usadas na Vigoria têm licença de uso comercial gratuito. 
 | Ficheiro | Autor | Página do vídeo | Licença | Data de descarga |
 |---|---|---|---|---|
 | static/video/inicio.mp4 (e a capa inicio_capa.webp) | Kampus Production | https://www.pexels.com/video/elderly-man-lifting-dumbbells-6892967/ | Licença Pexels | 01/11/2026 |
+| static/video/inicio_mulher.mp4 (e a capa inicio_mulher_capa.webp) | Peyman Shojaei | https://www.pexels.com/video/a-woman-doing-squats-8809584/ | Licença Pexels | 03/11/2026 |
 
 ## Ícones
 
