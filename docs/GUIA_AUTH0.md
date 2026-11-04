@@ -97,7 +97,7 @@ GROQ_API_KEY = ""
 GROQ_MODEL = ""
 ```
 
-Lista de convidados (obrigatória no Cloud, porque a app é pública): juntar às chaves de topo, **acima** de `[auth]`, os emails das pessoas que podem entrar, separados por vírgulas (a comparação ignora maiúsculas e espaços; em local, sem a chave, todos entram):
+Lista de convidados (obrigatória no Cloud, porque a app é pública): juntar às chaves de topo, **acima** de `[auth]`, os emails das pessoas que podem entrar, separados por vírgulas (a comparação ignora maiúsculas e espaços). Com `AMBIENTE=demo`, se a chave faltar ou estiver vazia, **ninguém entra** (todos veem «apenas por convite») e os registos da app mostram o aviso «VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo». Em local, sem a chave, todos entram:
 
 ```toml
 VIGORIA_EMAILS_PERMITIDOS = "jose@exemplo.pt, convidado@exemplo.pt"

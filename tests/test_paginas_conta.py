@@ -135,6 +135,50 @@ def test_na_lista_de_convidados_entra_sem_ligar_a_maiusculas(
     assert _contar(bd, Utilizador) == 1
 
 
+def _demo(monkeypatch: pytest.MonkeyPatch, lista: str) -> None:
+    """Demonstração (app pública no Cloud) com uma pessoa já entrada no Auth0."""
+    monkeypatch.setenv("AMBIENTE", "demo")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")  # o simulado só é aceite em local
+    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", lista)
+    monkeypatch.setattr(sessao, "identidade", lambda: CONVIDADA)
+    obter_configuracao.cache_clear()
+
+
+CONVIDADA = sessao.Identidade(sub="auth0|demo", email="ana@exemplo.pt", email_verificado=True)
+
+
+# «Em falta» lê-se como vazia (test_config); aqui não se depende do .env local.
+@pytest.mark.parametrize("lista", ["", " , "])
+def test_demo_sem_lista_de_convidados_ninguem_entra(
+    bd: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, lista: str
+) -> None:
+    _demo(monkeypatch, lista)
+    with caplog.at_level(logging.WARNING):
+        at = _nova_sessao()
+    assert any("apenas por convite" in i.value for i in at.info)
+    assert [b.label for b in at.button] == ["Terminar sessão"]
+    assert _contar(bd, Utilizador) == 0
+    assert "VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo" in caplog.text
+    assert CONVIDADA.email not in caplog.text
+
+
+def test_demo_com_lista_entra_quem_esta_nela(bd: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    _demo(monkeypatch, "Ana@exemplo.pt")
+    at = _nova_sessao()
+    assert not any("apenas por convite" in i.value for i in at.info)
+    assert "Começar o questionário" in [b.label for b in at.button]
+    assert _contar(bd, Utilizador) == 1
+
+
+def test_local_sem_lista_todos_entram(bd: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "")
+    obter_configuracao.cache_clear()
+    at = _nova_sessao()
+    assert "Começar o questionário" in [b.label for b in at.button]
+    assert _contar(bd, Utilizador) == 1
+
+
 # ---------------------------------------------------------------- Guardar e voltar
 
 

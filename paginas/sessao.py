@@ -55,8 +55,15 @@ def entrar() -> int | Recusa | None:
     if quem is None:
         st.session_state.pop(UTILIZADOR, None)
         return None
-    permitidos = obter_configuracao().vigoria_emails_permitidos
-    if quem.email_verificado and not convidado(quem, permitidos):
+    config = obter_configuracao()
+    permitidos = config.vigoria_emails_permitidos
+    # Na demonstração (app pública no Cloud), sem lista ninguém entra: falha fechada.
+    obrigatoria = config.ambiente == "demo"
+    if obrigatoria and not permitidos:
+        registo.warning("VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo")
+    if (obrigatoria and not permitidos) or (
+        quem.email_verificado and not convidado(quem, permitidos, lista_obrigatoria=obrigatoria)
+    ):
         # Antes da base de dados: quem não está na lista não fica com registo nenhum.
         # Email por verificar segue para repositorios.entrar, que pede a confirmação.
         st.session_state.pop(UTILIZADOR, None)

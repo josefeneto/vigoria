@@ -56,3 +56,8 @@ def test_lista_exige_email_verificado() -> None:
 def test_comparacao_sem_maiusculas_nem_espacos() -> None:
     assert normalizar_email("  Ana @Exemplo.PT ") == "ana@exemplo.pt"
     assert convidado(ANA.model_copy(update={"email": "ANA@exemplo.pt "}), LISTA)
+
+
+def test_lista_obrigatoria_vazia_ninguem_entra() -> None:
+    assert not convidado(ANA, frozenset(), lista_obrigatoria=True)
+    assert convidado(ANA, LISTA, lista_obrigatoria=True)

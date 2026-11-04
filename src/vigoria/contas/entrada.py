@@ -30,13 +30,16 @@ def normalizar_email(email: str) -> str:
     return "".join(email.split()).lower()
 
 
-def convidado(identidade: Identidade, permitidos: frozenset[str]) -> bool:
-    """Lista de convidados (fase de testes): vazia = todos; senão, só emails verificados da lista.
+def convidado(
+    identidade: Identidade, permitidos: frozenset[str], *, lista_obrigatoria: bool = False
+) -> bool:
+    """Lista de convidados (fase de testes): só emails verificados da lista.
 
-    `permitidos` já vem normalizado (config.py).
+    Lista vazia: todos entram, exceto com `lista_obrigatoria` (demonstração pública), em que
+    ninguém entra. `permitidos` já vem normalizado (config.py).
     """
     if not permitidos:
-        return True
+        return not lista_obrigatoria
     return identidade.email_verificado and normalizar_email(identidade.email) in permitidos
 
 
