@@ -17,7 +17,9 @@ from vigoria.regras.elegibilidade import Modo
 
 MARCA = "Vigoria"
 # Espaço não separável antes do travessão: «— para…» nunca começa uma linha.
-PROMESSA = "O seu plano, à sua medida\u00a0— para ganhar força e energia, sem sair de casa."
+PROMESSA = (
+    "O seu plano, à sua medida\u00a0— para ganhar e manter força e energia, sem sair de casa."
+)
 DEMO_AVISO = (
     "Versão de demonstração — não introduza dados reais de saúde. "
     "Os dados são processados em servidores fora da UE."
@@ -125,7 +127,7 @@ def data_hora(momento: datetime) -> str:
 
 INICIO_TEXTO = (
     "Um plano pessoal de 16 semanas para cuidar da sua saúde e vitalidade, com exercícios "
-    "para fazer em casa e hábitos simples para o dia a dia."
+    "para fazer em casa, hábitos simples para o dia a dia e orientações para continuar depois."
 )
 COMO_FUNCIONA = (
     (
@@ -141,7 +143,8 @@ COMO_FUNCIONA = (
     (
         "calendario",
         "3. Receba o seu plano",
-        "16 semanas em 4 fases, com treino em casa, alimentação e hábitos.",
+        "16 semanas em 4 fases, com treino em casa, alimentação, hábitos e orientações "
+        "para continuar.",
     ),
 )
 FINAL_TITULO = "Pronto para começar?"

@@ -247,6 +247,15 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert [b.label for b in at.button].count("Começar o questionário") == 2
 
 
+def test_inicio_fala_das_orientacoes_para_continuar() -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    texto = _texto(at)
+    assert "para ganhar e manter força e energia, sem sair de casa." in texto
+    assert "e orientações para continuar depois." in texto
+    assert "alimentação, hábitos e orientações para continuar." in texto
+
+
 def test_promessa_sem_travessao_no_inicio_da_linha() -> None:
     from paginas import textos as t
 
