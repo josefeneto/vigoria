@@ -143,7 +143,7 @@ def gerar_plano_em_markdown(
         return 1
     pasta.mkdir(parents=True, exist_ok=True)
     ficheiro = pasta / f"plano_{origem}.md"
-    ficheiro.write_text(plano_para_markdown(resultado.plano), encoding="utf-8")
+    ficheiro.write_text(plano_para_markdown(resultado.plano, q.idade), encoding="utf-8")
     plano = resultado.plano
     print(f"Plano gravado em {ficheiro}")
     print(f"Fornecedor: {plano.provedor} | prompt: {plano.versao_prompt}")

@@ -6,7 +6,8 @@ de alimentacao.yaml. Só o resumo, os marcos de força, a alimentação e as not
 """
 
 from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios
-from vigoria.modelos.plano import ExercicioPlano, Plano
+from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano
+from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.textos import numero
 
 
@@ -36,7 +37,18 @@ def _notas(x: ExercicioPlano) -> str:
     return " ".join(partes)
 
 
-def plano_para_markdown(plano: Plano) -> str:
+def _parte_manutencao(titulo: str, parte: ParteOrientacao) -> list[str]:
+    md = [f"### {titulo}", "", *(f"{p}\n" for p in parte.introducao)]
+    if parte.pontos:
+        if parte.titulo_pontos:
+            md += [f"**{parte.titulo_pontos}**", ""]
+        md += [f"- {x}" for x in parte.pontos] + [""]
+    md += [f"{n}\n" for n in parte.notas]
+    return md
+
+
+def plano_para_markdown(plano: Plano, idade: int | None = None) -> str:
+    """`idade`: a do questionário (a recomendação da OMS na manutenção só com ≥ 65)."""
     rotulos = carregar_avisos().rotulos
     r = rotulos.plano
     md = [f"# {r['titulo']}", "", f"## {r['resumo']}", "", plano.resumo, ""]
@@ -155,6 +167,17 @@ def plano_para_markdown(plano: Plano) -> str:
         md += [""]
     md += [f"## {r['notas']}", ""]
     md += [f"- {x}" for x in plano.notas_personalizadas] + [""]
+
+    m = orientacoes_manutencao(plano, idade)
+    md += [f"## {r['manutencao']}", "", " ".join(m.introducao), ""]
+    md += _parte_manutencao(r["manutencao_treino"], m.treino)
+    md += [f"**{r['manutencao_variar']}**", "", *(f"{p}\n" for p in m.variar)]
+    md += [f"**{r['manutencao_exercicios']}**", ""]
+    md += [f"- {x}" for x in m.exercicios_base] + [""]
+    md += _parte_manutencao(r["manutencao_alimentacao"], m.alimentacao)
+    md += _parte_manutencao(r["manutencao_vigiar"], m.vigiar)
+    md += _parte_manutencao(r["manutencao_recomecar"], m.recomecar)
+
     md += [f"## {r['avisos']}", ""]
     md += [f"> {x}\n" for x in plano.avisos]
     md += ["---", "", r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt)]

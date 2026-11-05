@@ -20,7 +20,8 @@ from fpdf import FPDF, FontFace, XPos, YPos
 from fpdf.enums import MethodReturnValue
 
 from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
-from vigoria.modelos.plano import ExercicioPlano, Plano, TreinoFase
+from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
+from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.textos import numero
 
 RECURSOS = files("vigoria.exportacao") / "recursos"
@@ -458,14 +459,45 @@ def _habitos(pdf: _Documento, plano: Plano, r: dict[str, str]) -> None:
     if a.perguntas_revisao:
         pdf.subtitulo(r["pdf_perguntas_revisao"])
         pdf.lista(list(a.perguntas_revisao))
+
+
+def _parte_manutencao(pdf: _Documento, titulo: str, parte: ParteOrientacao) -> None:
+    pdf.subtitulo(titulo)
+    for p in parte.introducao:
+        pdf.paragrafo(p)
+    if parte.pontos:
+        if parte.titulo_pontos:
+            pdf.paragrafo(parte.titulo_pontos, estilo="B")
+        pdf.lista(list(parte.pontos))
+    for n in parte.notas:
+        pdf.paragrafo(n)
+
+
+def _manutencao(pdf: _Documento, plano: Plano, idade: int | None, r: dict[str, str]) -> None:
+    """Depois das 16 semanas: antes dos avisos, numa página nova."""
+    m = orientacoes_manutencao(plano, idade)
+    pdf.titulo(r["manutencao"], nova_pagina=True)
+    pdf.paragrafo(" ".join(m.introducao))
+    _parte_manutencao(pdf, r["manutencao_treino"], m.treino)
+    pdf.paragrafo(r["manutencao_variar"], estilo="B")
+    for p in m.variar:
+        pdf.paragrafo(p)
+    pdf.paragrafo(r["manutencao_exercicios"], estilo="B")
+    pdf.lista(list(m.exercicios_base))
+    _parte_manutencao(pdf, r["manutencao_alimentacao"], m.alimentacao)
+    _parte_manutencao(pdf, r["manutencao_vigiar"], m.vigiar)
+    _parte_manutencao(pdf, r["manutencao_recomecar"], m.recomecar)
     pdf.paragrafo(
         r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt),
         cor="texto_secundario",
     )
 
 
-def plano_pdf(plano: Plano, criado_em: datetime) -> bytes:
-    """O plano em PDF (A4). Os avisos ficam sempre na última página, em destaque."""
+def plano_pdf(plano: Plano, criado_em: datetime, idade: int | None = None) -> bytes:
+    """O plano em PDF (A4). Os avisos ficam sempre na última página, em destaque.
+
+    `idade`: a do questionário do plano (a recomendação da OMS só aparece com ≥ 65).
+    """
     r = carregar_avisos().rotulos.plano
     pdf = _Documento(r["pdf_rodape"])
     _capa(pdf, r, criado_em)
@@ -476,5 +508,6 @@ def plano_pdf(plano: Plano, criado_em: datetime) -> bytes:
         _fase(pdf, fase, r)
     _alimentacao(pdf, plano, r)
     _habitos(pdf, plano, r)
+    _manutencao(pdf, plano, idade, r)
     pdf.caixa_avisos(r["avisos"], list(plano.avisos))
     return bytes(pdf.output())

@@ -14,7 +14,8 @@ import streamlit as st
 from paginas import componentes, comum
 from paginas import textos as t
 from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
-from vigoria.modelos.plano import ExercicioPlano, Plano, TreinoFase
+from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
+from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.textos import numero
 
 rotulos = carregar_avisos().rotulos
@@ -67,6 +68,7 @@ def _resumo(plano: Plano) -> None:
         sobretitulo = t.FASE_SEMANAS.format(n=fase.numero, min=intervalo.min, max=intervalo.max)
         cartoes.append(componentes.cartao_fase(sobretitulo, fase.nome, fase.foco, detalhes))
     st.html(componentes.grelha(cartoes, colunas=2))
+    st.caption(t.RESUMO_MANUTENCAO)
     if plano.notas_personalizadas:
         st.subheader(r["notas"])
         st.markdown("\n".join(f"- {n}" for n in plano.notas_personalizadas))
@@ -192,6 +194,38 @@ def _acompanhamento(plano: Plano) -> None:
         st.markdown("\n".join(f"- {x}" for x in a.perguntas_revisao))
 
 
+def _parte_manutencao(titulo: str, parte: ParteOrientacao) -> None:
+    st.markdown(f"#### {titulo}")
+    for p in parte.introducao:
+        st.write(p)
+    if parte.pontos:
+        if parte.titulo_pontos:
+            st.markdown(f"**{parte.titulo_pontos}**")
+        st.markdown("\n".join(f"- {x}" for x in parte.pontos))
+    for n in parte.notas:
+        st.write(n)
+
+
+def _manutencao(plano: Plano) -> None:
+    # A idade vem do questionário do plano (a recomendação da OMS só aparece com ≥ 65).
+    idade = getattr(st.session_state.get(comum.RESULTADO), "idade", None)
+    m = orientacoes_manutencao(plano, idade)
+    st.subheader(r["manutencao"])
+    st.write(" ".join(m.introducao))
+    _parte_manutencao(r["manutencao_treino"], m.treino)
+    st.markdown(f"**{r['manutencao_variar']}**")
+    for p in m.variar:
+        st.write(p)
+    st.markdown(f"**{r['manutencao_exercicios']}**")
+    st.markdown("\n".join(f"- {x}" for x in m.exercicios_base))
+    _parte_manutencao(r["manutencao_alimentacao"], m.alimentacao)
+    _parte_manutencao(r["manutencao_vigiar"], m.vigiar)
+    _parte_manutencao(r["manutencao_recomecar"], m.recomecar)
+    st.page_link(
+        comum.PAGINA_QUESTIONARIO, label=t.RECOMECAR_QUESTIONARIO, icon=":material/restart_alt:"
+    )
+
+
 # ---------------------------------------------------------------- Página
 
 
@@ -211,7 +245,9 @@ if st.session_state.get(comum.ERRO_GUARDAR):
     st.error(t.ERRO_GUARDAR, icon=":material/cloud_off:")
 else:
     st.caption(t.NOTA_SESSAO_PLANO.format(data=t.data_hora(resultado.criado_em)))
-comum.botao_pdf(resultado.criado_em, plano=plano, chave="plano_pdf")
+comum.botao_pdf(
+    resultado.criado_em, plano=plano, idade=getattr(resultado, "idade", None), chave="plano_pdf"
+)
 intensidade = resultado.estrategia.intensidade_efetiva
 st.html(
     componentes.numeros(
@@ -241,6 +277,7 @@ SECCOES = {
     "alimentacao": _alimentacao,
     "habitos": _habitos,
     "acompanhamento": _acompanhamento,
+    "manutencao": _manutencao,
 }
 seccao = st.segmented_control(
     t.SECCAO_PLANO,

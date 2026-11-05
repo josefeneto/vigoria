@@ -589,7 +589,11 @@ SECCOES_PLANO = {
     "alimentacao": ":material/restaurant: Alimentação",
     "habitos": ":material/self_improvement: Hábitos",
     "acompanhamento": ":material/monitoring: Acompanhamento",
+    "manutencao": ":material/autorenew: Manutenção",
 }
+# Depois das 16 semanas (Fase 6B): textos aprovados a 05/11/2026 (P8).
+RESUMO_MANUTENCAO = "Depois da semana 16, veja em «Manutenção» como continuar."
+RECOMECAR_QUESTIONARIO = "Responder de novo ao questionário"
 ESCOLHER_FASE = "Fase"
 ESCOLHER = "Escolha uma opção"
 MINUTOS_COLUNA = "Minutos"

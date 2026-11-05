@@ -104,7 +104,7 @@ def _pdf_guardado(fabrica: sessionmaker[Session], utilizador_id: int, plano_id: 
         guardado = repositorios.obter_plano(s, utilizador_id, plano_id)
     if guardado is None:  # apagado entretanto, ou de outro utilizador
         return b""
-    return plano_pdf(guardado.plano, guardado.criado_em)
+    return plano_pdf(guardado.plano, guardado.criado_em, guardado.idade)
 
 
 def botao_pdf(
@@ -112,15 +112,17 @@ def botao_pdf(
     *,
     chave: str,
     plano: Plano | None = None,
+    idade: int | None = None,
     plano_id: int | None = None,
 ) -> None:
     """«Descarregar o plano (PDF)». O PDF só se gera quando a pessoa carrega no botão.
 
-    Com `plano`, o que está em memória; com `plano_id`, lê-o da conta desta sessão.
+    Com `plano` (e a `idade` do questionário), o que está em memória; com `plano_id`,
+    lê-o da conta desta sessão.
     """
     gerar: Callable[[], bytes]
     if plano is not None:
-        gerar = partial(plano_pdf, plano, criado_em)
+        gerar = partial(plano_pdf, plano, criado_em, idade)
     else:
         assert plano_id is not None
         # A fábrica e o utilizador lidos aqui: a função corre noutra thread, sem a sessão.

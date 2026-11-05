@@ -13,6 +13,7 @@ from typing import Any
 
 import pytest
 
+from vigoria.conteudo.carregar import carregar_manutencao
 from vigoria.exportacao import pdf
 from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.plano import Plano
@@ -91,6 +92,20 @@ def test_conteudo_capa_seccoes_e_avisos_na_ultima_pagina(
     for aviso in plano.avisos:
         assert pdf._limpo(aviso) in na_ultima
         assert all(aviso not in t for p, _, t in escrito if p < ultima)  # só na última
+
+
+def test_manutencao_antes_dos_avisos_e_oms_so_com_65_anos(
+    escrito: list[tuple[int, float, str]],
+) -> None:
+    oms = pdf._limpo(carregar_manutencao().treino.oms_65)
+    ultima = _paginas(pdf.plano_pdf(_plano(), DATA, 68))
+    paginas = {texto: pagina for pagina, _, texto in escrito}
+    assert paginas["Depois das 16 semanas"] < ultima  # antes da página dos avisos
+    assert "Recomeçar" in paginas and oms in paginas
+    escrito.clear()
+    pdf.plano_pdf(_plano("persona_50_alta"), DATA, 50)
+    textos = [texto for _, _, texto in escrito]
+    assert "Depois das 16 semanas" in textos and oms not in textos
 
 
 def test_letra_base_de_pelo_menos_11_pt(escrito: list[tuple[int, float, str]]) -> None:

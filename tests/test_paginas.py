@@ -146,7 +146,7 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_seccao() -> None:
     assert "Plano simulado (persona de teste)" in [w.proto.title for w in at.warning]
     # Cintura sem número por fase (REGRAS §5): o mesmo texto, mostrado uma só vez.
     assert _texto(at).count("limiar de risco de 94 cm") == 1
-    for seccao in ("resumo", "treino", "alimentacao", "habitos", "acompanhamento"):
+    for seccao in ("resumo", "treino", "alimentacao", "habitos", "acompanhamento", "manutencao"):
         at.session_state["plano_seccao"] = seccao
         at.run()
         assert not at.exception
@@ -158,6 +158,52 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_seccao() -> None:
     at.session_state["plano_fase"] = 2
     at.run()
     assert "Em vez de:" in _texto(at)
+
+
+def test_manutencao_no_resumo_e_tambem_no_plano_guardado() -> None:
+    from paginas import textos as t
+    from vigoria.conteudo.carregar import carregar_manutencao
+
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "7"
+    at.run()
+    _botao(at, "Gerar o meu plano").click().run(timeout=60)
+    at.switch_page("paginas/plano.py").run()
+    assert t.RESUMO_MANUTENCAO in [c.value for c in at.caption]
+    # Nova sessão: o plano vem da base de dados (como um plano guardado antes da 6B).
+    novo = AppTest.from_file(APP, default_timeout=30).run()
+    novo.switch_page("paginas/plano.py").run()
+    novo.session_state["plano_seccao"] = "manutencao"
+    novo.run()
+    assert not novo.exception
+    texto = _texto(novo)
+    assert "Depois das 16 semanas" in [s.value for s in novo.subheader]
+    assert "Organização Mundial da Saúde" in texto  # 68 anos: com a recomendação da OMS
+    assert carregar_manutencao().recomecar.introducao[0] in texto
+    assert t.RECOMECAR_QUESTIONARIO in [p.proto.label for p in novo.get("page_link")]
+
+
+def test_textos_novos_sem_promessas_termos_proibidos_nem_brasileirismos() -> None:
+    from paginas import textos as t
+    from vigoria.conteudo.carregar import carregar_avisos
+    from vigoria.motor.voz import encontrar_termos
+
+    avisos = carregar_avisos()
+    rotulos = [v for k, v in avisos.rotulos.plano.items() if k.startswith("manutencao")]
+    texto = "\n".join(
+        [
+            t.PROMESSA,
+            t.INICIO_TEXTO,
+            *(x for passo in t.COMO_FUNCIONA for x in passo[1:]),
+            t.SECCOES_PLANO["manutencao"],
+            t.RESUMO_MANUTENCAO,
+            t.RECOMECAR_QUESTIONARIO,
+            *rotulos,
+        ]
+    )
+    for termos in (avisos.lista_negra.promessas, avisos.lista_negra.termos, avisos.brasileirismos):
+        assert encontrar_termos(termos, texto) == ()
 
 
 def test_faixa_de_demonstracao_so_em_demo(monkeypatch: pytest.MonkeyPatch) -> None:

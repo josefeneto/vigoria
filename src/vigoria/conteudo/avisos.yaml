@@ -200,6 +200,14 @@ rotulos:
     notas: Notas para si
     avisos: Avisos importantes
     gerado_por: "Plano gerado com {provedor} (prompt versão {versao})."
+    # Depois das 16 semanas (Fase 6B; texto em manutencao.yaml).
+    manutencao: Depois das 16 semanas
+    manutencao_treino: Treino
+    manutencao_variar: Como variar
+    manutencao_exercicios: Os exercícios das fases 3 e 4 do seu plano
+    manutencao_alimentacao: Alimentação
+    manutencao_vigiar: O que vigiar
+    manutencao_recomecar: Recomeçar
     # Só no PDF (exportacao/pdf.py). Sem dados identificativos: nem nome nem email.
     pdf_titulo: O seu plano Vigoria
     pdf_subtitulo: Programa de 16 semanas para ganhar força e energia em casa
