@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 from vigoria.dados.repositorios import Recusa
 from vigoria.interface.erros import TipoErroUtilizador
 from vigoria.interface.passos import CodigoErro, ErroCampo
+from vigoria.modelos.registo import Comparacao
 from vigoria.regras.calculos import ClasseImc
 from vigoria.regras.elegibilidade import Modo
 
@@ -39,6 +40,7 @@ PAGINAS = {
     "inicio": "Início",
     "questionario": "Questionário",
     "plano": "O meu plano",
+    "progresso": "O meu progresso",
     "conta": "A minha conta",
     "sair": "Terminar sessão",
     "privacidade": "Privacidade",
@@ -88,15 +90,16 @@ CONTA_ABRIR = "Abrir"
 CONTA_ATUAL = "Aberto"
 CONTA_APAGAR_PLANO = "Apagar"
 CONTA_APAGAR_PLANO_PERGUNTA = (
-    "Apagar o plano de {data}? Não é possível recuperá-lo. As suas respostas ficam guardadas."
+    "Apagar o plano de {data} e os registos de progresso dele? Não é possível recuperá-los. "
+    "As suas respostas ficam guardadas."
 )
 CONTA_APAGAR_PLANO_SIM = "Sim, apagar o plano"
 CONTA_APAGAR_PLANO_NAO = "Cancelar"
 CONTA_PLANO_APAGADO = "O plano foi apagado."
 CONTA_EXPORTAR_TITULO = "Os meus dados"
 CONTA_EXPORTAR_TEXTO = (
-    "Descarregue tudo o que guardámos sobre si (conta, consentimentos, respostas e planos) "
-    "num ficheiro JSON."
+    "Descarregue tudo o que guardámos sobre si (conta, consentimentos, respostas, planos e "
+    "registos de progresso) num ficheiro JSON."
 )
 CONTA_EXPORTAR = "Descarregar os meus dados (formato técnico, JSON)"
 DESCARREGAR_PDF = "Descarregar o plano (PDF)"
@@ -605,6 +608,143 @@ NOTA_SESSAO_PLANO = "Plano de {data}, guardado na sua conta."
 FREQUENCIA_PLANO = {"semanal": "Registo semanal", "a_cada_4_semanas": "Registo a cada 4 semanas"}
 PERGUNTAS_REVISAO = "Perguntas para cada revisão"
 VOLTAR_QUESTIONARIO = "Voltar ao questionário"
+ACOMPANHAMENTO_LIGACAO = "Registar o meu progresso"
+# R15: REGRAS_DOMINIO §9, tabela aprovada a 05/11/2026.
+CONVITE_NOVO_PLANO = (
+    "Chegou à semana 16 do plano. Quando quiser, responda de novo ao questionário para receber "
+    "um plano novo, a partir do seu ponto atual. Não é obrigatório: pode continuar com as "
+    "orientações de «Manutenção»."
+)
+
+# ---------------------------------------------------------------- O meu progresso (Fase 7)
+# Mensagens aprovadas a 05/11/2026 (tabela em REGRAS_DOMINIO §9).
+
+PROGRESSO_TITULO = "O meu progresso"
+PROGRESSO_SEM_PLANO = "Para registar o seu progresso, comece por responder ao questionário."
+PROGRESSO_SEMANA = "Está na semana {s} de 16 — fase {n}, {nome}."
+PROGRESSO_MARCO = "Próximo marco: semana {m} (peso indicativo: {kg} kg)."
+PROGRESSO_MANUTENCAO = "Está em manutenção desde a semana 17 (semana atual: {s})."
+PROGRESSO_DESLIGADO = "O acompanhamento está desligado. Pode ligá-lo em «A minha conta»."
+
+ALERTA_EM_FALTA = (
+    "Ainda não tem registo {periodo}. Se quiser, pode registá-lo agora, com uma data desse período."
+)
+ALERTA_ABAIXO = (
+    "Nos dois últimos registos, o peso desceu menos do que a linha indicativa do plano. É normal: "
+    "a evolução raramente é linear. Antes de mudar tudo, veja estes pontos e escolha uma só "
+    "alteração de cada vez."
+)
+ALERTA_ABAIXO_LISTA = "Quando a evolução abranda"
+ALERTA_PERDA_RAPIDA = (
+    "Nos dois últimos registos, o peso desceu mais depressa do que o ritmo máximo indicado para a "
+    "sua idade ({pct} % do peso por semana). Não há vantagem em acelerar: mantenha as quantidades "
+    "do plano. Se a perda não tiver explicação, ou se se sentir com menos energia, fale com o seu "
+    "médico."
+)
+ALERTA_ESFORCO = (
+    "No último registo, o esforço foi {e} em 10, acima do indicado para esta fase (entre {min} e "
+    "{max}). Nas próximas sessões, alivie um pouco: menos repetições, mais descanso ou um ritmo "
+    "mais calmo. No cardio, deve conseguir falar em frases curtas."
+)
+ALERTA_SUBIDA = (
+    "Nos dois últimos registos, {medida} está acima do valor do início da manutenção ({ref}). "
+    "Veja «O que vigiar» na secção Manutenção do plano."
+)
+ALERTA_VER_VIGIAR = "Ver «O que vigiar»"
+MEDIDA_PESO = "o peso"
+MEDIDA_CINTURA = "o perímetro da cintura"
+
+REGISTAR_TITULO = "Registar"
+REGISTAR_FEITO = "Já tem o registo {periodo}."
+REGISTAR_OUTRO = "Registar outro período"
+ROTULOS_REGISTO = {
+    "data": "Data",
+    "peso_kg": "Peso (kg)",
+    "cintura_cm": "Perímetro da cintura (cm)",
+    "sessoes": "Sessões feitas",
+    "cardio_min": "Minutos de cardio",
+    "energia": "Energia (0 a 10)",
+    "esforco": "Esforço (0 a 10)",
+    "sono_h": "Sono médio (horas)",
+    "forca": "Força",
+    "mobilidade_equilibrio": "Mobilidade e equilíbrio",
+    "observacoes": "Observações (opcional)",
+}
+REGISTO_SESSOES_4 = "Sessões feitas (numa semana normal)"
+REGISTO_CARDIO_4 = "Minutos de cardio (numa semana normal)"
+REGISTO_FORCA = "Comparando com o registo anterior, os exercícios de força estão…"
+REGISTO_MOBILIDADE = "Comparando com o registo anterior, a mobilidade e o equilíbrio estão…"
+COMPARACAO = {
+    Comparacao.MAIS_DIFICIL: "Mais difícil",
+    Comparacao.IGUAL: "Igual",
+    Comparacao.MAIS_FACIL: "Mais fácil",
+}
+REGISTO_OBSERVACOES_AJUDA = (
+    "Só para si. Fica guardado na sua conta, mas a Vigoria não o analisa nem o envia a terceiros."
+)
+REGISTO_NOTA_MANUTENCAO = "Na manutenção, basta um registo a cada 4 semanas."
+REGISTO_GUARDAR = "Guardar o registo"
+REGISTO_CANCELAR = "Cancelar"
+REGISTO_GUARDADO = "O registo foi guardado."
+REGISTO_REPETIDO = "Já tem um registo {periodo}. Pode editá-lo na lista abaixo."
+REGISTO_DATA_FUTURA = "A data não pode ser posterior a hoje."
+REGISTO_DATA_ANTES = "A data não pode ser anterior ao início do plano."
+REGISTO_VAZIO = "Preencha pelo menos um campo para guardar o registo."
+REGISTO_INVALIDO = "Reveja: {campos}."
+
+GRAFICOS_TITULO = "A minha evolução"
+GRAFICOS_SEM_REGISTOS = "Os gráficos aparecem depois do primeiro registo."
+GRAFICO_PESO = "Peso"
+GRAFICO_CINTURA = "Perímetro da cintura"
+GRAFICO_SESSOES = "Sessões por semana"
+GRAFICO_CARDIO = "Minutos de cardio por semana"
+GRAFICO_SEMANA = "Semana do plano"
+GRAFICO_REGISTOS = "Os seus registos"
+GRAFICO_LINHA = "Linha indicativa"
+GRAFICO_LIMIAR = "Referência de risco"
+GRAFICO_PREVISTO = "Previsto no plano"
+GRAFICO_DICA = "Semana %{{x}}: %{{y}} {unidade}"
+UNIDADE_SESSOES = "sessões"
+UNIDADE_MINUTOS = "minutos"
+RESUMO_PESO = "Último registo: {p} kg na semana {s}. Linha indicativa nessa semana: {l} kg."
+RESUMO_PESO_MANUTENCAO = "Último registo: {p} kg na semana {s}."
+RESUMO_CINTURA = "Último registo: {c} cm na semana {s} (no início: {c0} cm)."
+RESUMO_CINTURA_LIMIAR = "A linha tracejada marca {limiar} cm, a referência de risco."
+RESUMO_SESSOES = "{registos}, fez em média {x} sessões por semana (o plano prevê {d})."
+RESUMO_CARDIO = "{registos}, fez em média {m} minutos de cardio por semana."
+
+REGISTOS_TITULO = "Registos anteriores"
+REGISTOS_VAZIO = "Ainda não tem registos neste plano."
+REGISTO_SEMANA = "Semana {s}"
+REGISTO_EDITAR = "Editar"
+REGISTO_APAGAR = "Apagar"
+REGISTO_APAGAR_PERGUNTA = "Apagar o registo da semana {s}? Não é possível recuperá-lo."
+REGISTO_APAGAR_SIM = "Sim, apagar o registo"
+REGISTO_APAGAR_NAO = "Cancelar"
+REGISTO_APAGADO = "O registo foi apagado."
+
+CONTA_ACOMPANHAMENTO = "Acompanhamento"
+CONTA_ACOMPANHAMENTO_ATIVO = "Quero acompanhar o meu progresso"
+ROTULOS_QUESTIONARIO_FREQUENCIA = "Com que frequência quer registar o seu progresso?"
+CONTA_ACOMPANHAMENTO_GUARDADO = "As suas preferências foram guardadas."
+
+
+def periodo_de(primeira: int, ultima: int) -> str:
+    """«da semana 5» ou «das semanas 5 a 8»."""
+    return f"da semana {primeira}" if primeira == ultima else f"das semanas {primeira} a {ultima}"
+
+
+def periodo_para(primeira: int, ultima: int) -> str:
+    """«para a semana 5» ou «para as semanas 5 a 8»."""
+    return (
+        f"para a semana {primeira}"
+        if primeira == ultima
+        else f"para as semanas {primeira} a {ultima}"
+    )
+
+
+def ultimos_registos(n: int) -> str:
+    return "No último registo" if n == 1 else f"Nos últimos {n} registos"
 
 
 # ---------------------------------------------------------------- Mensagens de validação

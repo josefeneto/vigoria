@@ -2,6 +2,7 @@
 (VIGORIA_UTILIZADOR_LOCAL=1, só AMBIENTE=local) e uma base SQLite nova por teste."""
 
 import logging
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -14,12 +15,17 @@ from paginas import comum, sessao
 from vigoria import config
 from vigoria.config import obter_configuracao
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
-from vigoria.dados.tabelas import PlanoGuardado, QuestionarioGuardado, Utilizador
+from vigoria.dados.tabelas import (
+    PlanoGuardado,
+    QuestionarioGuardado,
+    RegistoProgresso,
+    Utilizador,
+)
 from vigoria.interface.estado import chave, para_estado
 from vigoria.interface.passos import respostas_de_questionario
 from vigoria.llm import escolha
 from vigoria.llm.simulado import ProvedorSimulado
-from vigoria.modelos.questionario import Questionario
+from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 
 RAIZ = Path(__file__).resolve().parents[1]
 APP = str(RAIZ / "app.py")
@@ -321,3 +327,102 @@ def test_llm_sem_identificadores_e_logs_sem_saude(
         assert proibido not in enviado
     for valor in ("bisoprolol", "912 345 678", "ana.silva", sessao.UTILIZADOR_LOCAL.email):
         assert valor not in caplog.text
+
+
+# ---------------------------------------------------------------- O meu progresso
+
+PROGRESSO = "paginas/progresso.py"
+
+
+def _com_plano_e_progresso() -> AppTest:
+    at = _nova_sessao()
+    _gerar(at)
+    at.switch_page(PROGRESSO).run()
+    assert not at.exception
+    return at
+
+
+def _guardar_registo(at: AppTest, **campos: float) -> None:
+    for sufixo, valor in campos.items():
+        next(n for n in at.number_input if n.key.endswith(f"_{sufixo}")).set_value(valor)
+    _botao(at, "Guardar o registo").click().run()
+    assert not at.exception
+
+
+def test_progresso_sem_plano_convida_ao_questionario(bd: str) -> None:
+    at = _nova_sessao()
+    at.switch_page(PROGRESSO).run()
+    assert not at.exception
+    assert any("responder ao questionário" in i.value for i in at.info)
+    assert not at.number_input
+
+
+def test_progresso_regista_edita_e_apaga(bd: str) -> None:
+    at = _com_plano_e_progresso()
+    assert any("Está na semana 1 de 16" in m.value for m in at.markdown)
+    assert any("Próximo marco: semana 4" in m.value for m in at.markdown)
+
+    _guardar_registo(at, peso=93.5, energia=7)
+    motor = criar_motor(bd)
+    assert _contar(bd, RegistoProgresso) == 1
+    motor.dispose()
+    assert any("Peso (kg): 93,5" in m.value for m in at.markdown)
+
+    # Só um registo por período: o formulário fica guardado num expansor e a repetição é recusada.
+    _guardar_registo(at, peso=93.0)
+    assert any("Já tem um registo para a semana 1" in e.value for e in at.error)
+    assert _contar(bd, RegistoProgresso) == 1
+
+    at.button(key="editar_1").click().run()
+    assert not at.exception
+    next(n for n in at.number_input if n.key == "registo_1_peso").set_value(93.2)
+    next(b for b in at.button if b.label == "Guardar o registo" and "registo_1" in b.key).click()
+    at.run()
+    assert any("Peso (kg): 93,2" in m.value for m in at.markdown)
+
+    at.button(key="apagar_1").click().run()
+    at.button(key="apagar_sim_1").click().run()
+    assert not at.exception
+    assert _contar(bd, RegistoProgresso) == 0
+
+
+def test_progresso_registo_vazio_nao_guarda(bd: str) -> None:
+    at = _com_plano_e_progresso()
+    _botao(at, "Guardar o registo").click().run()
+    assert any("pelo menos um campo" in e.value for e in at.error)
+    assert _contar(bd, RegistoProgresso) == 0
+
+
+def test_progresso_desligado_sem_formulario_mas_com_os_registos(bd: str) -> None:
+    at = _com_plano_e_progresso()
+    _guardar_registo(at, peso=93.5)
+    at.switch_page(CONTA).run()
+    at.toggle(key="conta_acompanhamento_ativo").set_value(False).run()
+    assert not at.exception
+    at.switch_page(PROGRESSO).run()
+    assert any("acompanhamento está desligado" in i.value for i in at.info)
+    assert not at.number_input
+    assert any("Peso (kg): 93,5" in m.value for m in at.markdown)
+
+
+def test_conta_muda_a_frequencia_e_o_formulario_acompanha(bd: str) -> None:
+    at = _com_plano_e_progresso()
+    assert "Sessões feitas" in [n.label for n in at.number_input]
+    at.switch_page(CONTA).run()
+    at.radio(key="conta_frequencia").set_value(FrequenciaRegisto.A_CADA_4_SEMANAS).run()
+    assert not at.exception
+    at.switch_page(PROGRESSO).run()
+    assert "Sessões feitas (numa semana normal)" in [n.label for n in at.number_input]
+
+
+def test_o_plano_so_convida_a_responder_de_novo_na_semana_16(
+    bd: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    at = _nova_sessao()
+    _gerar(at)
+    at.switch_page("paginas/plano.py").run()
+    assert not any("Chegou à semana 16" in i.value for i in at.info)
+    futuro = comum.hoje() + timedelta(days=7 * 15)
+    monkeypatch.setattr(comum, "hoje", lambda: futuro)
+    at.run()
+    assert any("Chegou à semana 16" in i.value for i in at.info)

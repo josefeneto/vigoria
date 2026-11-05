@@ -1,7 +1,7 @@
 """Apoio comum às páginas: estado da sessão, erros junto aos campos e avisos do plano."""
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from functools import partial
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -29,8 +29,14 @@ TERMINADO_GRAVIDEZ = "terminado_gravidez"
 PAGINA_INICIO = "paginas/inicio.py"
 PAGINA_QUESTIONARIO = "paginas/questionario.py"
 PAGINA_PLANO = "paginas/plano.py"
+PAGINA_PROGRESSO = "paginas/progresso.py"
 PAGINA_PRIVACIDADE = "paginas/privacidade.py"
 PAGINA_CONTA = "paginas/conta.py"
+
+
+def hoje() -> date:
+    """O dia de hoje em Portugal continental."""
+    return datetime.now(ZoneInfo("Europe/Lisbon")).date()
 
 
 def iniciar_estado() -> None:

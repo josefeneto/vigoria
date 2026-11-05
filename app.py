@@ -88,6 +88,7 @@ if isinstance(entrada, int):
             icon=":material/checklist:",
         ),
         st.Page(comum.PAGINA_PLANO, title=t.PAGINAS["plano"], icon=":material/description:"),
+        st.Page(comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"),
         st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
         privacidade,
         st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),

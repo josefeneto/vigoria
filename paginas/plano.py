@@ -16,6 +16,8 @@ from paginas import textos as t
 from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
 from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
 from vigoria.motor.manutencao import orientacoes_manutencao
+from vigoria.regras.calculos import SEMANAS_PROGRAMA
+from vigoria.regras.progresso import inicio_do_plano, semana_do_plano
 from vigoria.regras.textos import numero
 
 rotulos = carregar_avisos().rotulos
@@ -45,7 +47,18 @@ def _minuscula(texto: str) -> str:
     return texto[:1].lower() + texto[1:]
 
 
+def _convite_novo_plano() -> None:
+    """Na semana 16 ou depois: responder de novo, sem obrigar (R15)."""
+    criado_em = st.session_state[comum.RESULTADO].criado_em
+    if semana_do_plano(inicio_do_plano(criado_em), comum.hoje()) >= SEMANAS_PROGRAMA:
+        st.info(t.CONVITE_NOVO_PLANO, icon=":material/flag:")
+        st.page_link(
+            comum.PAGINA_QUESTIONARIO, label=t.RECOMECAR_QUESTIONARIO, icon=":material/restart_alt:"
+        )
+
+
 def _resumo(plano: Plano) -> None:
+    _convite_novo_plano()
     st.write(plano.resumo)
     st.subheader(t.FASES_TITULO)
     semanas = {f.numero: f.semanas for f in carregar_fases()}
@@ -192,6 +205,9 @@ def _acompanhamento(plano: Plano) -> None:
     if a.perguntas_revisao:
         st.subheader(t.PERGUNTAS_REVISAO)
         st.markdown("\n".join(f"- {x}" for x in a.perguntas_revisao))
+    st.page_link(
+        comum.PAGINA_PROGRESSO, label=t.ACOMPANHAMENTO_LIGACAO, icon=":material/monitoring:"
+    )
 
 
 def _parte_manutencao(titulo: str, parte: ParteOrientacao) -> None:

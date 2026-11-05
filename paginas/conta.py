@@ -15,10 +15,13 @@ from paginas import textos as t
 from vigoria.config import obter_auth0, obter_configuracao
 from vigoria.contas.auth0 import apagar_conta_auth0
 from vigoria.dados import repositorios
+from vigoria.modelos.questionario import FrequenciaRegisto
 
 CONFIRMA = "conta_apagar_confirma"
 PALAVRA = "conta_apagar_palavra"
 APAGAR_PLANO = "conta_apagar_plano"  # id do plano à espera de confirmação
+ACOMPANHAMENTO_ATIVO = "conta_acompanhamento_ativo"
+FREQUENCIA = "conta_frequencia"
 
 
 def _abrir(plano_id: int) -> None:
@@ -51,6 +54,15 @@ def _apagar_plano(plano_id: int) -> None:
     st.toast(t.CONTA_PLANO_APAGADO, icon=":material/delete:")
 
 
+def _guardar_acompanhamento() -> None:
+    preferencias = repositorios.Preferencias(
+        ativo=st.session_state[ACOMPANHAMENTO_ATIVO], frequencia=st.session_state[FREQUENCIA]
+    )
+    with sessao.fabrica().begin() as s:
+        repositorios.guardar_preferencias(s, sessao.utilizador_id(), preferencias)
+    st.toast(t.CONTA_ACOMPANHAMENTO_GUARDADO, icon=":material/check_circle:")
+
+
 def _apagar() -> None:
     with sessao.fabrica().begin() as s:
         sub = repositorios.apagar_utilizador(s, sessao.utilizador_id())
@@ -73,6 +85,7 @@ if quem is not None:
 with sessao.fabrica().begin() as s:
     planos = repositorios.listar_planos(s, uid)
     dados = repositorios.exportar_dados(s, uid)
+    preferencias = repositorios.obter_preferencias(s, uid)
 
 st.subheader(t.CONTA_PLANOS)
 if not planos:
@@ -118,6 +131,24 @@ for p in planos:
                     on_click=_pedir_apagar_plano,
                     args=(None,),
                 )
+
+st.subheader(t.CONTA_ACOMPANHAMENTO)
+ativo = st.toggle(
+    t.CONTA_ACOMPANHAMENTO_ATIVO,
+    value=preferencias.ativo,
+    key=ACOMPANHAMENTO_ATIVO,
+    on_change=_guardar_acompanhamento,
+)
+frequencias = list(FrequenciaRegisto)
+st.radio(
+    t.ROTULOS_QUESTIONARIO_FREQUENCIA,
+    frequencias,
+    index=frequencias.index(preferencias.frequencia),
+    format_func=lambda f: t.FREQUENCIA_PLANO[f.value],
+    key=FREQUENCIA,
+    disabled=not ativo,
+    on_change=_guardar_acompanhamento,
+)
 
 st.subheader(t.CONTA_EXPORTAR_TITULO)
 st.write(t.CONTA_EXPORTAR_TEXTO)
