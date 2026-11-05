@@ -1,12 +1,17 @@
 """Repositórios (dados/repositorios.py) com SQLite em memória, incluindo o isolamento:
 o utilizador A nunca lê nem altera dados do utilizador B."""
 
+import json
 from collections.abc import Iterator
+from datetime import UTC, date, datetime, timedelta
 from functools import cache
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine, func, inspect, select
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, func, inspect, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.contas.entrada import Identidade
@@ -17,10 +22,12 @@ from vigoria.dados.tabelas import (
     Consentimento,
     PlanoGuardado,
     QuestionarioGuardado,
+    RegistoProgresso,
     Utilizador,
 )
 from vigoria.llm.simulado import ProvedorSimulado
-from vigoria.modelos.questionario import Questionario
+from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
+from vigoria.modelos.registo import ValoresRegisto
 from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -201,8 +208,6 @@ def test_apagar_plano_so_o_proprio_e_mantem_as_respostas(fabrica: sessionmaker[S
 
 
 def test_exportar_traz_tudo_e_e_json(fabrica: sessionmaker[Session]) -> None:
-    import json
-
     with fabrica.begin() as s:
         uid, guardado = _com_plano(s, A)
         dados = r.exportar_dados(s, uid)
@@ -237,7 +242,253 @@ def test_cascata_na_base_de_dados(fabrica: sessionmaker[Session]) -> None:
         assert s.scalar(select(func.count()).select_from(PlanoGuardado)) == 0
 
 
+# ---------------------------------------------------------------- Acompanhamento
+
+INICIO = date(2026, 1, 5)
+HOJE = INICIO + timedelta(days=70)  # semana 11
+PESO = ValoresRegisto(peso_kg=90.0)
+QUATRO_SEMANAS = r.Preferencias(frequencia=FrequenciaRegisto.A_CADA_4_SEMANAS)
+
+
+def _recuar(s: Session, plano_id: int) -> None:
+    """O plano passa a ter sido criado em INICIO, a meio do dia."""
+    linha = s.get(PlanoGuardado, plano_id)
+    assert linha is not None
+    linha.criado_em = datetime(INICIO.year, INICIO.month, INICIO.day, 12, tzinfo=UTC)
+    s.flush()
+
+
+def _dia(semana: int) -> date:
+    return INICIO + timedelta(days=7 * (semana - 1))
+
+
+def _com_registo(s: Session, identidade: Identidade) -> tuple[int, r.PlanoDaConta]:
+    uid, plano = _com_plano(s, identidade)
+    _recuar(s, plano.id)
+    r.guardar_registo(s, uid, plano.id, _dia(1), PESO, HOJE)
+    return uid, plano
+
+
+def test_registo_fica_na_semana_da_data(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_plano(s, A)
+        _recuar(s, plano.id)
+        registo = r.guardar_registo(s, uid, plano.id, _dia(3) + timedelta(days=6), PESO, HOJE)
+        assert registo.semana == 3
+        assert registo.valores == PESO
+        assert r.listar_registos(s, uid, plano.id) == [registo]
+
+
+def test_registo_sem_datas_futuras_nem_antes_do_plano(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_plano(s, A)
+        _recuar(s, plano.id)
+        with pytest.raises(r.DataFutura):
+            r.guardar_registo(s, uid, plano.id, HOJE + timedelta(days=1), PESO, HOJE)
+        with pytest.raises(r.DataAntesDoPlano):
+            r.guardar_registo(s, uid, plano.id, INICIO - timedelta(days=1), PESO, HOJE)
+        assert r.guardar_registo(s, uid, plano.id, HOJE, PESO, HOJE).semana == 11  # hoje pode
+
+
+def test_um_registo_por_periodo_semanal_e_a_cada_4(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_registo(s, A)
+        with pytest.raises(r.PeriodoOcupado) as erro:
+            r.guardar_registo(s, uid, plano.id, _dia(1) + timedelta(days=2), PESO, HOJE)
+        assert erro.value.semana == 1
+        r.guardar_registo(s, uid, plano.id, _dia(2), PESO, HOJE)
+        r.guardar_preferencias(s, uid, QUATRO_SEMANAS)
+        with pytest.raises(r.PeriodoOcupado):
+            r.guardar_registo(s, uid, plano.id, _dia(4), PESO, HOJE)  # bloco 1–4 ocupado
+        r.guardar_registo(s, uid, plano.id, _dia(5), PESO, HOJE)
+        # Mudar a frequência não apaga registos.
+        assert [x.semana for x in r.listar_registos(s, uid, plano.id)] == [1, 2, 5]
+
+
+def test_retificar_um_registo(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_registo(s, A)
+        segundo = r.guardar_registo(s, uid, plano.id, _dia(2), PESO, HOJE)
+        novo = ValoresRegisto(peso_kg=89.0, observacoes="corrigido")
+        mesma = r.atualizar_registo(s, uid, segundo.id, _dia(2) + timedelta(days=1), novo, HOJE)
+        assert mesma is not None
+        assert (mesma.semana, mesma.valores) == (2, novo)
+        outra = r.atualizar_registo(s, uid, segundo.id, _dia(5), novo, HOJE)
+        assert outra is not None
+        assert outra.semana == 5
+        with pytest.raises(r.PeriodoOcupado):
+            r.atualizar_registo(s, uid, segundo.id, _dia(1), novo, HOJE)
+        with pytest.raises(r.DataFutura):
+            r.atualizar_registo(s, uid, segundo.id, HOJE + timedelta(days=1), novo, HOJE)
+
+
+def test_retificar_com_dois_registos_no_bloco_depois_de_mudar_a_frequencia(
+    fabrica: sessionmaker[Session],
+) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_registo(s, A)
+        segundo = r.guardar_registo(s, uid, plano.id, _dia(2), PESO, HOJE)
+        r.guardar_preferencias(s, uid, QUATRO_SEMANAS)
+        novo = ValoresRegisto(peso_kg=88.0)
+        assert r.atualizar_registo(s, uid, segundo.id, _dia(2), novo, HOJE) is not None
+
+
+def test_apagar_um_registo_liberta_o_periodo(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_registo(s, A)
+        registo = r.listar_registos(s, uid, plano.id)[0]
+        assert r.apagar_registo(s, uid, registo.id) is True
+        assert r.apagar_registo(s, uid, registo.id) is False
+        assert r.listar_registos(s, uid, plano.id) == []
+        r.guardar_registo(s, uid, plano.id, _dia(1), PESO, HOJE)
+
+
+def test_a_nao_le_altera_nem_apaga_registos_de_b(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid_a = _conta(s, A)
+        uid_b, plano_b = _com_registo(s, B)
+        registo_b = r.listar_registos(s, uid_b, plano_b.id)[0]
+    with fabrica.begin() as s:
+        assert r.listar_registos(s, uid_a, plano_b.id) == []
+        assert r.atualizar_registo(s, uid_a, registo_b.id, _dia(1), PESO, HOJE) is None
+        assert r.apagar_registo(s, uid_a, registo_b.id) is False
+        assert r.exportar_dados(s, uid_a)["registos_progresso"] == []
+        with pytest.raises(r.PlanoDeOutro):
+            r.guardar_registo(s, uid_a, plano_b.id, _dia(2), PESO, HOJE)
+        assert r.apagar_plano(s, uid_a, plano_b.id) is False
+    with fabrica.begin() as s:
+        assert r.listar_registos(s, uid_b, plano_b.id) == [registo_b]
+
+
+def test_exportar_inclui_os_registos(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_plano(s, A)
+        _recuar(s, plano.id)
+        valores = ValoresRegisto(peso_kg=90.0, energia=7, observacoes="correu bem")
+        r.guardar_registo(s, uid, plano.id, _dia(2), valores, HOJE)
+        dados = r.exportar_dados(s, uid)
+    json.dumps(dados)
+    exportado = dados["registos_progresso"][0]
+    assert (exportado["plano_id"], exportado["semana"]) == (plano.id, 2)
+    assert exportado["data"] == _dia(2).isoformat()
+    assert exportado["valores"] == {"peso_kg": 90.0, "energia": 7, "observacoes": "correu bem"}
+    assert exportado["criado_em"] and exportado["alterado_em"]
+
+
+def test_apagar_a_conta_apaga_os_registos(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid_a, _ = _com_registo(s, A)
+        uid_b, plano_b = _com_registo(s, B)
+    with fabrica.begin() as s:
+        r.apagar_utilizador(s, uid_a)
+    with fabrica.begin() as s:
+        linhas = s.scalars(select(RegistoProgresso)).all()
+        assert [x.utilizador_id for x in linhas] == [uid_b]
+        assert r.listar_registos(s, uid_b, plano_b.id)
+
+
+def test_cascata_leva_os_registos(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, _ = _com_registo(s, A)
+    with fabrica.begin() as s:
+        s.execute(Utilizador.__table__.delete().where(Utilizador.id == uid))
+    with fabrica.begin() as s:
+        assert s.scalar(select(func.count()).select_from(RegistoProgresso)) == 0
+
+
+def test_apagar_um_plano_apaga_os_registos_dele(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, plano = _com_registo(s, A)
+        qid = r.guardar_questionario(s, uid, _questionario())
+        res = _resultado()
+        outro = r.guardar_plano(s, uid, qid, res.plano, res.estrategia, res.modelo)
+        _recuar(s, outro.id)
+        r.guardar_registo(s, uid, outro.id, _dia(1), PESO, HOJE)
+    with fabrica.begin() as s:
+        assert r.apagar_plano(s, uid, plano.id)
+        assert r.listar_registos(s, uid, plano.id) == []
+        assert len(r.listar_registos(s, uid, outro.id)) == 1
+
+
+def test_o_plano_novo_traz_as_preferencias_do_questionario(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid = _conta(s, A)
+        assert r.obter_preferencias(s, uid) == r.Preferencias()
+        q = _questionario().model_copy(
+            update={
+                "acompanhamento_ativo": False,
+                "frequencia_registo": FrequenciaRegisto.A_CADA_4_SEMANAS,
+            }
+        )
+        qid = r.guardar_questionario(s, uid, q)
+        res = _resultado()
+        guardado = r.guardar_plano(s, uid, qid, res.plano, res.estrategia, res.modelo)
+        assert guardado.peso_kg == q.peso_kg
+        assert r.obter_preferencias(s, uid) == r.Preferencias(
+            ativo=False, frequencia=FrequenciaRegisto.A_CADA_4_SEMANAS
+        )
+        r.guardar_preferencias(s, uid, r.Preferencias())  # alterável na conta
+        assert r.obter_preferencias(s, uid) == r.Preferencias()
+
+
 # ---------------------------------------------------------------- Migrações
+
+
+def test_migracao_0002_copia_as_preferencias_das_ultimas_respostas(tmp_path: Path) -> None:
+    motor = criar_motor(f"sqlite:///{tmp_path / 'm.db'}")
+    config = Config()
+    config.set_main_option("script_location", str(files("vigoria.dados") / "migracoes"))
+    primeira = json.dumps({"acompanhamento_ativo": True, "frequencia_registo": "semanal"})
+    ultima = json.dumps({"acompanhamento_ativo": False, "frequencia_registo": "a_cada_4_semanas"})
+    with motor.begin() as ligacao:
+        config.attributes["connection"] = ligacao
+        command.upgrade(config, "0001")
+        for uid in (1, 2):
+            ligacao.execute(
+                text(
+                    "INSERT INTO utilizador (id, sub, fornecedor, email, criado_em) "
+                    "VALUES (:id, :sub, 'auth0', :email, '2026-01-01')"
+                ),
+                {"id": uid, "sub": f"auth0|{uid}", "email": f"{uid}@exemplo.pt"},
+            )
+        for qid, respostas in ((1, primeira), (2, ultima)):
+            ligacao.execute(
+                text(
+                    "INSERT INTO questionario (id, utilizador_id, respostas, criado_em) "
+                    "VALUES (:id, 1, :respostas, '2026-01-01')"
+                ),
+                {"id": qid, "respostas": respostas},
+            )
+    migrar(motor)
+    with fabrica_sessoes(motor).begin() as s:
+        assert r.obter_preferencias(s, 1) == r.Preferencias(
+            ativo=False, frequencia=FrequenciaRegisto.A_CADA_4_SEMANAS
+        )
+        assert r.obter_preferencias(s, 2) == r.Preferencias()  # sem respostas: por omissão
+        # No SQLite, recriar a tabela «utilizador» apagaria tudo o que dela depende (cascata).
+        assert s.scalar(select(func.count()).select_from(QuestionarioGuardado)) == 2
+        assert s.scalar(select(func.count()).select_from(Utilizador)) == 2
+    motor.dispose()
+
+
+def test_migracao_0002_para_tras_nao_apaga_as_contas(tmp_path: Path) -> None:
+    motor = criar_motor(f"sqlite:///{tmp_path / 'm.db'}")
+    migrar(motor)
+    with fabrica_sessoes(motor).begin() as s:
+        uid, plano = _com_registo(s, A)
+    config = Config()
+    config.set_main_option("script_location", str(files("vigoria.dados") / "migracoes"))
+    with motor.begin() as ligacao:
+        config.attributes["connection"] = ligacao
+        command.downgrade(config, "0001")
+    with motor.connect() as ligacao:
+        assert ligacao.scalar(text("SELECT count(*) FROM questionario")) == 1
+        assert ligacao.scalar(text("SELECT count(*) FROM plano")) == 1
+        assert ligacao.scalar(text("SELECT count(*) FROM registo_progresso")) == 0
+    migrar(motor)  # e volta a subir, sem perder nada
+    with fabrica_sessoes(motor).begin() as s:
+        assert r.obter_plano(s, uid, plano.id) is not None
+    motor.dispose()
 
 
 def test_migracoes_criam_o_esquema_das_tabelas(tmp_path: Path) -> None:

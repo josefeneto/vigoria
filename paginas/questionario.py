@@ -443,6 +443,7 @@ def _guardar(q: Questionario, resultado: ResultadoPipeline) -> repositorios.Plan
             plano=resultado.plano,
             estrategia=resultado.estrategia,
             idade=q.idade,
+            peso_kg=q.peso_kg,
         )
 
 

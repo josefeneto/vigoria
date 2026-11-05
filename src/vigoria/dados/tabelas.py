@@ -7,7 +7,17 @@ Cada linha de dados pessoais pertence a um utilizador; apagar o utilizador apaga
 from datetime import UTC, date, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, String
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    true,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -34,6 +44,11 @@ class Utilizador(Base):
     fornecedor: Mapped[str] = mapped_column(String(50))  # «google-oauth2», «auth0»
     email: Mapped[str] = mapped_column(String(320), index=True)  # em minúsculas
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+    # Preferências do acompanhamento: vêm do questionário de cada plano novo, alteráveis na conta.
+    acompanhamento_ativo: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
+    frequencia_registo: Mapped[str] = mapped_column(
+        String(20), default="semanal", server_default="semanal"
+    )
 
 
 class Consentimento(Base):
@@ -72,12 +87,18 @@ class PlanoGuardado(Base):
 
 
 class RegistoProgresso(Base):
-    """Fase 7: por agora só a estrutura."""
+    """Um registo por semana do plano; apagar o plano apaga os registos dele."""
 
     __tablename__ = "registo_progresso"
+    __table_args__ = (UniqueConstraint("plano_id", "semana", name="uq_registo_plano_semana"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     utilizador_id: Mapped[int] = _dono()
+    plano_id: Mapped[int] = mapped_column(ForeignKey("plano.id", ondelete="CASCADE"), index=True)
+    semana: Mapped[int] = mapped_column(Integer)  # semana 1 = data de criação do plano
     data: Mapped[date] = mapped_column(Date)
-    valores: Mapped[dict[str, Any]] = mapped_column(Json)
+    valores: Mapped[dict[str, Any]] = mapped_column(Json)  # ValoresRegisto em JSON
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+    alterado_em: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=agora, onupdate=agora
+    )
