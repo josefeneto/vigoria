@@ -465,6 +465,16 @@ estilo:
     tracção: tração
     respectivo: respetivo
     respectiva: respetiva
+    # Castelhanismos (o Groq escreveu «estructurar» nas notas, 05/11/2026).
+    estructura: estrutura
+    estructuras: estruturas
+    estructurar: estruturar
+    estructurado: estruturado
+    estructurada: estruturada
+    estructurados: estruturados
+    estructuradas: estruturadas
+    estructurando: estruturando
+    estructure: estruture
   sem_correcao:
     - total
     - totais

@@ -139,7 +139,12 @@ body:has(.st-key-a_preparar) [data-testid="stMain"] :is([data-testid="stVertical
     max-width: none; box-sizing: border-box; } }
 
 /* ---- Plano: secções em botões grandes; a ativa em petróleo, com texto branco (7,6:1) */
-.st-key-plano_seccao button[data-variant="segmented_control"] { flex: 1 1 auto; }
+.st-key-plano_seccao button[data-variant="segmented_control"] { flex: 1 1 auto;
+  border-color: var(--v-principal); background: var(--v-cartao); }
+/* O Streamlit esconde a borda direita dos botões do meio; a quebra de linha deixava o último
+   da linha aberto. Borda inteira em todos, sobreposta 1 px para não ficar dupla. */
+.stApp .st-key-plano_seccao button[data-variant="segmented_control"]:not(:last-child) {
+  border-right-color: var(--v-principal); margin-right: -1px; }
 .stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"],
 .stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"]:hover {
   background: var(--v-principal); border-color: var(--v-principal); color: var(--v-branco); }
