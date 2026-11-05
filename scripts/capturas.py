@@ -25,7 +25,7 @@ URL = f"http://localhost:{PORTA}"
 # Altura grande: o Streamlit desloca o conteúdo dentro da página, não no documento.
 LARGURAS = {"telemovel": (390, 2600), "computador": (1280, 2200)}
 PASSOS = ("1", "2a", "2b", "3", "4a", "4b", "5", "6")
-SECCOES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento")
+SECCOES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento", "Manutenção")
 
 
 def _arrancar() -> subprocess.Popen[bytes]:
@@ -105,22 +105,22 @@ def _percorrer(page: Page, largura: str) -> None:
         page.locator(".st-key-plano_seccao").get_by_role("radio", name=separador).click()
         _esperar(page)
         _capturar(page, largura, f"{i:02d}_plano_{separador.lower()}")
-        if separador == "Treino":  # os cartões dos exercícios ficam mais abaixo
+        if separador in ("Treino", "Manutenção"):  # secções longas: também inteiras
             tamanho = page.viewport_size or {"width": 390, "height": 2600}
             page.set_viewport_size({"width": tamanho["width"], "height": 7000})
             page.wait_for_timeout(500)
-            _capturar(page, largura, f"{i:02d}b_plano_treino_completo")
+            _capturar(page, largura, f"{i:02d}b_plano_{separador.lower()}_completo")
             page.set_viewport_size(tamanho)
 
     page.goto(f"{URL}/privacidade")
     _esperar(page)
-    _capturar(page, largura, "17_privacidade")
+    _capturar(page, largura, "18_privacidade")
 
     page.goto(f"{URL}/conta")
     _esperar(page)
     page.get_by_role("button", name="Apagar a conta e os dados").wait_for()
     page.wait_for_timeout(600)
-    _capturar(page, largura, "18_conta")
+    _capturar(page, largura, "19_conta")
 
 
 def main() -> None:
