@@ -2,7 +2,8 @@
 
 Arranca o Streamlit com o fornecedor simulado (nunca chama uma LLM real) e o utilizador local
 fictício (sem Auth0), numa base SQLite própria em saidas/capturas/, percorre os passos do
-questionário, as secções do plano e a conta e guarda PNG em saidas/capturas/.
+questionário, as secções do plano, a conta e o progresso (com os cenários de
+scripts/registos_ficticios.py) e guarda PNG em saidas/capturas/.
 Usa o Google Chrome instalado (channel="chrome"): não é preciso «playwright install».
 
     python scripts/capturas.py            # em saidas/capturas/
@@ -26,16 +27,21 @@ URL = f"http://localhost:{PORTA}"
 LARGURAS = {"telemovel": (390, 2600), "computador": (1280, 2200)}
 PASSOS = ("1", "2a", "2b", "3", "4a", "4b", "5", "6")
 SECCOES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento", "Manutenção")
+CENARIOS = ("normal", "lenta", "rapida", "manutencao")
 
 
-def _arrancar() -> subprocess.Popen[bytes]:
-    env = os.environ | {
+def _ambiente() -> dict[str, str]:
+    return os.environ | {
         "VIGORIA_PROVEDOR_LLM": "simulado",
         "VIGORIA_PROVEDOR_RESERVA": "",
         "AMBIENTE": "local",
         "VIGORIA_UTILIZADOR_LOCAL": "1",
         "DATABASE_URL": f"sqlite:///{(SAIDA / 'capturas.db').as_posix()}",  # nunca a do José
     }
+
+
+def _arrancar() -> subprocess.Popen[bytes]:
+    env = _ambiente()
     comando = [sys.executable, "-m", "streamlit", "run", "app.py", "--server.headless=true"]
     comando += [f"--server.port={PORTA}", "--browser.gatherUsageStats=false"]
     processo = subprocess.Popen(comando, cwd=RAIZ, env=env, stdout=subprocess.DEVNULL)
@@ -121,6 +127,23 @@ def _percorrer(page: Page, largura: str) -> None:
     page.get_by_role("button", name="Apagar a conta e os dados").wait_for()
     page.wait_for_timeout(600)
     _capturar(page, largura, "19_conta")
+
+    # Cada cenário cria um plano novo, com a data recuada; abrir a página de novo carrega-o.
+    tamanho = page.viewport_size or {"width": 390, "height": 2600}
+    for i, cenario in enumerate(CENARIOS, start=20):
+        script = RAIZ / "scripts" / "registos_ficticios.py"
+        subprocess.run([sys.executable, str(script), cenario], env=_ambiente(), check=True)
+        page.set_viewport_size({"width": tamanho["width"], "height": 9000})
+        page.goto(f"{URL}/progresso")
+        _esperar(page)
+        page.wait_for_timeout(2000)  # os gráficos desenham-se depois do resto
+        _capturar(page, largura, f"{i}_progresso_{cenario}")
+        page.set_viewport_size(tamanho)
+    page.goto(f"{URL}/plano")  # o último cenário está na manutenção: com o convite no Resumo
+    _esperar(page)
+    page.get_by_role("link", name="Voltar ao questionário").wait_for()  # o fim da página
+    page.wait_for_timeout(600)
+    _capturar(page, largura, "24_plano_na_manutencao")
 
 
 def main() -> None:

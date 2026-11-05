@@ -241,6 +241,32 @@ Aplicação (decisão de 28/10/2026):
 - O email de lembrete nunca contém dados de saúde e tem sempre ligação para desativar.
 - Evolução abaixo do esperado durante 2 períodos seguidos ⇒ a app sugere a lista de verificação do Vol. 3 («Quando a evolução abranda»), uma alteração de cada vez. Sem tom de culpa.
 
+### 9.1 Regras do registo e dos alertas (decisão de 05/11/2026)
+
+Aplicação em `regras/progresso.py`; texto exato das mensagens em `paginas/textos.py`. Nada disto passa pela LLM.
+
+| # | Regra | Aplicação |
+|---|---|---|
+| R1 | Semana do plano | Início = dia da criação do plano (hora de Lisboa). Dias 0–6 = semana 1. |
+| R2 | Manutenção | Semana ≥ 17, calculada pela data, mesmo sem registos. |
+| R3 | Período | Semanal: cada semana. A cada 4 semanas: blocos 1–4, 5–8, 9–12, 13–16, 17–20… Um registo por período; a data não pode ser futura nem anterior ao início do plano. Mudar a frequência não apaga registos. |
+| R4 | Frequência na manutenção | Sempre a cada 4 semanas, seja qual for a escolha. |
+| R5 | Período em falta | Com acompanhamento ligado: período terminado e sem registo. Mostra-se só o mais recente. |
+| R6 | Força e mobilidade/equilíbrio | «Mais difícil», «Igual» ou «Mais fácil», face ao registo anterior; opcional; não gera alertas. |
+| R7 | Campos | O mesmo formulário nas duas frequências. A cada 4 semanas, sessões e cardio referem-se a uma semana normal e aparecem as perguntas de revisão. «Regularidade alimentar» (V3) não entra. |
+| R8 | Evolução abaixo do esperado | Só peso. A partir da semana 4: perda acumulada desde o peso do questionário < 50 % da perda indicativa da linha dos marcos nessa semana **e** peso mais de 1 kg acima da linha, nos 2 últimos registos com peso. Nunca com objetivo de manter, depois de atingir o peso-alvo nem na manutenção. |
+| R9 | Perda demasiado rápida | A partir da semana 3: ritmo médio das últimas 4 semanas (ou desde o início, se houver menos) > ritmo máximo da faixa etária (§2, sobre o peso do questionário, como o ritmo máximo do plano) + 0,4 kg/semana, nos 2 últimos registos com peso. Também na manutenção. |
+| R10 | Esforço | Último registo com esforço acima do máximo da fase dessa semana (na manutenção, o da fase 4). Basta um registo. |
+| R11 | Subida consistente na manutenção | Referência = último registo até à semana 16 (sem ele, o primeiro da manutenção). Nos 2 últimos registos da manutenção: peso ≥ referência + 2 kg, ou cintura ≥ referência + 3 cm. Remete para «O que vigiar». |
+| R12 | Gráfico do peso | Até à semana 16, com a linha indicativa dos marcos; na manutenção, sem linha de objetivo. |
+| R13 | Gráfico da cintura | Sem linha de objetivo (§5). Referência de risco (§2) só se a cintura inicial estava acima dela. |
+| R14 | Sessões e cardio | Barras por semana com registo; nas sessões, os dias de treino do plano como referência. |
+| R15 | Convite para um plano novo | No topo do Resumo, na semana 16 ou depois, sem obrigar. O botão «Manutenção» não tem destaque pela semana. |
+| R16 | Acompanhamento desligado | Sem formulário, alertas nem períodos em falta; registos e gráficos ficam visíveis. |
+| R17 | Observações | Até 300 caracteres; nunca interpretadas pelo motor nem enviadas à LLM; fora dos logs. |
+
+**A CONFIRMAR (revisão profissional):** os limiares de 50 %, 1 kg (R8), 0,4 kg/semana (R9), 2 kg e 3 cm (R11), e as semanas mínimas de R8 e R9, não vêm dos volumes. As margens de 1 kg e 0,4 kg/semana absorvem oscilações normais de ±0,8 kg à volta da linha (testado): com a persona de teste, o R9 só surge acima de cerca de 0,78 kg/semana.
+
 ## 10. Contactos
 
 - Email: obrigatório, vem da autenticação.
@@ -268,3 +294,4 @@ Não há decisões de domínio pendentes.
 - 31/10/2026 — Telemóvel não recolhido no MVP — lembretes por email; minimização de dados (RGPD) (§10).
 - 31/10/2026 — Ortografia (§8): uma palavra desconhecida com uma só forma acentuada no dicionário pt_PT («exercicios» → «exercícios») é corrigida pelo motor; as restantes continuam só como aviso.
 - 05/11/2026 — Fase 6B: secção «Depois das 16 semanas» (§5), determinística e sem quinta fase de treino; recomendação da OMS só com idade ≥ 65; textos sem origem nos volumes aprovados na revisão editorial (P1 a P8).
+- 05/11/2026 — Fase 7: regras e mensagens do acompanhamento (§9.1, R1 a R17), com limiares marcados «A CONFIRMAR»; margens em R8 e R9 para absorver oscilações de ±0,8 kg; sem destaque da manutenção pela semana.
