@@ -107,13 +107,15 @@ vigiar:
 
 recomecar:
   introducao:
-    # Textos Vigoria, aprovados a 05/11/2026 (P6 e P7).
+    # Textos Vigoria, aprovados a 05/11/2026 (P6 e P7, revistos no mesmo dia: a secção
+    # lê-se durante e depois das 16 semanas).
     - >-
-      Ao fim das 16 semanas, responda de novo ao questionário: o novo plano parte do seu
-      peso, da sua cintura e da sua rotina de hoje.
+      Quando quiser um objetivo novo, por exemplo perder mais peso ou ganhar mais força,
+      responda de novo ao questionário: o novo plano parte do seu peso, da sua cintura e
+      da sua rotina de hoje.
     - >-
-      Faça-o também antes, se a sua saúde mudar: um diagnóstico novo, uma cirurgia, uma
-      lesão ou uma medicação nova.
+      Faça-o também sempre que a sua saúde mudar, mesmo a meio das 16 semanas: um
+      diagnóstico novo, uma cirurgia, uma lesão ou uma medicação nova.
   # V3 «Ficha 5 — Revisão das 16 semanas», «O meu plano para continuar».
   titulo_pontos: O meu plano para continuar
   pontos:
