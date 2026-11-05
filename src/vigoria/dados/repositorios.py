@@ -42,6 +42,7 @@ class PlanoDaConta(BaseModel):
     criado_em: datetime
     plano: Plano
     estrategia: Estrategia
+    idade: int | None = None  # do questionário do plano (manutenção: OMS só com ≥ 65)
 
 
 class ResumoPlano(BaseModel):
@@ -153,7 +154,7 @@ def guardar_plano(
     )
     s.add(linha)
     s.flush()
-    return _plano_da_conta(linha)
+    return _plano_da_conta(s, linha)
 
 
 def listar_planos(s: Session, utilizador_id: int) -> list[ResumoPlano]:
@@ -173,7 +174,7 @@ def obter_plano(s: Session, utilizador_id: int, plano_id: int) -> PlanoDaConta |
             PlanoGuardado.id == plano_id, PlanoGuardado.utilizador_id == utilizador_id
         )
     )
-    return None if linha is None else _plano_da_conta(linha)
+    return None if linha is None else _plano_da_conta(s, linha)
 
 
 def ultimo_plano(s: Session, utilizador_id: int) -> PlanoDaConta | None:
@@ -183,7 +184,7 @@ def ultimo_plano(s: Session, utilizador_id: int) -> PlanoDaConta | None:
         .order_by(PlanoGuardado.id.desc())
         .limit(1)
     )
-    return None if linha is None else _plano_da_conta(linha)
+    return None if linha is None else _plano_da_conta(s, linha)
 
 
 def apagar_plano(s: Session, utilizador_id: int, plano_id: int) -> bool:
@@ -199,12 +200,21 @@ def apagar_plano(s: Session, utilizador_id: int, plano_id: int) -> bool:
     return apagados == 1
 
 
-def _plano_da_conta(linha: PlanoGuardado) -> PlanoDaConta:
+def _plano_da_conta(s: Session, linha: PlanoGuardado) -> PlanoDaConta:
+    # O questionário é do mesmo utilizador (guardar_plano confirma-o).
+    respostas = s.scalar(
+        select(QuestionarioGuardado.respostas).where(
+            QuestionarioGuardado.id == linha.questionario_id,
+            QuestionarioGuardado.utilizador_id == linha.utilizador_id,
+        )
+    )
+    idade = respostas.get("idade") if isinstance(respostas, dict) else None
     return PlanoDaConta(
         id=linha.id,
         criado_em=linha.criado_em,
         plano=Plano.model_validate(linha.conteudo),
         estrategia=Estrategia.model_validate(linha.estrategia),
+        idade=idade if isinstance(idade, int) else None,
     )
 
 

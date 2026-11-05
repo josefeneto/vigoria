@@ -149,6 +149,26 @@ class Acompanhamento(_Modelo):
     perguntas_revisao: tuple[str, ...] = ()
 
 
+class ParteOrientacao(_Modelo):
+    introducao: tuple[str, ...]
+    titulo_pontos: str | None = None
+    pontos: tuple[str, ...] = ()
+    notas: tuple[str, ...] = ()
+
+
+class OrientacoesManutencao(_Modelo):
+    """Depois das 16 semanas (motor/manutencao.py). Não é campo do Plano: calcula-se ao
+    mostrar, a partir do plano e de manutencao.yaml, e serve também os planos já guardados."""
+
+    introducao: tuple[str, ...]
+    treino: ParteOrientacao
+    variar: tuple[str, ...]
+    exercicios_base: tuple[str, ...]  # nomes, das fases 3 e 4 deste plano
+    alimentacao: ParteOrientacao
+    vigiar: ParteOrientacao
+    recomecar: ParteOrientacao
+
+
 class Plano(_Modelo):
     """Plano final: o que a interface mostra e a verificação confirma."""
 

@@ -442,6 +442,7 @@ def _guardar(q: Questionario, resultado: ResultadoPipeline) -> repositorios.Plan
             criado_em=datetime.now(UTC),
             plano=resultado.plano,
             estrategia=resultado.estrategia,
+            idade=q.idade,
         )
 
 

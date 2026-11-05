@@ -113,6 +113,8 @@ def test_guarda_e_le_o_ultimo_plano(fabrica: sessionmaker[Session]) -> None:
         assert ultimo.id == guardado.id
         assert ultimo.plano == _resultado().plano
         assert ultimo.estrategia == _resultado().estrategia
+        assert guardado.idade == ultimo.idade == 68  # do questionário (manutenção, OMS)
+        assert r.obter_plano(s, uid, guardado.id).idade == 68  # type: ignore[union-attr]
         assert r.ultimo_questionario(s, uid) == _questionario()
         linha = s.get(PlanoGuardado, guardado.id)
         assert linha is not None

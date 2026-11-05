@@ -1,0 +1,124 @@
+# Depois das 16 semanas (Fase 6B, 05/11/2026). Texto copiado dos volumes, salvo onde se
+# indica «texto Vigoria, aprovado a 05/11/2026» (revisão editorial do José).
+# Mostrado em todos os planos, também nos já guardados (motor/manutencao.py).
+
+# V3 «Depois das 16 semanas», sem o nome do programa («O objetivo final do Vitalidade
+# Sénior…»).
+introducao:
+  - O objetivo final não é terminar a semana 16.
+  - É chegar à semana 17 com uma rotina que faça sentido continuar.
+
+treino:
+  # V2 «Estratégia para a Fase de Manutenção». Os pilares dizem o mesmo que o V1 §12
+  # («Manter 2–3 sessões semanais de força, atividade aeróbia regular e trabalho de
+  # equilíbrio/mobilidade. A progressão futura deve continuar a ser gradual.»), com mais
+  # pormenor.
+  introducao:
+    - >-
+      A manutenção do seu tónus físico e saúde cardiovascular baseia-se nas rotinas que
+      conseguiu repetir com consistência ao longo das 16 semanas. Para consolidar os ganhos
+      a longo prazo, cumpra os seguintes pilares essenciais:
+  pontos:
+    - Manter de 2 a 3 sessões semanais focadas em força muscular geral.
+    - >-
+      Preservar a atividade aeróbia regular de baixo impacto (Passadeira, Elítica ou
+      caminhadas livres).
+    - Praticar os blocos de equilíbrio e mobilidade como suporte preventivo e de agilidade.
+    - >-
+      Progredir de forma ultra-gradual, priorizando sempre a excelência técnica sobre o
+      aumento de carga.
+  # V1 «Cardio de baixo impacto». Só com idade ≥ 65 (REGRAS_DOMINIO §5, 05/11/2026).
+  oms_65: >-
+    As recomendações da Organização Mundial da Saúde para adultos com 65 ou mais anos
+    apontam para 150–300 minutos semanais de atividade aeróbia moderada, fortalecimento
+    muscular em pelo menos dois dias e atividade multicomponente com equilíbrio e força em
+    pelo menos três dias, com progressão gradual conforme a capacidade individual.
+  variar:
+    # Texto Vigoria, aprovado a 05/11/2026 (P1).
+    - >-
+      Para variar, alterne entre os exercícios das fases 3 e 4 do seu plano (lista abaixo):
+      já os conhece e foram adaptados a si. Mude um exercício de cada vez e mantenha a
+      técnica que aprendeu.
+    # V1 «Intensidade e progressão».
+    - >-
+      A progressão segue a ordem: técnica → duração → séries/repetições → carga →
+      intensidade. Não aumentar tudo ao mesmo tempo.
+
+alimentacao:
+  introducao:
+    # Texto Vigoria, aprovado a 05/11/2026 (P2).
+    - >-
+      Se já chegou ao peso que pretendia, não precisa de continuar a reduzir as quantidades:
+      pode aumentar as porções aos poucos, uma alteração de cada vez, e observar o peso e a
+      cintura durante algumas semanas.
+    - >-
+      Se ainda quer perder peso, responda de novo ao questionário para receber um plano
+      novo, a partir do seu ponto atual.
+  # V3 «Depois das 16 semanas», lista «Manter».
+  titulo_pontos: Manter
+  pontos:
+    - proteína nas refeições principais;
+    - hortícolas;
+    - fruta;
+    - leguminosas;
+    - alimentos pouco processados como base;
+    - água como bebida habitual;
+    - gordura em quantidades moderadas;
+    - atenção à composição corporal quando esse for um objetivo.
+  notas:
+    # Texto Vigoria, aprovado a 05/11/2026 (P3).
+    - Continue a distribuir a proteína pelas refeições principais, como no plano.
+    # V3 «Depois das 16 semanas», «Não manter».
+    - >-
+      Não é necessário manter uma alimentação excessivamente restritiva apenas porque o
+      programa terminou.
+    - >-
+      O objetivo é passar de «Estou a fazer um programa.» para «Esta é a forma como
+      organizo a minha vida.»
+    # V3 «Semanas 13–16 — Integração».
+    - «Quais destes hábitos consigo manter durante os próximos anos?»
+
+vigiar:
+  introducao:
+    # V1 «Segurança e adaptação».
+    - >-
+      Antes de cada sessão, avaliar energia, sono, dor, tonturas e disposição. Em dias
+      menos bons, reduzir a duração ou a intensidade.
+    # V3 «Quando a evolução abranda».
+    - É normal que a evolução não seja sempre linear. Antes de alterar tudo, voltar aos fundamentos.
+  titulo_pontos: "Verificar:"
+  pontos:
+    - O treino continua regular?
+    - A alimentação continua organizada?
+    - As porções aumentaram?
+    - Existem mais alimentos densos em energia?
+    - A atividade diária diminuiu?
+    - O sono piorou?
+  notas:
+    # V3 «Quando a evolução abranda», «Se for necessário ajustar».
+    - Fazer uma alteração de cada vez. Depois, observar. Não mudar cinco coisas ao mesmo tempo.
+    # Textos Vigoria, aprovados a 05/11/2026 (P4 e P5).
+    - >-
+      Se fizer uma pausa mais longa (doença, férias, uma lesão), recomece com menos séries
+      e menos esforço, como na fase 1, e volte a subir aos poucos.
+    - >-
+      Se surgir um problema de saúde novo, uma dor que não passa ou uma medicação nova,
+      fale com o seu médico antes de continuar.
+
+recomecar:
+  introducao:
+    # Textos Vigoria, aprovados a 05/11/2026 (P6 e P7).
+    - >-
+      Ao fim das 16 semanas, responda de novo ao questionário: o novo plano parte do seu
+      peso, da sua cintura e da sua rotina de hoje.
+    - >-
+      Faça-o também antes, se a sua saúde mudar: um diagnóstico novo, uma cirurgia, uma
+      lesão ou uma medicação nova.
+  # V3 «Ficha 5 — Revisão das 16 semanas», «O meu plano para continuar».
+  titulo_pontos: O meu plano para continuar
+  pontos:
+    - Três hábitos que quero manter
+    - O treino que quero continuar a fazer
+    - A atividade diária que quero manter
+    - O principal hábito alimentar que quero preservar
+    - O próximo objetivo

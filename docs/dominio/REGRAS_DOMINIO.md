@@ -123,6 +123,8 @@ Nota obrigatória (Vol. 1): o perímetro da cintura é um indicador de adiposida
   - **Cintura:** sem número. «Medir e comparar», com o limiar de risco (94 cm H / 80 cm M) como referência quando a cintura atual estiver acima dele.
   - **Força ou resistência:** escritos pela LLM, só a partir do conteúdo editorial (Fase 3) e dos exercícios da biblioteca.
 - A partir da semana 17: manutenção (Vol. 1) — 2 a 3 sessões de força por semana, atividade aeróbia regular, equilíbrio e mobilidade. O utilizador pode gerar um novo ciclo de 16 semanas com dados atualizados.
+  - Secção «Depois das 16 semanas» em todos os planos (decisão de 05/11/2026): texto fixo de `conteudo/manutencao.yaml`, sem LLM, calculado ao mostrar (também nos planos já guardados). Única personalização: os exercícios das fases 3 e 4 do próprio plano, como base para variar; nunca exercícios novos.
+  - A recomendação da OMS citada no Vol. 1 (150–300 minutos semanais de atividade aeróbia moderada…) é para adultos com 65 ou mais anos: só aparece com idade ≥ 65 no questionário. Abaixo disso, ou sem idade conhecida, ficam só os pilares do Vol. 1 §12 e do Vol. 2 (decisão de 05/11/2026).
 - Semana-base (Vol. 1): segunda força A + mobilidade; terça cardio + mobilidade; quarta força B + equilíbrio; quinta cardio leve + mobilidade; sexta força A/B alternada; sábado cardio; domingo recuperação ativa ou descanso. Ajustada ao número de dias de 1.J.
 - Ordem de progressão: técnica → duração → séries/repetições → carga → intensidade. **Nunca** aumentar duas variáveis em simultâneo.
 - Esforço percebido 0–10; entre 3 e 6 em todas as fases da versão-base (ver secção 6). No cardio moderado, conseguir falar em frases curtas.
@@ -265,3 +267,4 @@ Não há decisões de domínio pendentes.
 - 30/10/2026 — Revisão do plano real (prompt v5): variante contínua do cardio finalizador e marcha «sem acelerar» com «sem intervalos» (§6.3, A CONFIRMAR); promessas de resultado no futuro e «exercícios seguros» (§8); «protege» só como aviso de estilo.
 - 31/10/2026 — Telemóvel não recolhido no MVP — lembretes por email; minimização de dados (RGPD) (§10).
 - 31/10/2026 — Ortografia (§8): uma palavra desconhecida com uma só forma acentuada no dicionário pt_PT («exercicios» → «exercícios») é corrigida pelo motor; as restantes continuam só como aviso.
+- 05/11/2026 — Fase 6B: secção «Depois das 16 semanas» (§5), determinística e sem quinta fase de treino; recomendação da OMS só com idade ≥ 65; textos sem origem nos volumes aprovados na revisão editorial (P1 a P8).

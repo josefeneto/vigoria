@@ -252,6 +252,31 @@ class Alimentacao(_Conteudo):
     acompanhamento: Acompanhamento
 
 
+# ---------------------------------------------------------------- manutencao.yaml (Fase 6B)
+
+
+class ParteManutencao(_Conteudo):
+    introducao: tuple[str, ...] = Field(min_length=1)
+    titulo_pontos: str | None = None
+    pontos: tuple[str, ...] = ()
+    notas: tuple[str, ...] = ()
+
+
+class TreinoManutencao(ParteManutencao):
+    oms_65: str  # só com idade ≥ 65 (REGRAS §5)
+    variar: tuple[str, ...] = Field(min_length=1)
+
+
+class Manutencao(_Conteudo):
+    """Depois das 16 semanas: treino, alimentação, o que vigiar e recomeçar."""
+
+    introducao: tuple[str, ...] = Field(min_length=1)
+    treino: TreinoManutencao
+    alimentacao: ParteManutencao
+    vigiar: ParteManutencao
+    recomecar: ParteManutencao
+
+
 # ---------------------------------------------------------------- Carregamento
 
 
@@ -262,6 +287,7 @@ class Conteudo(_Conteudo):
     programa: Programa
     alimentacao: Alimentacao
     avisos: Avisos
+    manutencao: Manutencao
 
 
 def _carregar[M: BaseModel](nome: str, modelo: type[M]) -> M:
@@ -311,8 +337,14 @@ def carregar_alimentacao() -> Alimentacao:
     return _carregar("alimentacao.yaml", Alimentacao)
 
 
+@cache
+def carregar_manutencao() -> Manutencao:
+    """Depois das 16 semanas (volumes 1 a 3 e textos aprovados a 05/11/2026)."""
+    return _carregar("manutencao.yaml", Manutencao)
+
+
 def carregar_conteudo() -> Conteudo:
-    """Carrega os quatro ficheiros e confirma as referências entre eles.
+    """Carrega os cinco ficheiros e confirma as referências entre eles.
 
     Falha com ErroConteudo (ficheiro e motivo) ao primeiro problema encontrado.
     """
@@ -337,4 +369,5 @@ def carregar_conteudo() -> Conteudo:
         programa=programa,
         alimentacao=carregar_alimentacao(),
         avisos=carregar_avisos(),
+        manutencao=carregar_manutencao(),
     )
