@@ -50,10 +50,17 @@ def escrito(monkeypatch: pytest.MonkeyPatch) -> list[tuple[int, float, str]]:
     return registo
 
 
-def test_gera_o_pdf_da_persona_de_teste_sem_erros() -> None:
+def _sem_falhas_de_letra(caplog: pytest.LogCaptureFixture) -> None:
+    """O fpdf2 regista (não avisa com warnings) os caracteres que faltam numa letra."""
+    falhas = [r.getMessage() for r in caplog.records if "missing the following glyphs" in r.msg]
+    assert not falhas, falhas
+
+
+def test_gera_o_pdf_da_persona_de_teste_sem_erros(caplog: pytest.LogCaptureFixture) -> None:
     with warnings.catch_warnings():
-        warnings.simplefilter("error")  # p. ex., letra sem um carácter usado no plano
+        warnings.simplefilter("error")
         dados = pdf.plano_pdf(_plano(), DATA)
+    _sem_falhas_de_letra(caplog)
     assert dados.startswith(b"%PDF-")
     assert dados.rstrip().endswith(b"%%EOF")
     assert _paginas(dados) >= 10
@@ -62,10 +69,11 @@ def test_gera_o_pdf_da_persona_de_teste_sem_erros() -> None:
 @pytest.mark.parametrize(
     "persona", ["persona_50_alta", "persona_imc36", "persona_osteoporose", "persona_renal"]
 )
-def test_gera_o_pdf_das_outras_personas(persona: str) -> None:
+def test_gera_o_pdf_das_outras_personas(persona: str, caplog: pytest.LogCaptureFixture) -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         dados = pdf.plano_pdf(_plano(persona), DATA)
+    _sem_falhas_de_letra(caplog)
     assert _paginas(dados) >= 10
 
 
@@ -106,6 +114,29 @@ def test_manutencao_antes_dos_avisos_e_oms_so_com_65_anos(
     pdf.plano_pdf(_plano("persona_50_alta"), DATA, 50)
     textos = [texto for _, _, texto in escrito]
     assert "Depois das 16 semanas" in textos and oms not in textos
+
+
+def test_hifenes_e_espacos_tipograficos_sem_falhas_de_letra(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # O Groq escreveu «pequeno‑almoço» com U+2011, que as letras do PDF não têm.
+    especiais = "pequeno‑almoço, bem‐estar, 10‒15 min, 2 x"
+    plano = _plano()
+    plano = plano.model_copy(update={"resumo": f"{plano.resumo} {especiais}"})
+    pdf.plano_pdf(plano, DATA)
+    _sem_falhas_de_letra(caplog)
+    assert pdf._limpo(especiais) == "pequeno-almoço, bem-estar, 10-15 min, 2 x"
+
+
+def test_substitutos_existem_em_todas_as_letras() -> None:
+    from fontTools.ttLib import TTFont
+
+    substitutos = {c for v in pdf._SUBSTITUIR.values() if v for c in str(v)}
+    for ficheiro in pdf.RECURSOS.iterdir():
+        if ficheiro.name.endswith(".ttf"):
+            with ficheiro.open("rb") as f:
+                cmap = TTFont(f).getBestCmap()
+            assert all(ord(c) in cmap for c in substitutos), ficheiro.name
 
 
 def test_letra_base_de_pelo_menos_11_pt(escrito: list[tuple[int, float, str]]) -> None:

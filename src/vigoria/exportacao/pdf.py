@@ -43,8 +43,22 @@ TEXTO_PT = 11.5  # letra base (pedido: pelo menos 11 pt)
 LINHA = 6.0  # altura de linha do texto base, em mm
 MARGEM = 18.0  # mm
 
-# Caracteres que as letras do projeto não têm (subconjunto latino).
-_SUBSTITUIR = str.maketrans({"≥": "pelo menos ", "≤": "até ", "→": "-", "⇄": "", "✓": "-"})
+# Caracteres que as letras do projeto não têm (subconjunto latino). Os hífenes e espaços
+# tipográficos aparecem no texto de alguns modelos (p. ex., «pequeno‑almoço» do Groq).
+_SUBSTITUIR = str.maketrans(
+    {
+        "≥": "pelo menos ",
+        "≤": "até ",
+        "→": "-",
+        "⇄": "",
+        "✓": "-",
+        "‐": "-",  # hífen tipográfico
+        "‑": "-",  # hífen não separável
+        "‒": "-",  # traço de algarismo
+        " ": " ",  # espaço estreito não separável
+        " ": " ",  # espaço fino
+    }
+)
 
 
 def _rgb(nome: str) -> tuple[int, int, int]:
