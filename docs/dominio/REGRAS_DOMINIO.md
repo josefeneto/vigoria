@@ -267,6 +267,20 @@ Aplicação em `regras/progresso.py`; texto exato das mensagens em `paginas/text
 
 **A CONFIRMAR (revisão profissional):** os limiares de 50 %, 1 kg (R8), 0,4 kg/semana (R9), 2 kg e 3 cm (R11), e as semanas mínimas de R8 e R9, não vêm dos volumes. As margens de 1 kg e 0,4 kg/semana absorvem oscilações normais de ±0,8 kg à volta da linha (testado): com a persona de teste, o R9 só surge acima de cerca de 0,78 kg/semana.
 
+### 9.2 Regras dos lembretes por email (decisão de 07/11/2026)
+
+Aplicação em `regras/lembretes.py`; envio pela tarefa diária `tarefas/lembretes.py` (uma vez por dia, às 9h07 de Lisboa). Só recebe quem tem o acompanhamento e os lembretes ligados e, com `AMBIENTE=demo`, está na lista de convidados. A tarefa lê só as semanas com registo, nunca os valores.
+
+| # | Regra | Aplicação |
+|---|---|---|
+| L1 | Prazos | Prazo = último dia do período (hora de Lisboa). Primeiro lembrete a partir de 2 dias depois do prazo; segundo e último a partir de 5 dias, só se o primeiro saiu num dia anterior. Nunca dois no mesmo dia; nunca mais de 2 por período. |
+| L2 | Período lembrado | Só o período terminado mais recente. Se esse tem registo, não há lembrete, mesmo que falte um mais antigo. |
+| L3 | Limite | Nada mais de 7 dias depois do prazo (uma execução falhada é apanhada no dia seguinte, dentro deste limite). |
+| L4 | Plano | Só o plano mais recente. Na manutenção, períodos de 4 semanas (R4). |
+| L5 | Suspensão | Com 3 períodos seguidos terminados sem registo, os lembretes ficam suspensos até haver um registo novo. Sem email a avisar da suspensão. |
+
+O email nunca tem dados de saúde, semanas nem datas; tem sempre a ligação «Deixar de receber lembretes», que desliga só os lembretes (o acompanhamento continua ligado). Textos em `notificacoes/modelos/lembrete.yaml`.
+
 ## 10. Contactos
 
 - Email: obrigatório, vem da autenticação.
@@ -295,3 +309,4 @@ Não há decisões de domínio pendentes.
 - 31/10/2026 — Ortografia (§8): uma palavra desconhecida com uma só forma acentuada no dicionário pt_PT («exercicios» → «exercícios») é corrigida pelo motor; as restantes continuam só como aviso.
 - 05/11/2026 — Fase 6B: secção «Depois das 16 semanas» (§5), determinística e sem quinta fase de treino; recomendação da OMS só com idade ≥ 65; textos sem origem nos volumes aprovados na revisão editorial (P1 a P8).
 - 05/11/2026 — Fase 7: regras e mensagens do acompanhamento (§9.1, R1 a R17), com limiares marcados «A CONFIRMAR»; margens em R8 e R9 para absorver oscilações de ±0,8 kg; sem destaque da manutenção pela semana.
+- 07/11/2026 — Fase 8: regras dos lembretes por email (§9.2): L1 a L4 e os textos do email aprovados pelo José; L5 (suspensão ao fim de 3 períodos sem registo) pedida por ele.

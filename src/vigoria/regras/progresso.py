@@ -4,7 +4,7 @@ Funções puras: a data de hoje entra sempre como argumento. Devolvem códigos e
 textos estão em paginas/textos.py. As observações da pessoa nunca chegam aqui.
 """
 
-from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
 from zoneinfo import ZoneInfo
@@ -74,11 +74,16 @@ class Alerta(_Imutavel):
 # ---------------------------------------------------------------- Semanas, fases e períodos
 
 
+def dia_em_lisboa(instante: datetime) -> date:
+    """O dia de um instante guardado na base (em UTC), na hora de Portugal continental."""
+    if instante.tzinfo is None:  # o SQLite devolve sem fuso
+        instante = instante.replace(tzinfo=UTC)
+    return instante.astimezone(ZoneInfo("Europe/Lisbon")).date()
+
+
 def inicio_do_plano(criado_em: datetime) -> date:
-    """O dia da criação do plano, na hora de Portugal continental (a base guarda em UTC)."""
-    if criado_em.tzinfo is None:  # o SQLite devolve sem fuso
-        criado_em = criado_em.replace(tzinfo=UTC)
-    return criado_em.astimezone(ZoneInfo("Europe/Lisbon")).date()
+    """O dia da criação do plano, na hora de Portugal continental."""
+    return dia_em_lisboa(criado_em)
 
 
 def semana_do_plano(inicio: date, dia: date) -> int:
@@ -132,23 +137,44 @@ def periodo_ocupado(
     return any(inicio <= s <= fim for s in semanas_com_registo)
 
 
+def ultimo_dia_do_periodo(inicio: date, semanas: tuple[int, int]) -> date:
+    """O prazo do período: o último dia da última semana."""
+    return inicio + timedelta(days=7 * semanas[1] - 1)
+
+
+def periodos_terminados(
+    inicio: date, hoje: date, frequencia: FrequenciaRegisto
+) -> Iterator[tuple[int, int]]:
+    """Os períodos já terminados, do mais recente para o mais antigo. O último dia ainda conta."""
+    if hoje <= inicio:
+        return
+    semana = semana_do_plano(inicio, hoje - timedelta(days=1))
+    while semana >= 1:
+        semanas = periodo(semana, frequencia_efetiva(frequencia, semana))
+        if hoje > ultimo_dia_do_periodo(inicio, semanas):
+            yield semanas
+        semana = semanas[0] - 1
+
+
+def tem_registo(semanas: tuple[int, int], semanas_com_registo: Iterable[int]) -> bool:
+    return any(semanas[0] <= s <= semanas[1] for s in semanas_com_registo)
+
+
 def periodo_em_falta(
     inicio: date,
     hoje: date,
     frequencia: FrequenciaRegisto,
     semanas_com_registo: Collection[int],
 ) -> tuple[int, int] | None:
-    """O período terminado mais recente sem registo. O último dia do período ainda conta."""
-    if hoje <= inicio:
-        return None
-    semana = semana_do_plano(inicio, hoje - timedelta(days=1))
-    while semana >= 1:
-        primeira, ultima = periodo(semana, frequencia_efetiva(frequencia, semana))
-        terminado = hoje > inicio + timedelta(days=7 * ultima - 1)
-        if terminado and not any(primeira <= s <= ultima for s in semanas_com_registo):
-            return primeira, ultima
-        semana = primeira - 1
-    return None
+    """O período terminado mais recente sem registo."""
+    return next(
+        (
+            p
+            for p in periodos_terminados(inicio, hoje, frequencia)
+            if not tem_registo(p, semanas_com_registo)
+        ),
+        None,
+    )
 
 
 # ---------------------------------------------------------------- Linha indicativa
