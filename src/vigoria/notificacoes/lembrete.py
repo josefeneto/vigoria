@@ -1,0 +1,89 @@
+"""O email de lembrete de registo: HTML simples e texto, sem dados de saúde (REGRAS §9).
+
+Textos em modelos/lembrete.yaml; esqueletos em modelos/lembrete.html e modelos/lembrete.txt,
+lidos com importlib.resources, como os prompts. Todo o texto entra no HTML com html.escape.
+"""
+
+import html
+from functools import cache
+from importlib.resources import files
+from string import Template
+from urllib.parse import quote
+
+import yaml
+from pydantic import BaseModel, ConfigDict
+
+from vigoria.notificacoes.brevo import Email
+
+CAMINHO_PROGRESSO = "progresso"  # paginas/progresso.py
+CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py)
+CAMINHO_LOGOTIPO = "app/static/icones/icone-192.png"  # PNG: o Gmail não mostra SVG
+
+# Paleta da marca (paginas/estilos.py, CORES; um teste confirma que são iguais).
+CORES = {
+    "principal": "#1F5C63",
+    "principal_profundo": "#123F45",
+    "texto": "#2E3338",
+    "texto_secundario": "#5A6168",
+    "fundo": "#F7F3EC",
+    "cartao": "#FFFDF9",
+    "borda": "#DDD3C3",
+    "branco": "#FFFFFF",
+}
+
+
+class TextosLembrete(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    assunto: str
+    saudacao: str
+    corpo: str
+    botao: str
+    ultimo: str
+    rodape_motivo: str
+    rodape_cancelar: str
+    rodape_reativar: str
+
+
+def _ficheiro(nome: str) -> str:
+    return files("vigoria.notificacoes").joinpath("modelos", nome).read_text(encoding="utf-8")
+
+
+@cache
+def textos_lembrete() -> TextosLembrete:
+    return TextosLembrete.model_validate(yaml.safe_load(_ficheiro("lembrete.yaml")))
+
+
+def url_cancelar(app_url: str, token: str) -> str:
+    return f"{app_url.rstrip('/')}/{CAMINHO_CANCELAR}?t={quote(token, safe='')}"
+
+
+def email_lembrete(para: str, numero: int, app_url: str, token: str) -> Email:
+    """O lembrete número 1 ou 2 (o segundo diz que é o último)."""
+    t = textos_lembrete()
+    base = app_url.rstrip("/")
+    cancelar = url_cancelar(base, token)
+    ligacoes = {
+        "url_registo": f"{base}/{CAMINHO_PROGRESSO}",
+        "url_cancelar": cancelar,
+        "url_logotipo": f"{base}/{CAMINHO_LOGOTIPO}",
+    }
+    ultimo = numero >= 2
+    campos = t.model_dump()
+    texto = Template(_ficheiro("lembrete.txt")).substitute(
+        campos, ultimo_texto=f"{t.ultimo}\n" if ultimo else "", **ligacoes
+    )
+    seguro = {k: html.escape(v) for k, v in (campos | ligacoes).items()}
+    paragrafo = f'<p style="margin:0 0 12px 0;">{html.escape(t.ultimo)}</p>' if ultimo else ""
+    corpo_html = Template(_ficheiro("lembrete.html")).substitute(
+        seguro, ultimo_html=paragrafo, **{f"cor_{k}": v for k, v in CORES.items()}
+    )
+    return Email(
+        para=para,
+        assunto=t.assunto,
+        html=corpo_html,
+        texto=texto,
+        # Só a ligação https (abre a página de confirmação). Sem List-Unsubscribe-Post: a app
+        # ainda não aceita o pedido POST do cancelamento num clique (RFC 8058, Fase 10).
+        cabecalhos={"List-Unsubscribe": f"<{cancelar}>"},
+    )

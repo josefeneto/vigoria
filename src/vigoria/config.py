@@ -25,6 +25,7 @@ from vigoria.contas.entrada import normalizar_email
 # Fornecedores de LLM: cada um tem <nome>_api_key e <nome>_model (llm/escolha.py).
 # «simulado» (llm/simulado.py) não tem chave nem modelo e só é aceite com AMBIENTE=local.
 NomeProvedor = Literal["gemini", "groq", "mistral", "simulado"]
+MINIMO_SEGREDO = 32
 
 
 def _segredos() -> dict[str, Any]:
@@ -76,6 +77,9 @@ class Configuracao(BaseSettings):
     email_remetente: str = ""
     email_nome_remetente: str = "Vigoria"
     app_url: str = "http://localhost:8501"
+    # Assina as ligações «Deixar de receber lembretes» (notificacoes/token.py). Igual na app e
+    # na tarefa dos lembretes; mudá-lo invalida as ligações dos emails já enviados.
+    vigoria_segredo_lembretes: SecretStr | None = None
     ambiente: Literal["local", "demo", "producao"] = "local"
     # Só para testes e desenvolvimento sem Auth0: entra como um utilizador fictício fixo.
     vigoria_utilizador_local: bool = False
@@ -114,6 +118,22 @@ class Configuracao(BaseSettings):
         if isinstance(valor, (list, tuple, set, frozenset)):
             return frozenset(normalizar_email(str(e)) for e in valor if str(e).strip())
         return valor
+
+    @field_validator("vigoria_segredo_lembretes", mode="after")
+    @classmethod
+    def _segredo_comprido(cls, valor: SecretStr | None) -> SecretStr | None:
+        if valor is None or not valor.get_secret_value():
+            return None
+        if len(valor.get_secret_value()) < MINIMO_SEGREDO:
+            raise ValueError(
+                f"VIGORIA_SEGREDO_LEMBRETES tem de ter pelo menos {MINIMO_SEGREDO} caracteres"
+            )
+        return valor
+
+    @field_validator("app_url")
+    @classmethod
+    def _sem_barra_final(cls, valor: str) -> str:
+        return valor.rstrip("/")
 
     @field_validator("database_url")
     @classmethod

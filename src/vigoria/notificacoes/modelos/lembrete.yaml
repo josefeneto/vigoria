@@ -1,0 +1,11 @@
+# Lembrete de registo por email (Fase 8). Textos aprovados pelo José a 07/11/2026.
+# Nunca dados de saúde, semanas ou datas (REGRAS_DOMINIO §9). Verificados nos testes contra
+# promessas, lista negra e brasileirismos (conteudo/avisos.yaml).
+assunto: "Tem um registo por fazer na Vigoria"
+saudacao: "Olá,"
+corpo: "Tem um registo de progresso por fazer na Vigoria. Leva poucos minutos e mostra como está a correr o seu plano."
+botao: "Fazer o registo"
+ultimo: "Este é o último lembrete para este registo."
+rodape_motivo: "Recebe este email porque ativou os lembretes na Vigoria."
+rodape_cancelar: "Deixar de receber lembretes"
+rodape_reativar: "Pode voltar a ativá-los em “A minha conta”."

@@ -1,0 +1,10 @@
+$saudacao
+
+$corpo
+
+${ultimo_texto}$botao: $url_registo
+
+--
+$rodape_motivo
+$rodape_cancelar: $url_cancelar
+$rodape_reativar

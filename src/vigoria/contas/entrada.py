@@ -38,9 +38,18 @@ def convidado(
     Lista vazia: todos entram, exceto com `lista_obrigatoria` (demonstração pública), em que
     ninguém entra. `permitidos` já vem normalizado (config.py).
     """
+    return identidade.email_verificado and email_convidado(
+        identidade.email, permitidos, lista_obrigatoria=lista_obrigatoria
+    )
+
+
+def email_convidado(
+    email: str, permitidos: frozenset[str], *, lista_obrigatoria: bool = False
+) -> bool:
+    """A mesma regra para um email já verificado (por exemplo, na tarefa dos lembretes)."""
     if not permitidos:
         return not lista_obrigatoria
-    return identidade.email_verificado and normalizar_email(identidade.email) in permitidos
+    return normalizar_email(email) in permitidos
 
 
 def identidade_de(claims: Mapping[str, Any]) -> Identidade:
