@@ -11,12 +11,13 @@ from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from vigoria.contas.entrada import Identidade
 from vigoria.dados.tabelas import (
     Consentimento,
+    LembreteEnviado,
     PlanoGuardado,
     QuestionarioGuardado,
     RegistoProgresso,
@@ -26,7 +27,13 @@ from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 from vigoria.modelos.registo import ValoresRegisto
-from vigoria.regras.progresso import inicio_do_plano, periodo_ocupado, semana_do_plano
+from vigoria.regras.lembretes import Lembrete, LembreteFeito
+from vigoria.regras.progresso import (
+    dia_em_lisboa,
+    inicio_do_plano,
+    periodo_ocupado,
+    semana_do_plano,
+)
 
 TIPOS_CONSENTIMENTO = ("termos", "saude", "maior_idade")
 
@@ -74,6 +81,20 @@ class Preferencias(BaseModel):
 
     ativo: bool = True
     frequencia: FrequenciaRegisto = FrequenciaRegisto.SEMANAL
+    lembretes_email: bool = True
+
+
+class Destinatario(BaseModel):
+    """Quem pode receber lembretes, com o plano mais recente (tarefas/lembretes.py)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    utilizador_id: int
+    sub: str
+    email: str
+    plano_id: int
+    plano_criado_em: datetime
+    frequencia: FrequenciaRegisto
 
 
 class PlanoDeOutro(LookupError):
@@ -129,7 +150,13 @@ def apagar_utilizador(s: Session, utilizador_id: int) -> str | None:
         return None
     sub = utilizador.sub
     # Explícito, além do ON DELETE CASCADE: não depende da configuração da base de dados.
-    for tabela in (RegistoProgresso, PlanoGuardado, QuestionarioGuardado, Consentimento):
+    for tabela in (
+        LembreteEnviado,
+        RegistoProgresso,
+        PlanoGuardado,
+        QuestionarioGuardado,
+        Consentimento,
+    ):
         s.execute(delete(tabela).where(tabela.utilizador_id == utilizador_id))
     s.delete(utilizador)
     s.flush()
@@ -200,6 +227,7 @@ def guardar_plano(
         utilizador.frequencia_registo = questionario.respostas.get(
             "frequencia_registo", FrequenciaRegisto.SEMANAL.value
         )
+        utilizador.lembretes_email = questionario.respostas.get("lembretes_email", True)
     s.flush()
     return _plano_da_conta(s, linha)
 
@@ -239,6 +267,11 @@ def apagar_plano(s: Session, utilizador_id: int, plano_id: int) -> bool:
 
     O questionário que lhe deu origem fica: serve para preencher o próximo.
     """
+    s.execute(
+        delete(LembreteEnviado).where(
+            LembreteEnviado.plano_id == plano_id, LembreteEnviado.utilizador_id == utilizador_id
+        )
+    )
     s.execute(
         delete(RegistoProgresso).where(
             RegistoProgresso.plano_id == plano_id, RegistoProgresso.utilizador_id == utilizador_id
@@ -282,6 +315,7 @@ def obter_preferencias(s: Session, utilizador_id: int) -> Preferencias:
     return Preferencias(
         ativo=utilizador.acompanhamento_ativo,
         frequencia=FrequenciaRegisto(utilizador.frequencia_registo),
+        lembretes_email=utilizador.lembretes_email,
     )
 
 
@@ -290,6 +324,20 @@ def guardar_preferencias(s: Session, utilizador_id: int, preferencias: Preferenc
     if utilizador is not None:
         utilizador.acompanhamento_ativo = preferencias.ativo
         utilizador.frequencia_registo = preferencias.frequencia.value
+        utilizador.lembretes_email = preferencias.lembretes_email
+        s.flush()
+
+
+def sub_do_utilizador(s: Session, utilizador_id: int) -> str | None:
+    """Para verificar a ligação «Deixar de receber lembretes» (notificacoes/token.py)."""
+    return s.scalar(select(Utilizador.sub).where(Utilizador.id == utilizador_id))
+
+
+def desligar_lembretes(s: Session, utilizador_id: int) -> None:
+    """Deixar de receber lembretes (ligação do email); o acompanhamento continua ligado."""
+    utilizador = s.get(Utilizador, utilizador_id)
+    if utilizador is not None:
+        utilizador.lembretes_email = False
         s.flush()
 
 
@@ -414,6 +462,87 @@ def apagar_registo(s: Session, utilizador_id: int, registo_id: int) -> bool:
     return apagados == 1
 
 
+# ---------------------------------------------------------------- Lembretes (tarefa diária)
+
+
+def destinatarios_de_lembretes(s: Session) -> list[Destinatario]:
+    """Quem tem o acompanhamento e os lembretes ligados, cada um com o plano mais recente (L4).
+
+    A única função sem `utilizador_id`: é a tarefa diária que a usa, não uma página. Não lê
+    respostas nem registos; a lista de convidados aplica-se em tarefas/lembretes.py.
+    """
+    recente = (
+        select(PlanoGuardado.utilizador_id, func.max(PlanoGuardado.id).label("plano_id"))
+        .group_by(PlanoGuardado.utilizador_id)
+        .subquery()
+    )
+    linhas = s.execute(
+        select(
+            Utilizador.id,
+            Utilizador.sub,
+            Utilizador.email,
+            Utilizador.frequencia_registo,
+            PlanoGuardado.id,
+            PlanoGuardado.criado_em,
+        )
+        .join(recente, recente.c.utilizador_id == Utilizador.id)
+        .join(PlanoGuardado, PlanoGuardado.id == recente.c.plano_id)
+        .where(Utilizador.acompanhamento_ativo, Utilizador.lembretes_email)
+        .order_by(Utilizador.id)
+    )
+    return [
+        Destinatario(
+            utilizador_id=uid,
+            sub=sub,
+            email=email,
+            plano_id=pid,
+            plano_criado_em=criado_em,
+            frequencia=FrequenciaRegisto(frequencia),
+        )
+        for uid, sub, email, frequencia, pid, criado_em in linhas
+    ]
+
+
+def semanas_com_registo(s: Session, utilizador_id: int, plano_id: int) -> list[int]:
+    """Só as semanas, nunca os valores registados."""
+    return _semanas_do_plano(s, utilizador_id, plano_id)
+
+
+def lembretes_enviados(s: Session, utilizador_id: int, plano_id: int) -> list[LembreteFeito]:
+    linhas = s.scalars(
+        select(LembreteEnviado).where(
+            LembreteEnviado.plano_id == plano_id, LembreteEnviado.utilizador_id == utilizador_id
+        )
+    )
+    return [
+        LembreteFeito(
+            semanas=(linha.semana_inicio, linha.semana_fim),
+            numero=linha.numero,
+            dia=dia_em_lisboa(linha.enviado_em),
+        )
+        for linha in linhas
+    ]
+
+
+def registar_lembrete(
+    s: Session, utilizador_id: int, plano_id: int, lembrete: Lembrete, enviado_em: datetime
+) -> None:
+    """Grava o envio. A restrição única impede repetir o mesmo lembrete (IntegrityError)."""
+    if _criado_em(s, utilizador_id, plano_id) is None:
+        raise PlanoDeOutro(plano_id)
+    s.add(
+        LembreteEnviado(
+            utilizador_id=utilizador_id,
+            plano_id=plano_id,
+            semana_inicio=lembrete.semanas[0],
+            semana_fim=lembrete.semanas[1],
+            numero=lembrete.numero,
+            enviado_em=enviado_em,
+        )
+    )
+    s.flush()
+
+
 # ---------------------------------------------------------------- Exportação (RGPD)
 
 
@@ -423,7 +552,9 @@ def exportar_dados(s: Session, utilizador_id: int) -> dict[str, Any]:
     if utilizador is None:
         return {}
 
-    def todas[T: (Consentimento, QuestionarioGuardado, PlanoGuardado, RegistoProgresso)](
+    def todas[
+        T: (Consentimento, QuestionarioGuardado, PlanoGuardado, RegistoProgresso, LembreteEnviado)
+    ](
         tabela: type[T],
     ) -> list[T]:
         return list(
@@ -437,6 +568,9 @@ def exportar_dados(s: Session, utilizador_id: int) -> dict[str, Any]:
             "email": utilizador.email,
             "metodo_de_entrada": utilizador.fornecedor,
             "criada_em": utilizador.criado_em.isoformat(),
+            "acompanhamento_ativo": utilizador.acompanhamento_ativo,
+            "frequencia_registo": utilizador.frequencia_registo,
+            "lembretes_email": utilizador.lembretes_email,
         },
         "consentimentos": [
             {"tipo": c.tipo, "versao_texto": c.versao_texto, "data": c.data.isoformat()}
@@ -469,5 +603,14 @@ def exportar_dados(s: Session, utilizador_id: int) -> dict[str, Any]:
                 "alterado_em": r.alterado_em.isoformat(),
             }
             for r in todas(RegistoProgresso)
+        ],
+        "lembretes_enviados": [
+            {
+                "plano_id": e.plano_id,
+                "semanas": [e.semana_inicio, e.semana_fim],
+                "numero": e.numero,
+                "enviado_em": e.enviado_em.isoformat(),
+            }
+            for e in todas(LembreteEnviado)
         ],
     }

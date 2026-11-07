@@ -11,7 +11,9 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from pydantic import SecretStr
 from sqlalchemy import create_engine, func, inspect, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.contas.entrada import Identidade
@@ -20,6 +22,7 @@ from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.tabelas import (
     Base,
     Consentimento,
+    LembreteEnviado,
     PlanoGuardado,
     QuestionarioGuardado,
     RegistoProgresso,
@@ -29,6 +32,9 @@ from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 from vigoria.modelos.registo import ValoresRegisto
 from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
+from vigoria.notificacoes.cancelamento import cancelar_lembretes
+from vigoria.notificacoes.token import gerar_token
+from vigoria.regras.lembretes import Lembrete
 
 RAIZ = Path(__file__).resolve().parents[1]
 A = Identidade(sub="auth0|aaa", email="a@exemplo.pt", email_verificado=True)
@@ -519,3 +525,127 @@ def test_postgresql_com_limite_de_tempo_e_ligacoes_verificadas(
     assert opcoes["connect_args"] == {"connect_timeout": bd.TIMEOUT_LIGACAO_S}
     assert opcoes["pool_pre_ping"] is True
     assert opcoes["pool_recycle"] == bd.POOL_RECYCLE_S == 240
+
+
+# ---------------------------------------------------------------- Lembretes (Fase 8)
+
+SEGREDO = SecretStr("s" * 48)
+AGORA = datetime(2026, 11, 7, 9, 7, tzinfo=UTC)
+SEMANA_1 = Lembrete(semanas=(1, 1), numero=1)
+
+
+def test_o_plano_novo_traz_a_escolha_dos_lembretes(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid = _conta(s, A)
+        qid = r.guardar_questionario(
+            s, uid, _questionario().model_copy(update={"lembretes_email": False})
+        )
+        res = _resultado()
+        r.guardar_plano(s, uid, qid, res.plano, res.estrategia, res.modelo)
+        assert r.obter_preferencias(s, uid).lembretes_email is False
+        r.guardar_preferencias(s, uid, r.Preferencias(lembretes_email=True))
+        assert r.obter_preferencias(s, uid).lembretes_email is True
+
+
+def test_destinatarios_so_com_acompanhamento_e_lembretes(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        a, plano_a = _com_plano(s, A)
+        b, _ = _com_plano(s, B)
+        r.guardar_preferencias(s, b, r.Preferencias(lembretes_email=False))
+        (d,) = r.destinatarios_de_lembretes(s)
+        assert (d.utilizador_id, d.plano_id, d.email, d.sub) == (a, plano_a.id, A.email, A.sub)
+        r.guardar_preferencias(s, a, r.Preferencias(ativo=False))
+        assert r.destinatarios_de_lembretes(s) == []
+
+
+def test_registar_lembrete_nao_repete_nem_aceita_planos_de_outro(
+    fabrica: sessionmaker[Session],
+) -> None:
+    with fabrica.begin() as s:
+        a, plano_a = _com_plano(s, A)
+        b, _ = _com_plano(s, B)
+        with pytest.raises(r.PlanoDeOutro):
+            r.registar_lembrete(s, b, plano_a.id, SEMANA_1, AGORA)
+        r.registar_lembrete(s, a, plano_a.id, SEMANA_1, AGORA)
+        (feito,) = r.lembretes_enviados(s, a, plano_a.id)
+        assert (feito.semanas, feito.numero, feito.dia) == ((1, 1), 1, date(2026, 11, 7))
+        assert r.lembretes_enviados(s, b, plano_a.id) == []
+    with pytest.raises(IntegrityError), fabrica.begin() as s:
+        r.registar_lembrete(s, a, plano_a.id, SEMANA_1, AGORA)
+
+
+def test_cancelar_lembretes_pela_ligacao(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        a = _conta(s, A)
+        b = _conta(s, B)
+    token_a = gerar_token(a, A.sub, SEGREDO)
+    with fabrica.begin() as s:
+        assert not cancelar_lembretes(s, token_a, None)  # sem segredo configurado
+        assert not cancelar_lembretes(s, gerar_token(b, A.sub, SEGREDO), SEGREDO)
+        assert not cancelar_lembretes(s, "999." + token_a.split(".")[1], SEGREDO)
+        assert r.obter_preferencias(s, a).lembretes_email is True
+        assert cancelar_lembretes(s, token_a, SEGREDO)
+    with fabrica.begin() as s:
+        assert r.obter_preferencias(s, a) == r.Preferencias(lembretes_email=False)
+        assert r.obter_preferencias(s, b).lembretes_email is True  # B não muda
+
+
+def test_lembretes_na_exportacao_e_apagados_com_a_conta_e_o_plano(
+    fabrica: sessionmaker[Session],
+) -> None:
+    with fabrica.begin() as s:
+        a, plano_a = _com_plano(s, A)
+        b, plano_b = _com_plano(s, B)
+        r.registar_lembrete(s, a, plano_a.id, SEMANA_1, AGORA)
+        r.registar_lembrete(s, b, plano_b.id, SEMANA_1, AGORA)
+        dados = json.loads(json.dumps(r.exportar_dados(s, a)))
+        assert dados["lembretes_enviados"] == [
+            {
+                "plano_id": plano_a.id,
+                "semanas": [1, 1],
+                "numero": 1,
+                "enviado_em": dados["lembretes_enviados"][0]["enviado_em"],
+            }
+        ]
+        assert dados["conta"]["lembretes_email"] is True
+    with fabrica.begin() as s:
+        r.apagar_utilizador(s, a)
+        assert s.scalar(select(func.count()).select_from(LembreteEnviado)) == 1
+        assert r.apagar_plano(s, b, plano_b.id)
+        assert s.scalar(select(func.count()).select_from(LembreteEnviado)) == 0
+
+
+def test_migracao_0003_copia_a_escolha_dos_lembretes(tmp_path: Path) -> None:
+    motor = criar_motor(f"sqlite:///{tmp_path / 'm.db'}")
+    config = Config()
+    config.set_main_option("script_location", str(files("vigoria.dados") / "migracoes"))
+    with motor.begin() as ligacao:
+        config.attributes["connection"] = ligacao
+        command.upgrade(config, "0002")
+        for uid in (1, 2):
+            ligacao.execute(
+                text(
+                    "INSERT INTO utilizador (id, sub, fornecedor, email, criado_em) "
+                    "VALUES (:id, :sub, 'auth0', :email, '2026-01-01')"
+                ),
+                {"id": uid, "sub": f"auth0|{uid}", "email": f"{uid}@exemplo.pt"},
+            )
+        for qid, lembretes in ((1, True), (2, False)):
+            ligacao.execute(
+                text(
+                    "INSERT INTO questionario (id, utilizador_id, respostas, criado_em) "
+                    "VALUES (:id, 1, :respostas, '2026-01-01')"
+                ),
+                {"id": qid, "respostas": json.dumps({"lembretes_email": lembretes})},
+            )
+    migrar(motor)
+    with fabrica_sessoes(motor).begin() as s:
+        assert r.obter_preferencias(s, 1).lembretes_email is False  # as últimas respostas
+        assert r.obter_preferencias(s, 2).lembretes_email is True  # sem respostas
+        assert s.scalar(select(func.count()).select_from(QuestionarioGuardado)) == 2
+    with motor.begin() as ligacao:  # e para trás, sem apagar as contas
+        config.attributes["connection"] = ligacao
+        command.downgrade(config, "0002")
+        assert ligacao.scalar(text("SELECT count(*) FROM questionario")) == 2
+        assert ligacao.scalar(text("SELECT count(*) FROM utilizador")) == 2
+    motor.dispose()

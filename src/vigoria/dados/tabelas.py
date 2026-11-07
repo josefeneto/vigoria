@@ -49,6 +49,7 @@ class Utilizador(Base):
     frequencia_registo: Mapped[str] = mapped_column(
         String(20), default="semanal", server_default="semanal"
     )
+    lembretes_email: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
 
 
 class Consentimento(Base):
@@ -102,3 +103,22 @@ class RegistoProgresso(Base):
     alterado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=agora, onupdate=agora
     )
+
+
+class LembreteEnviado(Base):
+    """Um lembrete por email já enviado: nunca se repete o mesmo número no mesmo período."""
+
+    __tablename__ = "lembrete_enviado"
+    __table_args__ = (
+        UniqueConstraint(
+            "plano_id", "semana_inicio", "semana_fim", "numero", name="uq_lembrete_periodo_numero"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    utilizador_id: Mapped[int] = _dono()
+    plano_id: Mapped[int] = mapped_column(ForeignKey("plano.id", ondelete="CASCADE"), index=True)
+    semana_inicio: Mapped[int] = mapped_column(Integer)
+    semana_fim: Mapped[int] = mapped_column(Integer)
+    numero: Mapped[int] = mapped_column(Integer)  # 1 ou 2
+    enviado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
