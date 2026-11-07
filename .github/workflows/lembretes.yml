@@ -1,0 +1,62 @@
+# Lembretes de registo por email (Fase 8): uma vez por dia, às 9h07 de Lisboa.
+#
+# Hora: o GitHub lê o cron em UTC, salvo com «timezone». Com Europe/Lisbon, a mudança de hora
+# (verão/inverno) fica a cargo do GitHub. Os 7 minutos evitam a hora certa, em que o GitHub
+# tem mais atrasos. Se uma execução se atrasar ou falhar, a do dia seguinte apanha os
+# lembretes em falta (até 7 dias depois do prazo, REGRAS_DOMINIO §9.2, L3).
+#
+# Os registos deste workflow podem ser públicos: a tarefa só escreve identificadores técnicos,
+# nunca emails nem dados de saúde.
+name: Lembretes por email
+
+on:
+  schedule:
+    - cron: "7 9 * * *"
+      timezone: "Europe/Lisbon"
+  workflow_dispatch:
+    inputs:
+      simular:
+        description: "Só mostrar quem receberia que lembrete, sem enviar nem gravar"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lembretes
+  cancel-in-progress: false
+
+jobs:
+  lembretes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Instalar dependências
+        run: python -m pip install -r requirements.txt
+
+      - name: Enviar os lembretes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          VIGORIA_SEGREDO_LEMBRETES: ${{ secrets.VIGORIA_SEGREDO_LEMBRETES }}
+          VIGORIA_EMAILS_PERMITIDOS: ${{ secrets.VIGORIA_EMAILS_PERMITIDOS }}
+          # Sem a variável, «demo»: só quem está na lista de convidados (falha fechada).
+          AMBIENTE: ${{ vars.AMBIENTE || 'demo' }}
+          APP_URL: ${{ vars.APP_URL }}
+          EMAIL_REMETENTE: ${{ vars.EMAIL_REMETENTE || 'geral@vigoria.pt' }}
+          SIMULAR: ${{ github.event_name == 'workflow_dispatch' && inputs.simular }}
+        run: |
+          if [ "$SIMULAR" = "true" ]; then
+            python -m vigoria.tarefas.lembretes --simular
+          else
+            python -m vigoria.tarefas.lembretes
+          fi

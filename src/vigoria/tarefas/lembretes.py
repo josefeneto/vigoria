@@ -1,0 +1,167 @@
+"""Tarefa diária dos lembretes por email (Fase 8): python -m vigoria.tarefas.lembretes.
+
+Corre no GitHub Actions (.github/workflows/lembretes.yml), uma vez por dia. Para cada pessoa
+com acompanhamento e lembretes ligados, e na lista de convidados, decide pelas regras L1 a L5
+(regras/lembretes.py) se lhe cabe um lembrete hoje. Grava o envio e só confirma a gravação
+se o Brevo aceitar o email; se falhar, tenta de novo no dia seguinte.
+
+A saída mostra só identificadores técnicos (os registos do Actions podem ser públicos):
+nunca emails nem dados de saúde. Com --simular, não envia nem grava nada.
+"""
+
+import argparse
+import logging
+import sys
+from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
+
+from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, sessionmaker
+
+from vigoria.config import Configuracao, obter_configuracao
+from vigoria.contas.entrada import email_convidado
+from vigoria.dados import repositorios as r
+from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
+from vigoria.notificacoes import brevo
+from vigoria.notificacoes.lembrete import email_lembrete
+from vigoria.notificacoes.token import gerar_token
+from vigoria.regras.lembretes import lembrete_devido
+from vigoria.regras.progresso import dia_em_lisboa, inicio_do_plano
+
+registo = logging.getLogger(__name__)
+
+Enviar = Callable[..., str]  # a assinatura de brevo.enviar
+
+
+class Resumo(BaseModel):
+    candidatos: int = 0
+    nao_convidados: int = 0
+    sem_lembrete: int = 0
+    simulados: int = 0
+    enviados: int = 0
+    ja_enviados: int = 0  # outra execução gravou-o entretanto
+    falhados: int = 0
+
+
+def _faltas(config: Configuracao) -> list[str]:
+    """As variáveis que faltam para enviar a sério."""
+    faltas = []
+    if config.brevo_api_key is None or not config.brevo_api_key.get_secret_value():
+        faltas.append("BREVO_API_KEY")
+    if not config.email_remetente:
+        faltas.append("EMAIL_REMETENTE")
+    if config.vigoria_segredo_lembretes is None:
+        faltas.append("VIGORIA_SEGREDO_LEMBRETES")
+    if config.ambiente != "local" and not config.app_url.startswith("https://"):
+        faltas.append("APP_URL (endereço público https da app)")
+    return faltas
+
+
+def executar(
+    fabrica: sessionmaker[Session],
+    config: Configuracao,
+    agora: datetime,
+    *,
+    simular: bool,
+    enviar: Enviar = brevo.enviar,
+    escrever: Callable[[str], None] = print,
+) -> Resumo:
+    """Uma execução; `agora` (com fuso) dá o dia em Lisboa e a hora gravada nos envios."""
+    resumo = Resumo()
+    hoje = dia_em_lisboa(agora)
+    demo = config.ambiente == "demo"
+    permitidos = config.vigoria_emails_permitidos
+    if demo and not permitidos:
+        escrever("AMBIENTE=demo sem VIGORIA_EMAILS_PERMITIDOS: ninguém recebe lembretes.")
+    with fabrica.begin() as s:
+        destinatarios = r.destinatarios_de_lembretes(s)
+    for d in destinatarios:
+        resumo.candidatos += 1
+        if not email_convidado(d.email, permitidos, lista_obrigatoria=demo):
+            resumo.nao_convidados += 1
+            continue
+        with fabrica.begin() as s:
+            lembrete = lembrete_devido(
+                inicio_do_plano(d.plano_criado_em),
+                hoje,
+                d.frequencia,
+                r.semanas_com_registo(s, d.utilizador_id, d.plano_id),
+                r.lembretes_enviados(s, d.utilizador_id, d.plano_id),
+            )
+        if lembrete is None:
+            resumo.sem_lembrete += 1
+            continue
+        linha = (
+            f"utilizador {d.utilizador_id}, plano {d.plano_id}, "
+            f"semanas {lembrete.semanas[0]} a {lembrete.semanas[1]}, lembrete {lembrete.numero}"
+        )
+        if simular:
+            resumo.simulados += 1
+            escrever(f"{linha}: simulado")
+            continue
+        assert config.brevo_api_key is not None and config.vigoria_segredo_lembretes is not None
+        email = email_lembrete(
+            d.email,
+            lembrete.numero,
+            config.app_url,
+            gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes),
+        )
+        try:
+            # Grava e envia na mesma transação: se o Brevo falhar, a gravação é desfeita.
+            with fabrica.begin() as s:
+                r.registar_lembrete(s, d.utilizador_id, d.plano_id, lembrete, agora)
+                enviar(
+                    email,
+                    chave=config.brevo_api_key,
+                    remetente=config.email_remetente,
+                    nome_remetente=config.email_nome_remetente,
+                )
+        except IntegrityError:
+            resumo.ja_enviados += 1
+            escrever(f"{linha}: já enviado por outra execução")
+        except brevo.ErroEnvio as erro:
+            resumo.falhados += 1
+            escrever(f"{linha}: falhou ({erro.tipo})")
+        else:
+            resumo.enviados += 1
+            escrever(f"{linha}: enviado")
+    escrever(
+        f"Hoje ({hoje.isoformat()}): {resumo.candidatos} com lembretes ligados, "
+        f"{resumo.nao_convidados} fora da lista de convidados, "
+        f"{resumo.sem_lembrete} sem lembrete devido, {resumo.simulados} simulados, "
+        f"{resumo.enviados} enviados, {resumo.ja_enviados} já enviados, "
+        f"{resumo.falhados} falhados."
+    )
+    return resumo
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m vigoria.tarefas.lembretes",
+        description="Envia os lembretes de registo em falta (REGRAS_DOMINIO §9).",
+    )
+    parser.add_argument(
+        "--simular",
+        action="store_true",
+        help="mostra quem receberia que lembrete, sem enviar nem gravar",
+    )
+    args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+
+    config = obter_configuracao()
+    faltas = _faltas(config)
+    if faltas and not args.simular:
+        print(f"Faltam variáveis para enviar: {', '.join(faltas)}.", file=sys.stderr)
+        return 2
+    motor = criar_motor(config.database_url)
+    try:
+        migrar(motor)
+        resumo = executar(fabrica_sessoes(motor), config, datetime.now(UTC), simular=args.simular)
+    finally:
+        motor.dispose()
+    return 1 if resumo.falhados else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
