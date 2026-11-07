@@ -7,6 +7,10 @@ se o Brevo aceitar o email; se falhar, tenta de novo no dia seguinte.
 
 A saída mostra só identificadores técnicos (os registos do Actions podem ser públicos):
 nunca emails nem dados de saúde. Com --simular, não envia nem grava nada.
+
+Com --testar-envio, manda já um lembrete de exemplo (o primeiro) a quem tem os lembretes
+ligados e está na lista de convidados, sem olhar às regras L1 a L5 e sem o gravar. Serve
+para ver o email a sério; se houver mais de uma pessoa, é preciso escolher com --utilizador.
 """
 
 import argparse
@@ -136,6 +140,61 @@ def executar(
     return resumo
 
 
+def testar_envio(
+    fabrica: sessionmaker[Session],
+    config: Configuracao,
+    *,
+    utilizador_id: int | None,
+    simular: bool,
+    enviar: Enviar = brevo.enviar,
+    escrever: Callable[[str], None] = print,
+) -> int:
+    """Envia um lembrete de exemplo, sem regras nem gravação. Devolve o código de saída."""
+    demo = config.ambiente == "demo"
+    permitidos = config.vigoria_emails_permitidos
+    with fabrica.begin() as s:
+        destinatarios = [
+            d
+            for d in r.destinatarios_de_lembretes(s)
+            if email_convidado(d.email, permitidos, lista_obrigatoria=demo)
+        ]
+    if utilizador_id is not None:
+        destinatarios = [d for d in destinatarios if d.utilizador_id == utilizador_id]
+    if not destinatarios:
+        escrever(
+            "Teste: ninguém com lembretes ligados e na lista de convidados"
+            + (f" com o utilizador {utilizador_id}." if utilizador_id is not None else ".")
+        )
+        return 1
+    if len(destinatarios) > 1:
+        ids = ", ".join(str(d.utilizador_id) for d in destinatarios)
+        escrever(f"Teste: há {len(destinatarios)} pessoas ({ids}); escolha uma com --utilizador.")
+        return 2
+    (d,) = destinatarios
+    if simular:
+        escrever(f"Teste: utilizador {d.utilizador_id}, lembrete de exemplo: simulado")
+        return 0
+    assert config.brevo_api_key is not None and config.vigoria_segredo_lembretes is not None
+    email = email_lembrete(
+        d.email,
+        1,
+        config.app_url,
+        gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes),
+    )
+    try:
+        enviar(
+            email,
+            chave=config.brevo_api_key,
+            remetente=config.email_remetente,
+            nome_remetente=config.email_nome_remetente,
+        )
+    except brevo.ErroEnvio as erro:
+        escrever(f"Teste: utilizador {d.utilizador_id}, lembrete de exemplo: falhou ({erro.tipo})")
+        return 1
+    escrever(f"Teste: utilizador {d.utilizador_id}, lembrete de exemplo: enviado")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m vigoria.tarefas.lembretes",
@@ -146,7 +205,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="mostra quem receberia que lembrete, sem enviar nem gravar",
     )
+    parser.add_argument(
+        "--testar-envio",
+        action="store_true",
+        help="manda já um lembrete de exemplo, sem regras e sem gravar",
+    )
+    parser.add_argument(
+        "--utilizador",
+        type=int,
+        help="com --testar-envio: o id do utilizador, se houver mais de um",
+    )
     args = parser.parse_args(argv)
+    if args.utilizador is not None and not args.testar_envio:
+        parser.error("--utilizador só serve com --testar-envio")
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     config = obter_configuracao()
@@ -157,6 +228,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     motor = criar_motor(config.database_url)
     try:
         migrar(motor)
+        if args.testar_envio:
+            return testar_envio(
+                fabrica_sessoes(motor),
+                config,
+                utilizador_id=args.utilizador,
+                simular=args.simular,
+            )
         resumo = executar(fabrica_sessoes(motor), config, datetime.now(UTC), simular=args.simular)
     finally:
         motor.dispose()

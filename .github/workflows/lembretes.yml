@@ -19,6 +19,14 @@ on:
         description: "Só mostrar quem receberia que lembrete, sem enviar nem gravar"
         type: boolean
         default: true
+      testar_envio:
+        description: "Mandar já um lembrete de exemplo (sem regras nem gravação) a quem está na lista"
+        type: boolean
+        default: false
+      utilizador:
+        description: "Com o envio de teste: id do utilizador, se houver mais de um (vazio = o único)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -54,9 +62,13 @@ jobs:
           APP_URL: ${{ vars.APP_URL }}
           EMAIL_REMETENTE: ${{ vars.EMAIL_REMETENTE || 'geral@vigoria.pt' }}
           SIMULAR: ${{ github.event_name == 'workflow_dispatch' && inputs.simular }}
+          TESTAR_ENVIO: ${{ github.event_name == 'workflow_dispatch' && inputs.testar_envio }}
+          UTILIZADOR: ${{ inputs.utilizador }}
         run: |
-          if [ "$SIMULAR" = "true" ]; then
-            python -m vigoria.tarefas.lembretes --simular
-          else
-            python -m vigoria.tarefas.lembretes
+          opcoes=()
+          if [ "$SIMULAR" = "true" ]; then opcoes+=(--simular); fi
+          if [ "$TESTAR_ENVIO" = "true" ]; then
+            opcoes+=(--testar-envio)
+            if [ -n "$UTILIZADOR" ]; then opcoes+=(--utilizador "$UTILIZADOR"); fi
           fi
+          python -m vigoria.tarefas.lembretes "${opcoes[@]}"

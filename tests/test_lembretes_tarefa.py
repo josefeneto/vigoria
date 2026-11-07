@@ -330,3 +330,91 @@ def test_fora_do_local_exige_o_endereco_publico() -> None:
         "APP_URL (endereço público https da app)"
     ]
     assert lembretes._faltas(_config(app_url="http://localhost:8501")) == []
+
+
+# ---------------------------------------------------------------- Envio de teste
+
+
+def _testar(
+    fabrica: sessionmaker[Session],
+    *,
+    utilizador_id: int | None = None,
+    simular: bool = False,
+    config: Configuracao | None = None,
+    envio: _Brevo | None = None,
+) -> tuple[int, _Brevo, list[str]]:
+    envio = envio or _Brevo()
+    linhas: list[str] = []
+    codigo = lembretes.testar_envio(
+        fabrica,
+        config or _config(),
+        utilizador_id=utilizador_id,
+        simular=simular,
+        enviar=envio,
+        escrever=linhas.append,
+    )
+    return codigo, envio, linhas
+
+
+def test_teste_envia_o_exemplo_sem_gravar_nem_mostrar_emails(
+    fabrica: sessionmaker[Session],
+) -> None:
+    with fabrica.begin() as s:
+        uid, _ = _pessoa(s, 1)
+    codigo, envio, linhas = _testar(fabrica)
+    assert codigo == 0
+    ((email,),) = [envio.emails]
+    assert email.para == "pessoa1@exemplo.pt"
+    assert "último lembrete" not in email.texto  # o primeiro, não o segundo
+    assert _contar(fabrica) == 0
+    assert linhas == [f"Teste: utilizador {uid}, lembrete de exemplo: enviado"]
+    assert not any("@" in linha or "auth0|" in linha for linha in linhas)
+
+
+def test_teste_ligacao_de_cancelar_funciona(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, _ = _pessoa(s, 1)
+    _, envio, _ = _testar(fabrica)
+    token = envio.emails[0].cabecalhos["List-Unsubscribe"].split("?t=")[1].rstrip(">")
+    assert token_valido(token, "auth0|1", SecretStr(SEGREDO))
+
+
+def test_teste_so_para_convidados_com_lembretes_ligados(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        _pessoa(s, 1, lembretes_email=False)
+        _pessoa(s, 2)
+    demo = _config(ambiente="demo", vigoria_emails_permitidos="outra@exemplo.pt")
+    codigo, envio, linhas = _testar(fabrica, config=demo)
+    assert codigo == 1 and envio.emails == []
+    assert "ninguém" in linhas[0]
+
+
+def test_teste_com_varias_pessoas_pede_o_utilizador(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid1, _ = _pessoa(s, 1)
+        uid2, _ = _pessoa(s, 2)
+    codigo, envio, linhas = _testar(fabrica)
+    assert codigo == 2 and envio.emails == []
+    assert f"({uid1}, {uid2})" in linhas[0] and "--utilizador" in linhas[0]
+    codigo, envio, _ = _testar(fabrica, utilizador_id=uid2)
+    assert codigo == 0 and [e.para for e in envio.emails] == ["pessoa2@exemplo.pt"]
+
+
+def test_teste_simulado_nao_envia(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        uid, _ = _pessoa(s, 1)
+    codigo, envio, linhas = _testar(fabrica, simular=True)
+    assert codigo == 0 and envio.emails == []
+    assert linhas == [f"Teste: utilizador {uid}, lembrete de exemplo: simulado"]
+
+
+def test_teste_falhado_da_codigo_1(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        _pessoa(s, 1)
+    codigo, _, linhas = _testar(fabrica, envio=_Brevo(TipoErroEnvio.AUTENTICACAO))
+    assert codigo == 1 and "falhou (autenticacao)" in linhas[0]
+
+
+def test_utilizador_so_com_testar_envio(ambiente: None) -> None:
+    with pytest.raises(SystemExit):
+        lembretes.main(["--utilizador", "1"])
