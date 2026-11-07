@@ -32,6 +32,7 @@ PAGINA_PLANO = "paginas/plano.py"
 PAGINA_PROGRESSO = "paginas/progresso.py"
 PAGINA_PRIVACIDADE = "paginas/privacidade.py"
 PAGINA_CONTA = "paginas/conta.py"
+PAGINA_CANCELAR_LEMBRETES = "paginas/cancelar_lembretes.py"
 
 
 def hoje() -> date:

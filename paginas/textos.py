@@ -44,6 +44,7 @@ PAGINAS = {
     "conta": "A minha conta",
     "sair": "Terminar sessão",
     "privacidade": "Privacidade",
+    "cancelar_lembretes": "Lembretes por email",
 }
 
 # ---------------------------------------------------------------- Conta e sessão
@@ -727,6 +728,22 @@ CONTA_ACOMPANHAMENTO = "Acompanhamento"
 CONTA_ACOMPANHAMENTO_ATIVO = "Quero acompanhar o meu progresso"
 ROTULOS_QUESTIONARIO_FREQUENCIA = "Com que frequência quer registar o seu progresso?"
 CONTA_ACOMPANHAMENTO_GUARDADO = "As suas preferências foram guardadas."
+CONTA_LEMBRETES_EMAIL = "Enviar-me um lembrete por email quando faltar um registo"
+
+# Deixar de receber lembretes (ligação dos emails, sem sessão iniciada; Fase 8)
+CANCELAR_TITULO = "Lembretes por email"
+CANCELAR_PERGUNTA = (
+    "Quer deixar de receber os lembretes por email da Vigoria? O seu plano e os seus "
+    "registos ficam como estão."
+)
+CANCELAR_BOTAO = "Deixar de receber lembretes"
+CANCELAR_FEITO = "Pronto: já não vai receber lembretes por email."
+CANCELAR_REATIVAR = "Pode voltar a ativá-los em «A minha conta»."
+CANCELAR_INVALIDA = (
+    "Esta ligação não é válida ou já não corresponde a nenhuma conta. Se ainda recebe "
+    "lembretes, pode desativá-los em «A minha conta»."
+)
+CANCELAR_INICIO = "Ir para o Início"
 
 
 def periodo_de(primeira: int, ultima: int) -> str:

@@ -56,6 +56,17 @@ As respostas, os planos e os registos ficam guardados numa base de dados na Uni�
 (Frankfurt, Alemanha). A entrada na conta é tratada pelo Auth0, um serviço de autenticação
 que usamos como subcontratante, num servidor da região europeia.
 
+Se ativar os lembretes por email, usamos dois subcontratantes, nenhum deles com acesso aos
+seus dados de saúde:
+
+- **Brevo** (empresa da União Europeia): envia os lembretes. Recebe apenas o seu email e o
+  texto do lembrete, que nunca tem dados de saúde.
+- **GitHub** (Estados Unidos): agenda o envio diário. Lê o seu email e as semanas em que fez
+  registos, nunca os valores registados nem as respostas ao questionário.
+
+Todos os lembretes têm uma ligação para deixar de os receber; pode também desativá-los em
+«A minha conta».
+
 A versão de demonstração da Vigoria corre em servidores fora da União Europeia: nessa
 versão, não introduza dados reais de saúde.
 

@@ -22,6 +22,7 @@ PALAVRA = "conta_apagar_palavra"
 APAGAR_PLANO = "conta_apagar_plano"  # id do plano à espera de confirmação
 ACOMPANHAMENTO_ATIVO = "conta_acompanhamento_ativo"
 FREQUENCIA = "conta_frequencia"
+LEMBRETES_EMAIL = "conta_lembretes_email"
 
 
 def _abrir(plano_id: int) -> None:
@@ -56,7 +57,9 @@ def _apagar_plano(plano_id: int) -> None:
 
 def _guardar_acompanhamento() -> None:
     preferencias = repositorios.Preferencias(
-        ativo=st.session_state[ACOMPANHAMENTO_ATIVO], frequencia=st.session_state[FREQUENCIA]
+        ativo=st.session_state[ACOMPANHAMENTO_ATIVO],
+        frequencia=st.session_state[FREQUENCIA],
+        lembretes_email=st.session_state[LEMBRETES_EMAIL],
     )
     with sessao.fabrica().begin() as s:
         repositorios.guardar_preferencias(s, sessao.utilizador_id(), preferencias)
@@ -146,6 +149,13 @@ st.radio(
     index=frequencias.index(preferencias.frequencia),
     format_func=lambda f: t.FREQUENCIA_PLANO[f.value],
     key=FREQUENCIA,
+    disabled=not ativo,
+    on_change=_guardar_acompanhamento,
+)
+st.toggle(
+    t.CONTA_LEMBRETES_EMAIL,
+    value=preferencias.lembretes_email,
+    key=LEMBRETES_EMAIL,
     disabled=not ativo,
     on_change=_guardar_acompanhamento,
 )
