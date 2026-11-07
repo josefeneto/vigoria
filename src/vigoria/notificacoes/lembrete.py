@@ -17,7 +17,6 @@ from vigoria.notificacoes.brevo import Email
 
 CAMINHO_PROGRESSO = "progresso"  # paginas/progresso.py
 CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py)
-CAMINHO_LOGOTIPO = "app/static/icones/icone-192.png"  # PNG: o Gmail não mostra SVG
 
 # Paleta da marca (paginas/estilos.py, CORES; um teste confirma que são iguais).
 CORES = {
@@ -66,7 +65,6 @@ def email_lembrete(para: str, numero: int, app_url: str, token: str) -> Email:
     ligacoes = {
         "url_registo": f"{base}/{CAMINHO_PROGRESSO}",
         "url_cancelar": cancelar,
-        "url_logotipo": f"{base}/{CAMINHO_LOGOTIPO}",
     }
     ultimo = numero >= 2
     campos = t.model_dump()
