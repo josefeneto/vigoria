@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 import streamlit as st
+from pydantic import ValidationError
 
 from vigoria.config import Configuracao, obter_auth0
 
@@ -66,6 +67,39 @@ def test_database_url_do_neon_usa_psycopg(
 ) -> None:
     monkeypatch.setenv("DATABASE_URL", url)
     assert Configuracao().database_url == esperado
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        '  "postgresql://u:p@h/db"  ',
+        "'postgresql://u:p@h/db'",
+        " postgresql://u:p@h/db\n",
+    ],
+)
+def test_database_url_sem_aspas_nem_espacos(monkeypatch: pytest.MonkeyPatch, url: str) -> None:
+    monkeypatch.setenv("DATABASE_URL", url)
+    assert Configuracao().database_url == "postgresql+psycopg://u:p@h/db"
+
+
+@pytest.mark.parametrize(
+    ("url", "mensagem"),
+    [
+        ("", "vazio"),
+        ('""', "vazio"),
+        ('DATABASE_URL = "postgresql://u:segredo123@h/db"', "mal formado"),
+        ("psql 'postgresql://u:segredo123@h/db'", "mal formado"),
+        ("u:segredo123@h/db", "mal formado"),
+    ],
+)
+def test_database_url_errado_da_mensagem_clara_sem_o_valor(
+    monkeypatch: pytest.MonkeyPatch, url: str, mensagem: str
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", url)
+    with pytest.raises(ValidationError) as erro:
+        Configuracao()
+    assert mensagem in str(erro.value)
+    assert "segredo123" not in str(erro.value)
 
 
 def test_utilizador_local_so_em_local(monkeypatch: pytest.MonkeyPatch) -> None:

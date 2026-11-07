@@ -62,7 +62,11 @@ class _FonteSecretsStreamlit(PydanticBaseSettingsSource):
 class Configuracao(BaseSettings):
     """Variáveis definidas em .env.example."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # hide_input_in_errors: um valor recusado (por exemplo, o DATABASE_URL com a palavra-passe)
+    # nunca aparece na mensagem de erro nem nos registos do GitHub Actions.
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", hide_input_in_errors=True
+    )
 
     vigoria_provedor_llm: NomeProvedor = "gemini"
     vigoria_provedor_reserva: NomeProvedor | None = None
@@ -138,7 +142,16 @@ class Configuracao(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _postgresql_com_psycopg(cls, valor: str) -> str:
-        """O Neon dá «postgresql://…»; o SQLAlchemy precisa do controlador (psycopg 3)."""
+        """Tira espaços e aspas coladas por engano; o Neon dá «postgresql://…» e o SQLAlchemy
+        precisa do controlador (psycopg 3). A mensagem de erro nunca mostra o valor."""
+        valor = valor.strip().strip("\"'").strip()
+        if not valor:
+            raise ValueError("DATABASE_URL está vazio (confirme o nome e o valor do segredo)")
+        if not re.match(r"^[a-z][a-z0-9+]*://", valor):
+            raise ValueError(
+                "DATABASE_URL mal formado: deve ser só o endereço, a começar por "
+                "«postgresql://», sem nome da variável, «=», aspas nem «psql»"
+            )
         for prefixo in ("postgres://", "postgresql://"):
             if valor.startswith(prefixo):
                 return "postgresql+psycopg://" + valor.removeprefix(prefixo)
