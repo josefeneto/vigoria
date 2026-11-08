@@ -30,24 +30,24 @@ SECCOES = ("Resumo", "Treino", "Alimentação", "Hábitos", "Acompanhamento", "M
 CENARIOS = ("normal", "lenta", "rapida", "manutencao")
 
 
-def _ambiente() -> dict[str, str]:
+def _ambiente(com_sessao: bool = True) -> dict[str, str]:
     return os.environ | {
         "VIGORIA_PROVEDOR_LLM": "simulado",
         "VIGORIA_PROVEDOR_RESERVA": "",
         "AMBIENTE": "local",
-        "VIGORIA_UTILIZADOR_LOCAL": "1",
+        "VIGORIA_UTILIZADOR_LOCAL": "1" if com_sessao else "0",
         "DATABASE_URL": f"sqlite:///{(SAIDA / 'capturas.db').as_posix()}",  # nunca a do José
     }
 
 
-def _arrancar() -> subprocess.Popen[bytes]:
-    env = _ambiente()
+def _arrancar(com_sessao: bool = True, porta: int = PORTA) -> subprocess.Popen[bytes]:
+    env = _ambiente(com_sessao)
     comando = [sys.executable, "-m", "streamlit", "run", "app.py", "--server.headless=true"]
-    comando += [f"--server.port={PORTA}", "--browser.gatherUsageStats=false"]
+    comando += [f"--server.port={porta}", "--browser.gatherUsageStats=false"]
     processo = subprocess.Popen(comando, cwd=RAIZ, env=env, stdout=subprocess.DEVNULL)
     for _ in range(60):
         with socket.socket() as s:
-            if s.connect_ex(("localhost", PORTA)) == 0:
+            if s.connect_ex(("localhost", porta)) == 0:
                 return processo
         time.sleep(0.5)
     processo.terminate()
@@ -156,6 +156,32 @@ def _percorrer(page: Page, largura: str) -> None:
     page.get_by_role("link", name="Voltar ao questionário").wait_for()  # o fim da página
     page.wait_for_timeout(600)
     _capturar(page, largura, "24_plano_na_manutencao")
+    _menu_e_rodape(page, largura, URL, "27")
+
+
+def _menu_e_rodape(page: Page, largura: str, url: str, n: str) -> None:
+    """O menu aberto (computador: «Conta»; telemóvel: o painel lateral) e o rodapé da Ajuda."""
+    page.goto(f"{url}/ajuda")
+    _esperar(page)
+    rodape = page.locator(".st-key-rodape")
+    rodape.wait_for()
+    page.wait_for_timeout(600)
+    rodape.screenshot(path=str(SAIDA / f"{largura}_{n}b_rodape.png"))
+    if largura == "telemovel":
+        page.locator('[data-testid="stExpandSidebarButton"]').click()
+    else:
+        conta = page.get_by_text("Conta", exact=True)
+        if conta.count():  # sem sessão não há grupo «Conta»
+            conta.first.click()
+    page.wait_for_timeout(800)
+    _capturar(page, largura, f"{n}_menu")
+
+
+def _sem_sessao(page: Page, largura: str, url: str) -> None:
+    page.goto(url)
+    _esperar(page)
+    _capturar(page, largura, "30_sem_sessao_inicio")
+    _menu_e_rodape(page, largura, url, "31_sem_sessao")
 
 
 def main() -> None:
@@ -175,6 +201,14 @@ def main() -> None:
                 print(f"{largura} ({x} px):")
                 contexto = browser.new_context(viewport={"width": x, "height": y})
                 _percorrer(contexto.new_page(), largura)
+                contexto.close()
+            processo.terminate()
+            # Sem sessão (sem o utilizador local fictício): outro servidor, noutra porta.
+            processo = _arrancar(com_sessao=False, porta=PORTA + 1)
+            for largura, (x, y) in LARGURAS.items():
+                print(f"{largura} ({x} px), sem sessão:")
+                contexto = browser.new_context(viewport={"width": x, "height": y})
+                _sem_sessao(contexto.new_page(), largura, f"http://localhost:{PORTA + 1}")
                 contexto.close()
             browser.close()
     finally:

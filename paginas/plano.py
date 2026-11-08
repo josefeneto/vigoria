@@ -250,7 +250,7 @@ if resultado is None:
     st.title(r["titulo"])
     st.info(t.SEM_PLANO, icon=":material/info:")
     st.page_link(comum.PAGINA_QUESTIONARIO, label=t.COMECAR, icon=":material/arrow_forward:")
-    st.stop()
+    comum.parar()
 
 plano: Plano = resultado.plano
 if plano.provedor == "simulado":

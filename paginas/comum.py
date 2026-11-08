@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from functools import partial
-from typing import Any
+from typing import Any, NoReturn
 from zoneinfo import ZoneInfo
 
 import streamlit as st
@@ -34,6 +34,27 @@ PAGINA_PRIVACIDADE = "paginas/privacidade.py"
 PAGINA_CONTA = "paginas/conta.py"
 PAGINA_CANCELAR_LEMBRETES = "paginas/cancelar_lembretes.py"
 PAGINA_AJUDA = "paginas/ajuda.py"
+
+
+def rodape() -> None:
+    """Rodapé comum: «Privacidade · Ajuda · contacto», no fim de todas as páginas do menu."""
+    # Os «·» entre as ligações são desenhados pelo CSS (estilos.css, .st-key-rodape).
+    with st.container(
+        horizontal=True,
+        horizontal_alignment="center",
+        vertical_alignment="center",
+        gap=None,
+        key="rodape",
+    ):
+        st.page_link(PAGINA_PRIVACIDADE, label=t.PAGINAS["privacidade"])
+        st.page_link(PAGINA_AJUDA, label=t.PAGINAS["ajuda"])
+        st.markdown(f"[{t.CONTACTO}](mailto:{t.CONTACTO})", width="content")
+
+
+def parar() -> NoReturn:
+    """Em vez de st.stop() numa página: desenha primeiro o rodapé (app.py já não o desenharia)."""
+    rodape()
+    st.stop()
 
 
 def ligacao_ajuda(tema: str) -> None:

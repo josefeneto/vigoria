@@ -17,6 +17,7 @@ from vigoria.regras.elegibilidade import Modo
 # ---------------------------------------------------------------- Geral
 
 MARCA = "Vigoria"
+CONTACTO = "geral@vigoria.pt"  # rodapé e mensagens sem menu (convite, base de dados)
 # Espaço não separável antes do travessão: «— para…» nunca começa uma linha.
 PROMESSA = (
     "O seu plano, à sua medida\u00a0— para ganhar e manter força e energia, sem sair de casa."
@@ -54,13 +55,14 @@ AJUDA_INTRO = (
     "Respostas curtas sobre como a Vigoria funciona. Se não encontrar o que procura, escreva-nos."
 )
 COMO_FUNCIONA_LIGACAO = "Como funciona?"
+SECCAO_CONTA = "Conta"  # grupo do menu com «A minha conta» e «Terminar sessão»
 
 # ---------------------------------------------------------------- Conta e sessão
 
 ENTRAR = "Entrar ou criar conta"
 BD_INDISPONIVEL = (
     "Não foi possível ligar à base de dados. Tente de novo dentro de momentos: "
-    "os seus dados estão guardados."
+    f"os seus dados estão guardados. Se o problema continuar, escreva para {CONTACTO}."
 )
 LOGIN_POR_CONFIGURAR = (
     "A entrada com conta ainda não está configurada neste servidor (falta a secção [auth] do "
@@ -80,7 +82,8 @@ RECUSAS = {
     ),
 }
 SO_POR_CONVITE = (
-    "A Vigoria está em fase de testes, apenas por convite. Se quiser participar, contacte-nos."
+    "A Vigoria está em fase de testes, apenas por convite. Se quiser participar, escreva para "
+    f"{CONTACTO}."
 )
 UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
 # Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.

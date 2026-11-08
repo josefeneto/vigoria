@@ -1,15 +1,16 @@
 """Ponto de entrada da Vigoria (Streamlit): configuração, sessão e navegação.
 
 As cores vêm de .streamlit/config.toml e de paginas/estilos.py; os textos, de paginas/textos.py.
-Sem sessão iniciada só se veem o Início, a Privacidade e a Ajuda (Fases 6 e 8B); o resto exige
-login. A página para deixar de receber lembretes (Fase 8) abre-se com ou sem sessão, fora do
-menu.
+Sem sessão iniciada só se veem o Início e a Ajuda no menu, e a Privacidade no rodapé (Fases 6
+e 8B); o resto exige login. A página para deixar de receber lembretes (Fase 8) abre-se com ou
+sem sessão, fora do menu. Todas as páginas acabam no rodapé (comum.rodape).
 """
 
 from pathlib import Path
 
 import streamlit as st
 from sqlalchemy.exc import OperationalError
+from streamlit.navigation.page import StreamlitPage
 
 from paginas import comum, estilos, sessao
 from paginas import textos as t
@@ -78,8 +79,13 @@ elif entrada is not None:
 inicio = st.Page(
     comum.PAGINA_INICIO, title=t.PAGINAS["inicio"], icon=":material/home:", default=True
 )
+# Fora do menu (Fase 8B): no rodapé de todas as páginas e no passo do consentimento.
 privacidade = st.Page(
-    comum.PAGINA_PRIVACIDADE, title=t.PAGINAS["privacidade"], icon=":material/policy:"
+    comum.PAGINA_PRIVACIDADE,
+    title=t.PAGINAS["privacidade"],
+    icon=":material/policy:",
+    url_path="privacidade",
+    visibility="hidden",
 )
 ajuda = st.Page(
     comum.PAGINA_AJUDA, title=t.PAGINAS["ajuda"], icon=":material/help:", url_path="ajuda"
@@ -92,26 +98,37 @@ cancelar_lembretes = st.Page(
     url_path="cancelar-lembretes",
     visibility="hidden",
 )
+paginas: list[StreamlitPage] | dict[str, list[StreamlitPage]]
 if isinstance(entrada, int):
-    paginas = [
-        inicio,
-        st.Page(
-            comum.PAGINA_QUESTIONARIO,
-            title=t.PAGINAS["questionario"],
-            icon=":material/checklist:",
-        ),
-        st.Page(comum.PAGINA_PLANO, title=t.PAGINAS["plano"], icon=":material/description:"),
-        st.Page(comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"),
-        st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
-        privacidade,
-        ajuda,
-        st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
-        cancelar_lembretes,
-    ]
+    # Com secções e position="top": no computador, «Conta» é um menu que se abre; no
+    # telemóvel (painel lateral), um título com as duas páginas por baixo. As páginas da
+    # secção "" vêm primeiro.
+    paginas = {
+        "": [
+            inicio,
+            st.Page(
+                comum.PAGINA_QUESTIONARIO,
+                title=t.PAGINAS["questionario"],
+                icon=":material/checklist:",
+            ),
+            st.Page(comum.PAGINA_PLANO, title=t.PAGINAS["plano"], icon=":material/description:"),
+            st.Page(
+                comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"
+            ),
+            ajuda,
+            privacidade,
+            cancelar_lembretes,
+        ],
+        t.SECCAO_CONTA: [
+            st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
+            st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
+        ],
+    }
 else:
-    paginas = [inicio, privacidade, ajuda, cancelar_lembretes]
+    paginas = [inicio, ajuda, privacidade, cancelar_lembretes]
 
 try:
     st.navigation(paginas, position="top").run()
+    comum.rodape()  # as páginas que param a meio usam comum.parar(), que o desenha antes
 except OperationalError as erro:
     sessao.base_indisponivel(erro)

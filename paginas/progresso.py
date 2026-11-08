@@ -478,7 +478,7 @@ resultado = st.session_state.get(comum.RESULTADO)
 if resultado is None or not resultado.id:  # id 0: o plano não ficou guardado na conta
     st.info(t.PROGRESSO_SEM_PLANO, icon=":material/info:")
     st.page_link(comum.PAGINA_QUESTIONARIO, label=t.COMECAR, icon=":material/arrow_forward:")
-    st.stop()
+    comum.parar()
 
 uid = sessao.utilizador_id()
 with sessao.fabrica().begin() as s:

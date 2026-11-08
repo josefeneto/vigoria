@@ -527,7 +527,7 @@ if st.session_state.get(comum.TERMINADO_GRAVIDEZ):
     st.info(avisos_motor.GRAVIDEZ, icon=":material/pregnant_woman:")
     st.caption(t.GRAVIDEZ_NADA_GUARDADO)
     st.button(t.VOLTAR_INICIO, width="stretch", on_click=_recomecar)
-    st.stop()
+    comum.parar()
 
 passo = st.session_state[comum.PASSO]
 indice = PASSOS.index(passo)
