@@ -426,3 +426,22 @@ def test_o_plano_so_convida_a_responder_de_novo_na_semana_16(
     monkeypatch.setattr(comum, "hoje", lambda: futuro)
     at.run()
     assert any("Chegou à semana 16" in i.value for i in at.info)
+
+
+# ---------------------------------------------------------------- Ajuda (Fase 8B)
+
+
+def _ligacao_ajuda(at: AppTest) -> str:
+    """O tema da ligação «Como funciona?» da página (tem de haver exatamente uma)."""
+    ligacoes = [p.proto for p in at.get("page_link") if p.proto.label == "Como funciona?"]
+    assert len(ligacoes) == 1
+    assert ligacoes[0].page.endswith("ajuda")
+    return ligacoes[0].query_string
+
+
+def test_progresso_e_conta_ligam_a_ajuda_no_tema_certo(bd: str) -> None:
+    at = _com_plano_e_progresso()
+    assert _ligacao_ajuda(at) == "tema=registo"
+    at.switch_page(CONTA).run()
+    assert not at.exception
+    assert _ligacao_ajuda(at) == "tema=lembretes"

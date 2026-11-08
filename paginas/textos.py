@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 
 from vigoria.dados.repositorios import Recusa
 from vigoria.interface.erros import TipoErroUtilizador
-from vigoria.interface.passos import CodigoErro, ErroCampo
+from vigoria.interface.passos import MINUTOS_QUESTIONARIO, CodigoErro, ErroCampo
 from vigoria.modelos.registo import Comparacao
 from vigoria.regras.calculos import ClasseImc
 from vigoria.regras.elegibilidade import Modo
@@ -44,8 +44,16 @@ PAGINAS = {
     "conta": "A minha conta",
     "sair": "Terminar sessão",
     "privacidade": "Privacidade",
+    "ajuda": "Ajuda",
     "cancelar_lembretes": "Lembretes por email",
 }
+
+# Ajuda (Fase 8B): as perguntas e respostas estão em src/vigoria/conteudo/ajuda.yaml.
+AJUDA_TITULO = "Ajuda"
+AJUDA_INTRO = (
+    "Respostas curtas sobre como a Vigoria funciona. Se não encontrar o que procura, escreva-nos."
+)
+COMO_FUNCIONA_LIGACAO = "Como funciona?"
 
 # ---------------------------------------------------------------- Conta e sessão
 
@@ -137,7 +145,7 @@ COMO_FUNCIONA = (
     (
         "lista",
         "1. Responda ao questionário",
-        "Cerca de 10 minutos sobre si, a sua saúde e a sua rotina.",
+        f"Cerca de {MINUTOS_QUESTIONARIO} minutos sobre si, a sua saúde e a sua rotina.",
     ),
     (
         "intensidade",

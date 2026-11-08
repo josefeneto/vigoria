@@ -9,6 +9,8 @@ from typing import Annotated, Self
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 OBSERVACOES_MAX = 300
+ESCALA_MINIMA = 0  # energia e esforço: escala de 0 a 10
+ESCALA_MAXIMA = 10
 
 
 class Comparacao(StrEnum):
@@ -32,8 +34,8 @@ class ValoresRegisto(BaseModel):
     cintura_cm: float | None = Field(default=None, ge=50, le=200)
     sessoes: int | None = Field(default=None, ge=0, le=14)
     cardio_min: int | None = Field(default=None, ge=0, le=600)
-    energia: int | None = Field(default=None, ge=0, le=10)
-    esforco: int | None = Field(default=None, ge=0, le=10)
+    energia: int | None = Field(default=None, ge=ESCALA_MINIMA, le=ESCALA_MAXIMA)
+    esforco: int | None = Field(default=None, ge=ESCALA_MINIMA, le=ESCALA_MAXIMA)
     sono_h: float | None = Field(default=None, ge=3, le=12, multiple_of=0.5)
     forca: Comparacao | None = None
     mobilidade_equilibrio: Comparacao | None = None

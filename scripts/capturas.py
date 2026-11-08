@@ -122,6 +122,18 @@ def _percorrer(page: Page, largura: str) -> None:
     _esperar(page)
     _capturar(page, largura, "18_privacidade")
 
+    # Ajuda (Fase 8B): toda fechada e, como nas ligações «Como funciona?», com um tema aberto.
+    tamanho = page.viewport_size or {"width": 390, "height": 2600}
+    page.set_viewport_size({"width": tamanho["width"], "height": 5200})
+    for nome, endereco in (("26_ajuda", "ajuda"), ("26b_ajuda_lembretes", "ajuda?tema=lembretes")):
+        page.goto(f"{URL}/{endereco}")
+        _esperar(page)
+        # As perguntas desenham-se depois do título: esperar pelo último tema.
+        page.locator('[data-testid="stMain"] h3', has_text="Contacto").wait_for()
+        page.wait_for_timeout(600)
+        _capturar(page, largura, nome)
+    page.set_viewport_size(tamanho)
+
     page.goto(f"{URL}/conta")
     _esperar(page)
     page.get_by_role("button", name="Apagar a conta e os dados").wait_for()

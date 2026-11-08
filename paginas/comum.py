@@ -33,6 +33,17 @@ PAGINA_PROGRESSO = "paginas/progresso.py"
 PAGINA_PRIVACIDADE = "paginas/privacidade.py"
 PAGINA_CONTA = "paginas/conta.py"
 PAGINA_CANCELAR_LEMBRETES = "paginas/cancelar_lembretes.py"
+PAGINA_AJUDA = "paginas/ajuda.py"
+
+
+def ligacao_ajuda(tema: str) -> None:
+    """«Como funciona?»: abre a Ajuda com este tema primeiro e aberto."""
+    st.page_link(
+        PAGINA_AJUDA,
+        label=t.COMO_FUNCIONA_LIGACAO,
+        icon=":material/help:",
+        query_params={"tema": tema},
+    )
 
 
 def hoje() -> date:

@@ -1,0 +1,198 @@
+# Ajuda (Fase 8B): texto aprovado pelo José a 08/11/2026.
+# Os números nunca se escrevem à mão: usam-se marcadores {assim}, preenchidos a partir das
+# constantes do código (src/vigoria/interface/ajuda.py, VALORES). Um teste falha se houver
+# algarismos no texto ou um marcador desconhecido.
+# `ambientes`: só se mostra nesses ambientes (AMBIENTE); sem a chave, em todos.
+# Cada resposta tem de 1 a 3 frases.
+
+temas:
+  - id: como_funciona
+    titulo: Como funciona
+    perguntas:
+      - id: o_que_e
+        pergunta: O que é a Vigoria?
+        resposta: >-
+          A Vigoria prepara um plano pessoal de saúde e vitalidade para adultos que treinam
+          em casa, a partir das suas respostas a um questionário. O plano junta treino,
+          alimentação e hábitos, com base em conteúdo editorial revisto; a inteligência
+          artificial adapta esse conteúdo a si, não o inventa.
+      - id: questionario
+        pergunta: Quanto tempo demora o questionário? Posso voltar atrás?
+        resposta: >-
+          São {passos} passos curtos, cerca de {minutos_questionario} minutos. Pode voltar
+          atrás com «Anterior» e, no último passo, rever e alterar qualquer resposta antes
+          de preparar o plano.
+      - id: decisoes
+        pergunta: Porque é que vejo «as nossas decisões» antes do plano?
+        resposta: >-
+          Para saber, antes de o plano estar feito, o que adaptámos às suas respostas e
+          porquê: por exemplo, a intensidade, o objetivo de peso ou um começo mais prudente.
+          Se alguma coisa não lhe parecer certa, pode voltar atrás e corrigir as respostas.
+      - id: semanas
+        pergunta: Como estão organizadas as {semanas_programa} semanas?
+        resposta: >-
+          O programa tem {semanas_programa} semanas, em {fases} fases de
+          {semanas_por_fase} semanas, e cada fase é um pouco mais exigente do que a
+          anterior. A partir da semana {semana_manutencao} começa a manutenção, com
+          orientações para continuar.
+
+  - id: plano
+    titulo: O meu plano
+    perguntas:
+      - id: seccoes
+        pergunta: Que secções tem o plano?
+        resposta: >-
+          Resumo, Treino, Alimentação, Hábitos, Acompanhamento e Manutenção. Os avisos de
+          segurança aparecem no fim de cada secção.
+      - id: pdf
+        pergunta: Posso descarregar o plano?
+        resposta: >-
+          Sim: use «Descarregar o plano (PDF)» na página do plano ou em cada plano de «A
+          minha conta». O PDF não tem o seu nome nem o seu email.
+      - id: anteriores
+        pergunta: Onde vejo os planos anteriores?
+        resposta: >-
+          Em «A minha conta», em «Os meus planos». Pode abrir qualquer um ou apagá-lo;
+          apagar um plano apaga também os registos de progresso desse plano.
+      - id: plano_novo
+        pergunta: Quando e como faço um plano novo?
+        resposta: >-
+          Responda de novo ao questionário, que já vem preenchido com as últimas respostas
+          (os consentimentos voltam a marcar-se). Na semana {semanas_programa}, a Vigoria
+          sugere-lhe um plano novo a partir do seu ponto atual, mas não é obrigatório.
+
+  - id: registo
+    titulo: Registo do progresso
+    perguntas:
+      - id: o_que_registar
+        pergunta: O que registo e com que frequência?
+        resposta: >-
+          Peso, perímetro da cintura, sessões feitas, minutos de cardio, energia, esforço,
+          sono e como estão a força e a mobilidade; só é preciso um campo para guardar. Pode
+          registar todas as semanas ou a cada {semanas_por_fase} semanas, e na manutenção
+          basta a cada {semanas_por_fase} semanas.
+      - id: mudar_frequencia
+        pergunta: Posso mudar a frequência?
+        resposta: >-
+          Sim, em «A minha conta», na secção «Acompanhamento». A mudança vale para os
+          registos seguintes.
+      - id: editar_apagar
+        pergunta: Como edito ou apago um registo?
+        resposta: >-
+          Em «O meu progresso», em «Registos anteriores», use «Editar» ou «Apagar». Um
+          registo apagado não se pode recuperar.
+      - id: graficos
+        pergunta: O que mostram os gráficos?
+        resposta: >-
+          A sua evolução de semana para semana: peso e cintura junto da linha indicativa do
+          plano, e sessões e cardio junto do que o plano prevê. A linha indicativa é uma
+          referência, não uma meta: a evolução raramente é linear.
+      - id: avisos
+        pergunta: O que significam os avisos?
+        resposta: >-
+          Aparecem quando falta um registo, quando o peso desce mais devagar ou mais depressa
+          do que o indicado, quando o esforço passa do indicado para a fase ou quando o peso
+          ou a cintura sobem na manutenção. Cada aviso diz o que pode fazer a seguir.
+      - id: desligar_acompanhamento
+        pergunta: Como desligo o acompanhamento?
+        resposta: >-
+          Em «A minha conta», desmarque «Quero acompanhar o meu progresso». Os registos ficam
+          guardados e pode voltar a ligá-lo quando quiser.
+
+  - id: lembretes
+    titulo: Lembretes por email
+    perguntas:
+      - id: quando
+        pergunta: Quando chegam os lembretes?
+        resposta: >-
+          Se um período terminar sem registo, o primeiro lembrete chega {dias_primeiro} dias
+          depois e o segundo {dias_segundo} dias depois. São no máximo {maximo_por_periodo}
+          por período, só do plano mais recente, e nunca mais de {dias_maximo} dias depois
+          do fim do período.
+      - id: suspensos
+        pergunta: Porque deixei de receber lembretes?
+        resposta: >-
+          Depois de {periodos_suspender} períodos seguidos sem registo, os lembretes ficam
+          suspensos, para não insistirmos. Voltam com o próximo registo que fizer.
+      - id: desligar
+        pergunta: Como desligo os lembretes ou volto a ligá-los?
+        resposta: >-
+          Use «Deixar de receber» no fim de qualquer lembrete, ou desmarque «Enviar-me um
+          lembrete por email quando faltar um registo» em «A minha conta». Para voltar a
+          recebê-los, marque de novo essa opção; o acompanhamento tem de estar ligado.
+
+  - id: seguranca
+    titulo: Segurança
+    perguntas:
+      - id: medico
+        pergunta: A Vigoria substitui o médico?
+        resposta: >-
+          Não. A Vigoria dá orientações de bem-estar e não diagnostica nem trata; antes de
+          começar ou de intensificar o plano, sobretudo com doenças crónicas ou medicação
+          regular, fale com um profissional de saúde.
+      - id: esforco
+        pergunta: Como sei se estou a exagerar no esforço?
+        resposta: >-
+          Use a escala de esforço de {escala_minima} a {escala_maxima} (como se sente, de
+          nada a máximo) e o teste da fala: no cardio, deve conseguir falar em frases curtas.
+          O plano indica o esforço de cada fase.
+      - id: parar
+        pergunta: Quando devo parar o exercício?
+        resposta: >-
+          Pare logo se sentir algum dos sinais descritos nos avisos do plano, como dor no
+          peito, falta de ar invulgar ou tonturas, e procure avaliação adequada. Os avisos
+          estão no fim de cada secção do plano e na última página do PDF.
+
+  - id: conta
+    titulo: Conta e dados
+    perguntas:
+      - id: so_convite
+        ambientes: [demo]
+        pergunta: Porque é que não consigo usar a Vigoria?
+        resposta: >-
+          A Vigoria está em fase de testes, apenas por convite. Se quiser participar,
+          escreva para [geral@vigoria.pt](mailto:geral@vigoria.pt).
+      - id: entrar
+        pergunta: Como entro?
+        resposta: >-
+          Com a sua conta Google, ou com email e palavra-passe (nesse caso, confirme primeiro
+          o email). Entre sempre com o mesmo método que usou da primeira vez.
+      - id: terminar_sessao
+        pergunta: Como termino a sessão?
+        resposta: >-
+          Em «Terminar sessão», no menu. Num computador partilhado, termine sempre a sessão
+          no fim.
+      - id: descarregar_dados
+        pergunta: Posso descarregar os meus dados?
+        resposta: >-
+          Sim: em «A minha conta», «Descarregar os meus dados» guarda num ficheiro todas as
+          suas respostas, planos e registos.
+      - id: apagar_conta
+        pergunta: Como apago a conta?
+        resposta: >-
+          Em «A minha conta», em «Apagar a conta», confirme e escreva APAGAR. A conta e todos
+          os dados são apagados de forma definitiva.
+      - id: dados_onde_demo
+        ambientes: [demo]
+        pergunta: Onde ficam os meus dados?
+        resposta: >-
+          Os seus dados ficam guardados numa base de dados na União Europeia. Nesta fase de
+          testes, a app corre em servidores fora da UE; a política de privacidade explica
+          quem trata os dados e para quê. Ao preparar o plano, não enviamos o seu nome nem o
+          seu email à inteligência artificial.
+      - id: dados_onde
+        ambientes: [local, producao]
+        # A confirmar na Fase 10 (Railway, região europeia).
+        pergunta: Onde ficam os meus dados?
+        resposta: >-
+          Na base de dados da Vigoria, na União Europeia; a política de privacidade explica
+          quem trata os dados e para quê. Ao preparar o plano, não enviamos o seu nome nem o
+          seu email à inteligência artificial.
+
+  - id: contacto
+    titulo: Contacto
+    perguntas:
+      - id: email
+        pergunta: Como falo com a Vigoria?
+        resposta: >-
+          Escreva para [geral@vigoria.pt](mailto:geral@vigoria.pt).

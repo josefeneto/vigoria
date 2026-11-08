@@ -61,3 +61,4 @@ with st.container(key="faixa_final"):
     st.html(f'<h2 class="v-faixa-titulo">{escape(t.FINAL_TITULO)}</h2>')
     _comecar("comecar_fim")
     st.caption(t.INICIO_SESSAO)
+    comum.ligacao_ajuda("como_funciona")

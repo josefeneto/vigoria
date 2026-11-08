@@ -7,7 +7,7 @@ Só depende de modelos/zonas.py: regras/textos.py importa este módulo.
 from enum import StrEnum
 from functools import cache
 from importlib.resources import files
-from typing import Self
+from typing import Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -277,6 +277,40 @@ class Manutencao(_Conteudo):
     recomecar: ParteManutencao
 
 
+# ---------------------------------------------------------------- ajuda.yaml (Fase 8B)
+
+_ID_AJUDA = r"^[a-z][a-z0-9_]*$"
+
+
+class PerguntaAjuda(_Conteudo):
+    """Uma pergunta da Ajuda; o texto pode ter marcadores {assim} (interface/ajuda.py)."""
+
+    id: str = Field(pattern=_ID_AJUDA)
+    pergunta: str = Field(min_length=1)
+    resposta: str = Field(min_length=1)
+    ambientes: tuple[Literal["local", "demo", "producao"], ...] = ()  # vazio: todos
+
+
+class TemaAjuda(_Conteudo):
+    id: str = Field(pattern=_ID_AJUDA)
+    titulo: str = Field(min_length=1)
+    perguntas: tuple[PerguntaAjuda, ...] = Field(min_length=1)
+
+
+class Ajuda(_Conteudo):
+    temas: tuple[TemaAjuda, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _ids_unicos(self) -> Self:
+        temas = [tema.id for tema in self.temas]
+        perguntas = [p.id for tema in self.temas for p in tema.perguntas]
+        for ids in (temas, perguntas):
+            repetidos = sorted({i for i in ids if ids.count(i) > 1})
+            if repetidos:
+                raise ValueError(f"ids repetidos: {', '.join(repetidos)}")
+        return self
+
+
 # ---------------------------------------------------------------- Carregamento
 
 
@@ -341,6 +375,12 @@ def carregar_alimentacao() -> Alimentacao:
 def carregar_manutencao() -> Manutencao:
     """Depois das 16 semanas (volumes 1 a 3 e textos aprovados a 05/11/2026)."""
     return _carregar("manutencao.yaml", Manutencao)
+
+
+@cache
+def carregar_ajuda() -> Ajuda:
+    """Perguntas e respostas da página de Ajuda, ainda com os marcadores por preencher."""
+    return _carregar("ajuda.yaml", Ajuda)
 
 
 def carregar_conteudo() -> Conteudo:

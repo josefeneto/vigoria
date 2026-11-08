@@ -26,6 +26,7 @@ from vigoria.modelos.questionario import (
 )
 
 PASSOS: tuple[str, ...] = ("0", "1", "2a", "2b", "3", "4a", "4b", "5", "6", "7")
+MINUTOS_QUESTIONARIO = 10  # tempo indicativo, no Início e na Ajuda
 
 CAMPOS: dict[str, tuple[str, ...]] = {
     "0": ("aceita_termos", "consentimento_saude", "confirma_maior_idade"),

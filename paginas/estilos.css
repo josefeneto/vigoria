@@ -181,7 +181,13 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .stApp .st-key-faixa_final .v-faixa-titulo { color: var(--v-fundo); }
 .st-key-faixa_topo [data-testid="stPageLink"] a,
 .st-key-faixa_topo [data-testid="stPageLink"] p,
-.st-key-faixa_topo [data-testid="stPageLink"] span { color: var(--v-fundo); }
+.st-key-faixa_topo [data-testid="stPageLink"] span,
+.st-key-faixa_final [data-testid="stPageLink"] a,
+.st-key-faixa_final [data-testid="stPageLink"] p,
+.st-key-faixa_final [data-testid="stPageLink"] span { color: var(--v-fundo); }
+/* Ligação para a Ajuda (Fase 8B), centrada como o resto do convite final. */
+.st-key-faixa_final [data-testid="stElementContainer"]:has([data-testid="stPageLink"]) {
+  display: flex; justify-content: center; }
 .st-key-faixa_final [data-testid="stCaptionContainer"] p { color: var(--v-argila); text-align: center; }
 
 /* ---- Vídeo do topo: capa enquanto carrega, botão de pausa sempre visível */

@@ -136,6 +136,7 @@ for p in planos:
                 )
 
 st.subheader(t.CONTA_ACOMPANHAMENTO)
+comum.ligacao_ajuda("lembretes")
 ativo = st.toggle(
     t.CONTA_ACOMPANHAMENTO_ATIVO,
     value=preferencias.ativo,

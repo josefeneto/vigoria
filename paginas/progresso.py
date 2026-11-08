@@ -490,6 +490,7 @@ contexto = contexto_do_plano(resultado)
 semana = semana_do_plano(contexto.inicio, hoje)
 st.caption(t.CONTA_PLANO_DE.format(data=t.data_hora(resultado.criado_em)))
 _topo(resultado, semana)
+comum.ligacao_ajuda("registo")
 
 if preferencias.ativo:
     alertas = avaliar(contexto, medicoes_dos_registos(registos), preferencias.frequencia, hoje)

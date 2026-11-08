@@ -1,8 +1,9 @@
 """Ponto de entrada da Vigoria (Streamlit): configuração, sessão e navegação.
 
 As cores vêm de .streamlit/config.toml e de paginas/estilos.py; os textos, de paginas/textos.py.
-Sem sessão iniciada só se veem o Início e a Privacidade (Fase 6); o resto exige login. A página
-para deixar de receber lembretes (Fase 8) abre-se com ou sem sessão, fora do menu.
+Sem sessão iniciada só se veem o Início, a Privacidade e a Ajuda (Fases 6 e 8B); o resto exige
+login. A página para deixar de receber lembretes (Fase 8) abre-se com ou sem sessão, fora do
+menu.
 """
 
 from pathlib import Path
@@ -80,6 +81,9 @@ inicio = st.Page(
 privacidade = st.Page(
     comum.PAGINA_PRIVACIDADE, title=t.PAGINAS["privacidade"], icon=":material/policy:"
 )
+ajuda = st.Page(
+    comum.PAGINA_AJUDA, title=t.PAGINAS["ajuda"], icon=":material/help:", url_path="ajuda"
+)
 # A ligação dos emails de lembrete: com ou sem sessão, fora do menu.
 cancelar_lembretes = st.Page(
     comum.PAGINA_CANCELAR_LEMBRETES,
@@ -100,11 +104,12 @@ if isinstance(entrada, int):
         st.Page(comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"),
         st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
         privacidade,
+        ajuda,
         st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
         cancelar_lembretes,
     ]
 else:
-    paginas = [inicio, privacidade, cancelar_lembretes]
+    paginas = [inicio, privacidade, ajuda, cancelar_lembretes]
 
 try:
     st.navigation(paginas, position="top").run()
