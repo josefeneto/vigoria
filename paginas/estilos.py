@@ -30,6 +30,7 @@ CORES = {
     "texto_secundario": "#5A6168",
     "fundo": "#F7F3EC",  # branco-osso
     "fundo_secundario": "#ECE5D8",
+    "faixa": "#E5DCCD",  # cabeçalho e rodapé: um pouco mais escuro do que os campos
     "cartao": "#FFFDF9",
     "borda": "#DDD3C3",  # areia
     "aviso_texto": "#7A4A00",
@@ -67,6 +68,11 @@ PARES_TEXTO = (
     ("argila", "principal"),
     ("texto", "argila"),
     ("principal_profundo", "argila"),
+    # Cabeçalho e rodapé
+    ("texto", "faixa"),
+    ("texto_secundario", "faixa"),
+    ("principal", "faixa"),
+    ("principal_profundo", "faixa"),
 )
 
 ICONES_PASSOS = {

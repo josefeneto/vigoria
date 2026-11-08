@@ -205,10 +205,14 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .v-video-botao::before { content: "▶  "; }
 .v-video-botao.a-correr::before { content: "❚❚  "; }
 
+/* ---- Cabeçalho (menu e logotipo) no tom «faixa», como o rodapé; a página atual sobre o fundo. */
+[data-testid="stHeader"] { background: var(--v-faixa); }
+[data-testid="stTopNavLink"][aria-current="page"] { background: var(--v-fundo); }
+
 /* ---- Rodapé comum (comum.rodape): Privacidade · Ajuda · contacto, centrado, ligações em petróleo,
-   numa caixa igual às dos consentimentos (fundo de cartão e borda areia). */
+   numa caixa no tom «faixa», como o cabeçalho. */
 .st-key-rodape { margin-top: 3rem; padding: .6rem .25rem; box-sizing: border-box;
-  background: var(--v-cartao); border: 1.5px solid var(--v-borda); border-radius: var(--v-raio-pequeno);
+  background: var(--v-faixa); border-radius: var(--v-raio-pequeno);
   row-gap: .25rem; }
 .st-key-rodape > [data-testid="stElementContainer"] { display: flex; align-items: center; }
 /* Separador «·» depois de cada ligação, exceto a última. */
