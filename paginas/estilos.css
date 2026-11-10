@@ -110,6 +110,9 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
 .v-semana-dia { font-weight: 700; }
 .v-semana-min { white-space: nowrap; color: var(--v-texto-secundario); }
 .v-exercicio { margin: 0; }
+/* Ícone do movimento como na maqueta (Fase.dc.html): quadrado de 64 px com o desenho a 3/4. */
+.v-exercicio .v-icone { width: 3.5rem; height: 3.5rem; border-radius: 16px; }
+.v-exercicio .v-icone img { width: 2.625rem; height: 2.625rem; }
 .v-exercicio-topo { display: flex; gap: .8rem; align-items: center; margin-bottom: .7rem; }
 .v-exercicio h4 { margin: 0; padding: 0; font-size: 1.1rem; color: var(--v-principal-profundo); }
 .v-exercicio p { margin: .4rem 0 0; }

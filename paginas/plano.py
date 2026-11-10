@@ -39,8 +39,8 @@ def _exercicio(x: ExercicioPlano) -> None:
     extras = list(x.notas)
     if x.em_vez_de:
         extras.insert(0, "⇄ " + r["em_vez_de"].format(nome=carregar_exercicios()[x.em_vez_de].nome))
-    grupo = carregar_exercicios()[x.id].grupo
-    st.html(componentes.exercicio(grupo, x.nome, prescricao, x.descricao, extras))
+    icone = carregar_exercicios()[x.id].icone
+    st.html(componentes.exercicio(icone, x.nome, prescricao, x.descricao, extras))
 
 
 def _minuscula(texto: str) -> str:

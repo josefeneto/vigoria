@@ -4,7 +4,14 @@ import itertools
 
 import pytest
 
-from vigoria.conteudo.carregar import Exercicio, Grupo, Impacto, Nivel, carregar_exercicios
+from vigoria.conteudo.carregar import (
+    Exercicio,
+    Grupo,
+    IconeExercicio,
+    Impacto,
+    Nivel,
+    carregar_exercicios,
+)
 from vigoria.modelos.estrategia import Zona
 from vigoria.regras import textos
 from vigoria.regras.regressao import resolver_regressao
@@ -83,6 +90,7 @@ def test_ciclo_e_detetado() -> None:
             nome=id_,
             descricao="",
             grupo=Grupo.FORCA,
+            icone=IconeExercicio.AGACHAMENTO,
             fase_minima=1,
             impacto=Impacto.BAIXO,
             nivel=Nivel.BASE,

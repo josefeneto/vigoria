@@ -5,6 +5,7 @@
 # de_pe: feito de pé (com «equilíbrio com apoio», leva a nota de apoio por perto). Proposta
 # do Claude Code aprovada pelo José a 29/10/2026; flexões e pranchas inclinadas contam como de pé.
 # No MVP, só entram no plano os exercícios com «nivel: base» (§6.3).
+# icone: pictograma do movimento (assets/icones/exercicios/), aprovado pelo José a 10/11/2026.
 
 exercicios:
 
@@ -15,6 +16,7 @@ exercicios:
     nome: Agachamento para cadeira
     descricao: Sentar e levantar de uma cadeira estável, controlando a descida.
     grupo: forca
+    icone: agachamento
     fase_minima: 1
     equipamento: [cadeira]
     impacto: baixo
@@ -29,6 +31,7 @@ exercicios:
     nome: Flexão na parede
     descricao: Manter o corpo alinhado e aproximar o peito da parede de forma controlada.
     grupo: forca
+    icone: flexao
     fase_minima: 1
     equipamento: [parede]
     impacto: baixo
@@ -41,6 +44,7 @@ exercicios:
     nome: Remada com halteres
     descricao: Puxar os cotovelos para trás, mantendo o tronco estável.
     grupo: forca
+    icone: remada
     fase_minima: 1
     equipamento: [halteres]
     impacto: baixo
@@ -55,6 +59,7 @@ exercicios:
     nome: Ponte de glúteos
     descricao: Elevar a bacia de forma controlada, sem arquear excessivamente as costas.
     grupo: forca
+    icone: ponte
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -67,6 +72,7 @@ exercicios:
     nome: Elevação lateral leve
     descricao: Elevar os braços numa amplitude confortável, sem balanço.
     grupo: forca
+    icone: bracos_acima
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -79,6 +85,7 @@ exercicios:
     nome: Bird-dog
     descricao: Em quatro apoios, estender braço e perna opostos sem rodar o tronco.
     grupo: forca
+    icone: quatro_apoios
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -90,6 +97,7 @@ exercicios:
     nome: Elevação de gémeos
     descricao: Subir e descer lentamente, usando apoio para equilíbrio.
     grupo: forca
+    icone: degrau
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -102,6 +110,7 @@ exercicios:
     nome: Prancha
     descricao: Prancha antebraços.
     grupo: forca
+    icone: prancha
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -116,6 +125,7 @@ exercicios:
       Com uma mão numa cadeira ou bancada, dar um passo atrás e fletir os joelhos até onde
       for confortável.
     grupo: forca
+    icone: passo
     fase_minima: 2
     equipamento: [cadeira]
     impacto: baixo
@@ -133,6 +143,7 @@ exercicios:
       Mãos numa bancada estável (ou no chão com os joelhos apoiados), descer o peito de
       forma controlada.
     grupo: forca
+    icone: flexao
     fase_minima: 2
     impacto: baixo
     nivel: base
@@ -145,6 +156,7 @@ exercicios:
     nome: Agachamento Sumo
     descricao: Pernas mais afastadas que os ombros, pontas dos pés para fora.
     grupo: forca
+    icone: agachamento
     fase_minima: 2
     impacto: baixo
     nivel: base
@@ -158,6 +170,7 @@ exercicios:
     nome: Remada Aberta
     descricao: Tronco inclinado à frente, puxar halteres com cotovelos bem abertos.
     grupo: forca
+    icone: remada
     fase_minima: 2
     equipamento: [halteres]
     impacto: baixo
@@ -172,6 +185,7 @@ exercicios:
     nome: Prensa de Ombros
     descricao: Braços a 90º ao lado da cabeça, empurrar verticalmente.
     grupo: forca
+    icone: bracos_acima
     fase_minima: 2
     impacto: baixo
     nivel: base
@@ -185,6 +199,7 @@ exercicios:
     nome: Abdominal Crunch
     descricao: Deitado de costas, retirar apenas as escápulas/ombros do chão.
     grupo: forca
+    icone: ponte
     fase_minima: 2
     impacto: baixo
     nivel: base
@@ -201,6 +216,7 @@ exercicios:
       Pés afastados em passo, ambos no chão, mão na parede ou numa cadeira; descer e subir
       na vertical.
     grupo: forca
+    icone: passo
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -215,6 +231,7 @@ exercicios:
     nome: Peso Morto Romeno
     descricao: Descer o tronco à frente com pernas quase esticadas, fletindo a anca.
     grupo: forca
+    icone: inclinacao_anca
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -230,6 +247,7 @@ exercicios:
       Mãos numa bancada estável, mais próximas do que a largura dos ombros; descer de forma
       controlada.
     grupo: forca
+    icone: flexao
     fase_minima: 3
     equipamento: [bancada]
     impacto: baixo
@@ -244,6 +262,7 @@ exercicios:
     nome: Remada Unilateral com Apoio
     descricao: Tronco inclinado com um braço apoiado, puxar o outro de cada vez.
     grupo: forca
+    icone: remada
     fase_minima: 3
     equipamento: [halteres]
     impacto: baixo
@@ -257,6 +276,7 @@ exercicios:
     nome: Elevação Frontal
     descricao: Elevar braços esticados à frente até à linha dos olhos de forma fluida.
     grupo: forca
+    icone: bracos_acima
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -270,6 +290,7 @@ exercicios:
     nome: Prancha Lateral com Joelhos Apoiados
     descricao: Apoio num antebraço e na lateral do joelho, bacia elevada e alinhada.
     grupo: forca
+    icone: prancha
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -284,6 +305,7 @@ exercicios:
       Sentar e levantar da cadeira de forma controlada; no topo, subir às pontas dos pés com
       apoio, sem saltar.
     grupo: forca
+    icone: agachamento
     fase_minima: 4
     equipamento: [cadeira]
     impacto: baixo
@@ -299,6 +321,7 @@ exercicios:
     nome: Subida a Degrau com Apoio
     descricao: Subir e descer um degrau baixo, alternando a perna, com a mão no corrimão.
     grupo: forca
+    icone: degrau
     fase_minima: 4
     equipamento: [degrau]
     impacto: baixo
@@ -316,6 +339,7 @@ exercicios:
       Mãos numa bancada estável, corpo alinhado; tocar alternadamente no ombro oposto sem
       rodar a bacia.
     grupo: forca
+    icone: prancha
     fase_minima: 4
     equipamento: [bancada]
     impacto: baixo
@@ -331,6 +355,7 @@ exercicios:
       Sentar e levantar da cadeira; já de pé, empurrar os braços acima. Dois movimentos
       separados, sem pressa.
     grupo: forca
+    icone: bracos_acima
     fase_minima: 4
     equipamento: [cadeira]
     impacto: baixo
@@ -353,6 +378,7 @@ exercicios:
       Elevar os joelhos alternadamente em ritmo confortável e estável, sem acelerar, sem
       saltar, com apoio por perto se necessário.
     grupo: cardio
+    icone: marcha
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -368,6 +394,7 @@ exercicios:
       Começar com marcha confortável. Aumentar primeiro o tempo; depois, se adequado, a
       velocidade e a inclinação.
     grupo: cardio
+    icone: marcha
     fase_minima: 1
     equipamento: [passadeira]
     impacto: baixo
@@ -382,6 +409,7 @@ exercicios:
       Usar resistência baixa a moderada e movimento fluido. Reduzir a resistência se a
       técnica se deteriorar.
     grupo: cardio
+    icone: marcha
     fase_minima: 1
     equipamento: [eliptica]
     impacto: baixo
@@ -394,6 +422,7 @@ exercicios:
     nome: Caminhada
     descricao: Excelente opção para recuperação ativa e aumento da atividade diária.
     grupo: cardio
+    icone: marcha
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -407,6 +436,7 @@ exercicios:
     nome: Círculos de ombros / braços
     descricao: Movimentos suaves, sem forçar a amplitude.
     grupo: mobilidade
+    icone: mobilidade
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -417,6 +447,7 @@ exercicios:
     nome: Rotações torácicas
     descricao: Rotações controladas do tronco, dentro de uma amplitude confortável.
     grupo: mobilidade
+    icone: mobilidade
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -427,6 +458,7 @@ exercicios:
     nome: Mobilidade da anca
     descricao: Movimentos suaves e controlados dentro da amplitude disponível.
     grupo: mobilidade
+    icone: mobilidade
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -437,6 +469,7 @@ exercicios:
     nome: Mobilidade dos tornozelos
     descricao: Mobilização controlada, incluindo elevação dos calcanhares.
     grupo: mobilidade
+    icone: mobilidade
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -446,6 +479,7 @@ exercicios:
     nome: Transferências de peso
     descricao: Deslocar o peso de forma controlada, usando apoio quando necessário.
     grupo: equilibrio
+    icone: equilibrio
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -460,6 +494,7 @@ exercicios:
       Equilíbrio junto a uma parede ou bancada, começando com transferência de peso e
       progredindo para apoio unipodal assistido.
     grupo: equilibrio
+    icone: equilibrio
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -477,6 +512,7 @@ exercicios:
     nome: Lunge alternado atrás
     descricao: sem apoio (2 halteres de 2 kg)
     grupo: forca
+    icone: passo
     fase_minima: 2
     equipamento: [halteres]
     impacto: medio
@@ -489,6 +525,7 @@ exercicios:
     nome: Flexões no chão
     descricao: sem joelhos apoiados
     grupo: forca
+    icone: flexao
     fase_minima: 2
     impacto: medio
     nivel: intermedio
@@ -501,6 +538,7 @@ exercicios:
     nome: Agachamento búlgaro
     descricao: pé de trás apoiado num sofá ou cadeira, 2 halteres de 2 kg
     grupo: forca
+    icone: passo
     fase_minima: 3
     equipamento: [cadeira, halteres]
     impacto: medio
@@ -513,6 +551,7 @@ exercicios:
     nome: Flexões diamante
     descricao: no chão
     grupo: forca
+    icone: flexao
     fase_minima: 3
     impacto: medio
     nivel: avancado
@@ -524,6 +563,7 @@ exercicios:
     nome: Prancha lateral completa
     descricao: com apoio no pé
     grupo: forca
+    icone: prancha
     fase_minima: 3
     impacto: baixo
     nivel: intermedio
@@ -536,6 +576,7 @@ exercicios:
     nome: Agachamento com salto
     descricao: ""
     grupo: forca
+    icone: agachamento
     fase_minima: 4
     impacto: alto
     nivel: avancado
@@ -547,6 +588,7 @@ exercicios:
     nome: Lunge caminhando
     descricao: ""
     grupo: forca
+    icone: passo
     fase_minima: 4
     impacto: medio
     nivel: intermedio
@@ -558,6 +600,7 @@ exercicios:
     nome: Flexão com toque no ombro
     descricao: ""
     grupo: forca
+    icone: flexao
     fase_minima: 4
     impacto: medio
     nivel: avancado
@@ -569,6 +612,7 @@ exercicios:
     nome: Remada em prancha
     descricao: ""
     grupo: forca
+    icone: remada
     fase_minima: 4
     equipamento: [halteres]
     impacto: medio
@@ -581,6 +625,7 @@ exercicios:
     nome: Thruster
     descricao: ""
     grupo: forca
+    icone: bracos_acima
     fase_minima: 4
     equipamento: [halteres]
     impacto: medio
@@ -593,6 +638,7 @@ exercicios:
     nome: Escaladores
     descricao: ""
     grupo: cardio
+    icone: marcha
     fase_minima: 4
     impacto: alto
     nivel: avancado

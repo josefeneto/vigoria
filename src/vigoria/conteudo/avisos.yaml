@@ -220,6 +220,9 @@ rotulos:
     pdf_registo_semanal: Registo semanal
     pdf_registo_4_semanas: Registo a cada 4 semanas
     pdf_perguntas_revisao: Perguntas para cada revisão
+    pdf_em_todas_fases: Em todas as fases
+    pdf_em_todas_fases_nota: "Estes exercícios repetem-se em todas as sessões das 4 fases."
+    pdf_so_nesta_fase: Só nesta fase
   # Semana-tipo (motor/semana.py, Fase 4C): atividade e descrição de cada tipo de dia.
   semana:
     forca:

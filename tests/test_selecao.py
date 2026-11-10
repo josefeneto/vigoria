@@ -5,7 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from vigoria.conteudo.carregar import Exercicio, Grupo, Impacto, Nivel, carregar_exercicios
+from vigoria.conteudo.carregar import (
+    Exercicio,
+    Grupo,
+    IconeExercicio,
+    Impacto,
+    Nivel,
+    carregar_exercicios,
+)
 from vigoria.modelos.estrategia import Estrategia, Restricoes, Zona
 from vigoria.modelos.questionario import Equipamento, Questionario
 from vigoria.motor.estrategia import gerar_estrategia
@@ -323,11 +330,13 @@ def test_regressao_em_qualquer_fase_biblioteca_sintetica() -> None:
     bib = {
         "a": Exercicio(
             id="a", nome="A", descricao="a", grupo=Grupo.FORCA, fase_minima=1,
+            icone=IconeExercicio.AGACHAMENTO,
             impacto=Impacto.BAIXO, nivel=Nivel.BASE, de_pe=False, regressao="b",
             zonas=(Zona.OMBROS,),
         ),
         "b": Exercicio(
             id="b", nome="B", descricao="b", grupo=Grupo.FORCA, fase_minima=4,
+            icone=IconeExercicio.AGACHAMENTO,
             impacto=Impacto.BAIXO, nivel=Nivel.BASE, de_pe=False,
         ),
     }  # fmt: skip
@@ -344,11 +353,13 @@ def test_regressao_que_falha_filtros_sai() -> None:
     bib = {
         "a": Exercicio(
             id="a", nome="A", descricao="a", grupo=Grupo.FORCA, fase_minima=1,
+            icone=IconeExercicio.AGACHAMENTO,
             impacto=Impacto.BAIXO, nivel=Nivel.BASE, de_pe=False, regressao="b",
             zonas=(Zona.OMBROS,),
         ),
         "b": Exercicio(
             id="b", nome="B", descricao="b", grupo=Grupo.FORCA, fase_minima=1,
+            icone=IconeExercicio.AGACHAMENTO,
             impacto=Impacto.BAIXO, nivel=Nivel.BASE, de_pe=False, contraindicacoes=("osteoporose",),
         ),
     }  # fmt: skip

@@ -54,6 +54,24 @@ class Equipamento(StrEnum):
     ELIPTICA = "eliptica"
 
 
+class IconeExercicio(StrEnum):
+    """Pictograma do movimento (assets/icones/exercicios/<valor>.svg; Fase 5D)."""
+
+    AGACHAMENTO = "agachamento"
+    INCLINACAO_ANCA = "inclinacao_anca"
+    PASSO = "passo"
+    PONTE = "ponte"
+    FLEXAO = "flexao"
+    REMADA = "remada"
+    BRACOS_ACIMA = "bracos_acima"
+    PRANCHA = "prancha"
+    QUATRO_APOIOS = "quatro_apoios"
+    DEGRAU = "degrau"
+    MARCHA = "marcha"
+    MOBILIDADE = "mobilidade"
+    EQUILIBRIO = "equilibrio"
+
+
 class Exercicio(_Conteudo):
     """Um exercício da biblioteca (§6.1)."""
 
@@ -62,6 +80,7 @@ class Exercicio(_Conteudo):
     descricao: str
     descricao_sem_intervalos: str | None = None  # com «sem intervalos» na Estrategia
     grupo: Grupo
+    icone: IconeExercicio  # obrigatório em todos (Fase 5D)
     fase_minima: int = Field(ge=1, le=4)
     equipamento: tuple[Equipamento, ...] = ()
     impacto: Impacto

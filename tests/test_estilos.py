@@ -121,7 +121,9 @@ def test_todas_as_atividades_da_semana_tem_icone_proprio() -> None:
 
 def test_componentes_escapam_o_texto() -> None:
     """O texto do plano pode vir da LLM: nunca entra como HTML."""
-    html = componentes.exercicio("forca", "<b>x</b>", ["3 séries"], "<script>alert(1)</script>")
+    html = componentes.exercicio(
+        "agachamento", "<b>x</b>", ["3 séries"], "<script>alert(1)</script>"
+    )
     assert "<script>" not in html and "&lt;script&gt;" in html and "&lt;b&gt;" in html
     html = componentes.cartao_fase("Fase 1", "A", "<i>foco</i>", [("Peso", "<u>1</u>")])
     assert "<i>" not in html and "<u>" not in html

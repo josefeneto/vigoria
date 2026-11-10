@@ -234,12 +234,14 @@ def exercicio(
     descricao: str,
     extras: Iterable[str] = (),
 ) -> str:
-    """Cartão de um exercício: ícone do grupo ao lado do nome, prescrição em etiquetas,
-    descrição e notas (a toda a largura, para caber bem a 390 px)."""
+    """Cartão de um exercício: ícone do movimento (assets/icones/exercicios/, figura em
+    petróleo profundo e equipamento em terracota, como na maqueta) ao lado do nome,
+    prescrição em etiquetas, descrição e notas (a toda a largura, para caber a 390 px)."""
     chips = "".join(f"<span>{escape(p)}</span>" for p in prescricao)
     notas = "".join(f'<p class="v-nota">{escape(n)}</p>' for n in extras)
+    icone_html = _icone(f"exercicios/{nome_icone}", "principal_profundo")
     return (
-        f'<div class="v-cartao v-exercicio"><div class="v-exercicio-topo">{_icone(nome_icone)}'
+        f'<div class="v-cartao v-exercicio"><div class="v-exercicio-topo">{icone_html}'
         f'<h4>{escape(nome)}</h4></div><div class="v-chips">{chips}</div>'
         f"<p>{escape(descricao)}</p>{notas}</div>"
     )
