@@ -5,10 +5,12 @@ vigoria.dados.repositorios, sempre filtrados pelo utilizador. As observações s
 mostram-se como texto simples, sem interpretação.
 """
 
+from collections.abc import Sequence
+
 import streamlit as st
 from pydantic import ValidationError
 
-from paginas import comum, graficos, sessao
+from paginas import componentes, comum, graficos, sessao
 from paginas import textos as t
 from vigoria.conteudo.carregar import carregar_alimentacao
 from vigoria.dados import repositorios
@@ -36,6 +38,7 @@ EDITAR = "progresso_editar"  # id do registo a retificar
 APAGAR = "progresso_apagar"  # id do registo à espera de confirmação
 GERACAO = "progresso_geracao"  # muda ao guardar: o formulário volta a aparecer vazio
 ULTIMOS_REGISTOS = 4  # para as médias por baixo dos gráficos
+ANCORA_REGISTO = "registar"  # o botão «Registar» do topo salta para o formulário
 
 
 # ---------------------------------------------------------------- Topo
@@ -43,7 +46,7 @@ ULTIMOS_REGISTOS = 4  # para as médias por baixo dos gráficos
 
 def _topo(p: PlanoDaConta, semana: int) -> None:
     fase = fase_da_semana(semana)
-    with st.container(border=True, key="progresso_topo"):
+    with st.container(key="progresso_topo"):  # subtítulo por baixo do título (maqueta)
         if fase is None:
             st.markdown(f"**{t.PROGRESSO_MANUTENCAO.format(s=semana)}**")
             return
@@ -300,6 +303,47 @@ def _media(valores: list[float]) -> str:
     return numero(sum(valores) / len(valores))
 
 
+def _medias(sessoes: list[tuple[int, int]], cardio: list[tuple[int, int]], previsto: int) -> None:
+    """Cartões das médias dos últimos registos (sessões e cardio), se houver valores."""
+    itens = []
+    contagens = []
+    if sessoes:
+        ultimos = [v for _, v in sessoes[-ULTIMOS_REGISTOS:]]
+        contagens.append(len(ultimos))
+        itens.append((t.MEDIA_SESSOES, _media(ultimos), t.MEDIA_SESSOES_DE.format(d=previsto)))
+    if cardio:
+        ultimos = [v for _, v in cardio[-ULTIMOS_REGISTOS:]]
+        contagens.append(len(ultimos))
+        itens.append((t.MEDIA_CARDIO, _media(ultimos), t.UNIDADE_MINUTOS))
+    if itens:
+        st.html(componentes.medias(itens))
+        st.caption(t.medias_de(max(contagens)))
+
+
+def _grafico_peso(
+    p: PlanoDaConta,
+    pesos: list[tuple[int, float]],
+    manutencao: bool,
+    marcos: Sequence[tuple[int, float]],
+) -> None:
+    st.markdown(f"#### {t.GRAFICO_PESO}")
+    semanas, valores = (list(x) for x in zip(*pesos, strict=True))
+    ultima, ultimo = pesos[-1]
+    linha: list[tuple[int, float]] = []
+    if not manutencao and p.peso_kg is not None:
+        linha = [(0, p.peso_kg), *marcos]
+        semanas, valores = [0, *semanas], [p.peso_kg, *valores]
+    if linha and ultima <= graficos.SEMANAS_TOTAL and p.peso_kg is not None:
+        resumo = t.RESUMO_PESO.format(
+            p=numero(ultimo),
+            s=ultima,
+            l=numero(linha_indicativa(p.peso_kg, marcos, ultima)),
+        )
+    else:
+        resumo = t.RESUMO_PESO_MANUTENCAO.format(p=numero(ultimo), s=ultima)
+    _mostrar(graficos.peso(semanas, valores, linha), "grafico_peso", resumo)
+
+
 def _graficos(p: PlanoDaConta, registos: list[RegistoDaConta], semana: int) -> None:
     st.subheader(t.GRAFICOS_TITULO)
     if not registos:
@@ -308,25 +352,22 @@ def _graficos(p: PlanoDaConta, registos: list[RegistoDaConta], semana: int) -> N
     manutencao = em_manutencao(semana)
     contexto = contexto_do_plano(p)
     indicadores = p.estrategia.indicadores
-
+    previsto = sum(1 for d in p.plano.semana_tipo if d.duracao_min)
     pesos = [(r.semana, r.valores.peso_kg) for r in registos if r.valores.peso_kg is not None]
+    sessoes = [(r.semana, r.valores.sessoes) for r in registos if r.valores.sessoes is not None]
+    cardio = [
+        (r.semana, r.valores.cardio_min) for r in registos if r.valores.cardio_min is not None
+    ]
+
+    # Maqueta Progresso: o peso e as médias lado a lado no computador, empilhados no telemóvel.
     if pesos:
-        st.markdown(f"#### {t.GRAFICO_PESO}")
-        semanas, valores = (list(x) for x in zip(*pesos, strict=True))
-        ultima, ultimo = pesos[-1]
-        linha: list[tuple[int, float]] = []
-        if not manutencao and p.peso_kg is not None:
-            linha = [(0, p.peso_kg), *contexto.marcos]
-            semanas, valores = [0, *semanas], [p.peso_kg, *valores]
-        if linha and ultima <= graficos.SEMANAS_TOTAL and p.peso_kg is not None:
-            resumo = t.RESUMO_PESO.format(
-                p=numero(ultimo),
-                s=ultima,
-                l=numero(linha_indicativa(p.peso_kg, contexto.marcos, ultima)),
-            )
-        else:
-            resumo = t.RESUMO_PESO_MANUTENCAO.format(p=numero(ultimo), s=ultima)
-        _mostrar(graficos.peso(semanas, valores, linha), "grafico_peso", resumo)
+        coluna_peso, coluna_medias = st.columns([3, 2], gap="medium")
+        with coluna_peso:
+            _grafico_peso(p, pesos, manutencao, contexto.marcos)
+        with coluna_medias:
+            _medias(sessoes, cardio, previsto)
+    else:
+        _medias(sessoes, cardio, previsto)
 
     cinturas = [
         (r.semana, r.valores.cintura_cm) for r in registos if r.valores.cintura_cm is not None
@@ -348,10 +389,8 @@ def _graficos(p: PlanoDaConta, registos: list[RegistoDaConta], semana: int) -> N
             resumo += " " + t.RESUMO_CINTURA_LIMIAR.format(limiar=limiar)
         _mostrar(graficos.cintura(semanas, valores, limiar), "grafico_cintura", resumo)
 
-    sessoes = [(r.semana, r.valores.sessoes) for r in registos if r.valores.sessoes is not None]
     if sessoes:
         st.markdown(f"#### {t.GRAFICO_SESSOES}")
-        previsto = sum(1 for d in p.plano.semana_tipo if d.duracao_min)
         ultimos = [v for _, v in sessoes[-ULTIMOS_REGISTOS:]]
         resumo = t.RESUMO_SESSOES.format(
             registos=t.ultimos_registos(len(ultimos)), x=_media(ultimos), d=previsto
@@ -360,9 +399,6 @@ def _graficos(p: PlanoDaConta, registos: list[RegistoDaConta], semana: int) -> N
         figura = graficos.barras(semanas, valores, t.UNIDADE_SESSOES, previsto)
         _mostrar(figura, "grafico_sessoes", resumo)
 
-    cardio = [
-        (r.semana, r.valores.cardio_min) for r in registos if r.valores.cardio_min is not None
-    ]
     if cardio:
         st.markdown(f"#### {t.GRAFICO_CARDIO}")
         ultimos = [v for _, v in cardio[-ULTIMOS_REGISTOS:]]
@@ -490,6 +526,19 @@ contexto = contexto_do_plano(resultado)
 semana = semana_do_plano(contexto.inicio, hoje)
 st.caption(t.CONTA_PLANO_DE.format(data=t.data_hora(resultado.criado_em)))
 _topo(resultado, semana)
+semanas_registadas = [r.semana for r in registos]
+ocupado = periodo_ocupado(semana, preferencias.frequencia, semanas_registadas)
+if preferencias.ativo and not ocupado:
+    # Maqueta Progresso: o registo em falta logo no topo, com ligação ao formulário.
+    primeira, ultima = periodo(semana, frequencia_efetiva(preferencias.frequencia, semana))
+    st.html(
+        componentes.registo_por_fazer(
+            t.POR_FAZER_TITULO.format(periodo=t.periodo_de(primeira, ultima)),
+            t.POR_FAZER_TEXTO,
+            t.POR_FAZER_BOTAO,
+            ANCORA_REGISTO,
+        )
+    )
 comum.ligacao_ajuda("registo")
 
 if preferencias.ativo:
@@ -498,9 +547,8 @@ if preferencias.ativo:
         _alerta(alerta)
     if any(a.tipo in (TipoAlerta.SUBIDA_PESO, TipoAlerta.SUBIDA_CINTURA) for a in alertas):
         _ver_manutencao()  # um só botão, mesmo com os dois avisos
-    st.subheader(t.REGISTAR_TITULO)
-    semanas = [r.semana for r in registos]
-    if periodo_ocupado(semana, preferencias.frequencia, semanas):
+    st.subheader(t.REGISTAR_TITULO, anchor=ANCORA_REGISTO)
+    if ocupado:
         primeira, ultima = periodo(semana, frequencia_efetiva(preferencias.frequencia, semana))
         st.caption(t.REGISTAR_FEITO.format(periodo=t.periodo_para(primeira, ultima)))
         with st.expander(t.REGISTAR_OUTRO):

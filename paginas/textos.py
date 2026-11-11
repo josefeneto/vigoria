@@ -639,6 +639,9 @@ HOJE_MANUTENCAO = "Depois das 16 semanas"
 HOJE_MANUTENCAO_TEXTO = "Veja em «Manutenção» como continuar ao seu ritmo."
 HOJE_VER = "Ver a sessão de hoje"
 HOJE_VER_MANUTENCAO = "Ver a manutenção"
+# Treino (maqueta Fase)
+ESFORCO = "Esforço"
+SEMANAS_FASE = "Semanas {min} a {max}"
 # Depois das 16 semanas (Fase 6B): textos aprovados a 05/11/2026 (P8).
 RESUMO_MANUTENCAO = "Depois da semana 16, veja em «Manutenção» como continuar."
 RECOMECAR_QUESTIONARIO = "Responder de novo ao questionário"
@@ -697,6 +700,12 @@ MEDIDA_PESO = "o peso"
 MEDIDA_CINTURA = "o perímetro da cintura"
 
 REGISTAR_TITULO = "Registar"
+POR_FAZER_TITULO = "Registo {periodo} por fazer"
+POR_FAZER_TEXTO = "Leva cerca de 2 minutos."
+POR_FAZER_BOTAO = "Registar"
+MEDIA_SESSOES = "Sessões por semana"
+MEDIA_SESSOES_DE = "de {d}"
+MEDIA_CARDIO = "Cardio por semana"
 REGISTAR_FEITO = "Já tem o registo {periodo}."
 REGISTAR_OUTRO = "Registar outro período"
 ROTULOS_REGISTO = {
@@ -799,6 +808,11 @@ def periodo_para(primeira: int, ultima: int) -> str:
         if primeira == ultima
         else f"para as semanas {primeira} a {ultima}"
     )
+
+
+def medias_de(n: int) -> str:
+    """Legenda dos cartões das médias no progresso (Fase 8D)."""
+    return "Média do último registo" if n == 1 else f"Médias dos últimos {n} registos"
 
 
 def ultimos_registos(n: int) -> str:

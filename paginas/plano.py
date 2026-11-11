@@ -9,6 +9,8 @@ Os rótulos vêm de avisos.yaml (`rotulos`), como no Markdown da CLI; o plano ve
 st.session_state (o acabado de gerar, ou o último guardado na conta: comum.carregar_da_conta).
 """
 
+from collections.abc import Sequence
+
 import streamlit as st
 
 from paginas import componentes, comum
@@ -34,7 +36,7 @@ def _intervalo(minimo: int, maximo: int, unidade: str) -> str:
     return f"{minimo} {unidade}" if minimo == maximo else f"{minimo} a {maximo} {unidade}"
 
 
-def _exercicio(x: ExercicioPlano) -> None:
+def _exercicio(x: ExercicioPlano) -> str:
     prescricao = []
     if x.series:
         prescricao.append(f"{x.series} {r['series'].lower()}")
@@ -42,11 +44,16 @@ def _exercicio(x: ExercicioPlano) -> None:
         prescricao.append(f"{x.repeticoes} {r['repeticoes'].lower()}")
     if x.descanso_s:
         prescricao.append(f"{r['descanso'].lower()} {_intervalo(*x.descanso_s, 's')}")
-    extras = list(x.notas)
+    em_vez_de = None
     if x.em_vez_de:
-        extras.insert(0, "⇄ " + r["em_vez_de"].format(nome=carregar_exercicios()[x.em_vez_de].nome))
+        em_vez_de = r["em_vez_de"].format(nome=carregar_exercicios()[x.em_vez_de].nome)
     icone = carregar_exercicios()[x.id].icone
-    st.html(componentes.exercicio(icone, x.nome, prescricao, x.descricao, extras))
+    return componentes.exercicio(icone, x.nome, prescricao, x.descricao, x.notas, em_vez_de)
+
+
+def _exercicios(exercicios: Sequence[ExercicioPlano]) -> None:
+    """Um grupo de exercícios: em 2 colunas no computador, uma no telemóvel."""
+    st.html(componentes.grelha((_exercicio(x) for x in exercicios), colunas=2))
 
 
 def _minuscula(texto: str) -> str:
@@ -110,24 +117,41 @@ def _semana(plano: Plano) -> None:
 
 
 def _fase(fase: TreinoFase) -> None:
-    st.markdown(f"**{r['foco']}:** {fase.foco}")
-    st.caption(r["esforco"].format(min=fase.esforco[0], max=fase.esforco[1]))
+    """Cartão da fase (névoa, com a escala de esforço) e os exercícios em cartões."""
+    a, b = fase.esforco
+    intervalo = {f.numero: f.semanas for f in carregar_fases()}[fase.numero]
+    esforco = componentes.escala_esforco(a, b, t.ESFORCO, r["esforco"].format(min=a, max=b))
+    semanas = t.SEMANAS_FASE.format(min=intervalo.min, max=intervalo.max)
+    st.html(componentes.cartao_treino_fase(fase.nome, semanas, fase.foco, esforco))
     st.markdown(f"#### {r['forca_titulo']}")
-    for x in fase.forca:
-        _exercicio(x)
+    _exercicios(fase.forca)
     if fase.cardio_finalizador is not None:
         duracao = r["cardio_duracao"].format(
             min=fase.cardio_duracao_min[0], max=fase.cardio_duracao_min[1]
         )
         st.markdown(f"#### {r['cardio_finalizador']} ({duracao})")
-        _exercicio(fase.cardio_finalizador)
+        _exercicios([fase.cardio_finalizador])
     if fase.mobilidade_equilibrio:
         st.markdown(f"#### {r['mobilidade_equilibrio']}")
-        for x in fase.mobilidade_equilibrio:
-            _exercicio(x)
+        _exercicios(fase.mobilidade_equilibrio)
 
 
 def _treino(plano: Plano) -> None:
+    """Maqueta Fase: seletor das 4 fases (abre na fase desta semana), o cartão da fase e os
+    exercícios; depois, a semana-tipo e a estrutura de cada sessão."""
+    fases = {f.numero: f for f in plano.treino.fases}
+    atual = hoje.fase if hoje.fase in fases else min(fases)
+    escolhida = st.segmented_control(
+        t.ESCOLHER_FASE,
+        list(fases),
+        default=atual,
+        required=True,
+        format_func=lambda n: f"{r['fase']} {n}",
+        key="plano_fase",
+        label_visibility="collapsed",
+        width="stretch",
+    )
+    _fase(fases[escolhida or atual])
     _semana(plano)
     st.subheader(r["estrutura_sessao"])
     sessao = plano.treino.estrutura_sessao
@@ -137,17 +161,6 @@ def _treino(plano: Plano) -> None:
             for parte in ("aquecimento", "bloco_principal", "cardio_finalizador", "retorno_calma")
         )
     )
-    fases = {f.numero: f for f in plano.treino.fases}
-    st.subheader(r["treino"])
-    escolhida = st.segmented_control(
-        t.ESCOLHER_FASE,
-        list(fases),
-        default=min(fases),
-        required=True,
-        format_func=lambda n: f"{r['fase']} {n}: {fases[n].nome}",
-        key="plano_fase",
-    )
-    _fase(fases[escolhida or min(fases)])
 
 
 def _alimentacao(plano: Plano) -> None:

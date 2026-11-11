@@ -534,6 +534,10 @@ indice = PASSOS.index(passo)
 a_gerar = passo == "7" and bool(st.session_state.get(A_GERAR))
 # Ao gerar, volta também ao topo: o botão está no fundo da revisão e a espera fica em cima.
 _ir_ao_topo(f"{passo}-a-gerar" if a_gerar else passo)
+# No telemóvel, a barra de navegação dá lugar a «Anterior / Seguinte»: a saída fica no topo
+# (maqueta Questionario). No computador, o topo tem a navegação e esta ligação esconde-se.
+with st.container(key="questionario_voltar"):
+    st.page_link(comum.PAGINA_INICIO, label=t.VOLTAR_INICIO, icon=":material/arrow_back:")
 st.html(
     componentes.cabecalho_passo(
         ICONES_PASSOS[passo],

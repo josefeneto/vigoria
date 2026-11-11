@@ -23,7 +23,7 @@ def _figura(semanas: Sequence[int], unidade: str, *, legenda: bool, inicio_zero:
     fim = max(SEMANAS_TOTAL, *semanas) if semanas else SEMANAS_TOTAL
     eixo_y: dict[str, object] = {
         "title": {"text": unidade},
-        "gridcolor": CORES["borda"],
+        "gridcolor": CORES["grelha"],
         "zeroline": False,
         "fixedrange": True,
     }
@@ -32,13 +32,14 @@ def _figura(semanas: Sequence[int], unidade: str, *, legenda: bool, inicio_zero:
     figura = go.Figure()
     figura.update_layout(
         height=ALTURA,
-        margin={"l": 52, "r": 12, "t": 40 if legenda else 8, "b": 52},
+        margin={"l": 52, "r": 12, "t": 8, "b": 96 if legenda else 52},
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font={"family": LETRA, "size": 14, "color": CORES["texto"]},
+        font={"family": LETRA, "size": 13, "color": CORES["texto_secundario"]},
         separators=", ",
         showlegend=legenda,
-        legend={"orientation": "h", "x": 0, "y": 1.02, "yanchor": "bottom"},  # por cima
+        # Por baixo do gráfico, como na maqueta (Fase 8D).
+        legend={"orientation": "h", "x": 0, "y": -0.32, "yanchor": "top"},
         dragmode=False,
         barcornerradius=4,
         hoverlabel={"bgcolor": CORES["cartao"], "font": {"color": CORES["texto"]}},
@@ -64,8 +65,13 @@ def _registos(
         y=list(valores),
         name=t.GRAFICO_REGISTOS,
         mode="lines+markers",
-        line={"color": CORES["principal"], "width": 2},
-        marker={"color": CORES["principal"], "size": 9},
+        line={"color": CORES["principal"], "width": 3},
+        # O último registo maior e com contorno claro (maqueta Progresso).
+        marker={
+            "color": CORES["principal"],
+            "size": [9] * (len(valores) - 1) + [13],
+            "line": {"color": CORES["cartao"], "width": [0] * (len(valores) - 1) + [2]},
+        },
         hovertemplate=t.GRAFICO_DICA.format(unidade=unidade) + "<extra></extra>",
     )
 

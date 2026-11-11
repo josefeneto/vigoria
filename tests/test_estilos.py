@@ -232,3 +232,25 @@ def test_cores_so_para_formas_distintas_do_fundo() -> None:
     assert contraste(estilos.CORES["principal"], estilos.CORES["nevoa_escura"]) >= 3
     assert contraste(estilos.CORES["pessego"], estilos.CORES["principal_profundo"]) >= 3
     assert contraste(estilos.CORES["fundo"], estilos.CORES["principal_profundo"]) >= 3
+
+
+@pytest.mark.parametrize(
+    ("minimo", "maximo", "dentro"), [(3, 6, 4), (0, 2, 2), (7, 10, 4), (5, 5, 1)]
+)
+def test_escala_de_esforco(minimo: int, maximo: int, dentro: int) -> None:
+    html = componentes.escala_esforco(minimo, maximo, "Esforço", "Esforço percebido")
+    assert html.count("<span class=") == 10 + 3  # 10 segmentos, a barra e os 2 rótulos
+    assert html.count('class="dentro"') == dentro
+    assert f"{minimo} a {maximo}" in html and 'aria-label="Esforço percebido"' in html
+
+
+def test_componentes_do_treino_e_progresso_escapam_o_texto() -> None:
+    perigoso = "<b>x</b>"
+    for html in (
+        componentes.exercicio("agachamento", perigoso, [perigoso], perigoso, [perigoso], perigoso),
+        componentes.cartao_treino_fase(perigoso, perigoso, perigoso, ""),
+        componentes.medias([(perigoso, perigoso, perigoso)]),
+        componentes.registo_por_fazer(perigoso, perigoso, perigoso, "registar"),
+    ):
+        assert "<b>" not in html and "&lt;b&gt;" in html
+    assert 'href="#registar"' in componentes.registo_por_fazer("a", "b", "c", "registar")

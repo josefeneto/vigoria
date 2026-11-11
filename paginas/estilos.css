@@ -100,10 +100,6 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
 .v-semana-dia { font-weight: 700; }
 .v-semana-min { white-space: nowrap; color: var(--v-texto-secundario); }
 .v-exercicio { margin: 0; }
-/* Ícone do movimento como na maqueta (Fase.dc.html): quadrado de 64 px com o desenho a 3/4. */
-.v-exercicio .v-icone { width: 3.5rem; height: 3.5rem; border-radius: 16px; }
-.v-exercicio .v-icone img { width: 2.625rem; height: 2.625rem; }
-.v-exercicio-topo { display: flex; gap: .8rem; align-items: center; margin-bottom: .7rem; }
 .v-exercicio h4 { margin: 0; padding: 0; font-size: 1.1rem; color: var(--v-principal-profundo); }
 .v-exercicio p { margin: .4rem 0 0; }
 .v-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
@@ -393,3 +389,65 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .v-notas-titulo { margin: 0 0 .35rem; font-size: 1.05rem; color: var(--v-principal-profundo); }
 .stApp .v-notas ul { margin: 0; padding-left: 1.1rem; }
 .stApp .v-notas li { font-size: .9rem; line-height: 1.45; margin: 0 0 .25rem; }
+
+/* ---- Treino (maqueta Fase): seletor das fases numa caixa clara, cartão da fase em névoa */
+.st-key-plano_fase [role="radiogroup"] { background: var(--v-cartao); border: 1px solid var(--v-borda);
+  border-radius: 16px; padding: 5px; gap: 6px; }
+.st-key-plano_fase button[data-variant="segmented_control"] { flex: 1 1 0; min-width: 0;
+  border: 0 !important; border-radius: 12px !important; background: transparent;
+  color: var(--v-texto-secundario); font-weight: 700; padding: 0 .25rem; }
+/* «Fase 3» e «Fase 4» inteiros a 390 px, sem reticências. */
+.st-key-plano_fase button[data-variant="segmented_control"] * { overflow: visible;
+  text-overflow: clip; white-space: nowrap; }
+.stApp .st-key-plano_fase button[data-variant="segmented_control"][aria-checked="true"],
+.stApp .st-key-plano_fase button[data-variant="segmented_control"][aria-checked="true"]:hover {
+  background: var(--v-principal); color: var(--v-branco); }
+.st-key-plano_fase button[aria-checked="true"] p { color: var(--v-branco); }
+.v-fase { background: var(--v-nevoa); border-radius: 18px; padding: 14px 16px; display: grid;
+  gap: 8px; }
+.v-fase p { margin: 0; }
+.v-fase-topo { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem;
+  flex-wrap: wrap; }
+.v-fase-nome { font-family: "Fraunces", Georgia, serif; font-size: 1.2rem; font-weight: 700;
+  color: var(--v-principal-profundo); }
+.v-fase-semanas { font-size: .8rem; font-weight: 700; color: var(--v-principal); }
+.v-esforco { display: flex; align-items: center; gap: 8px; }
+.v-esforco-rotulo { flex: none; font-size: .75rem; font-weight: 700; color: var(--v-principal-profundo); }
+.v-esforco-barra { flex: 1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; }
+.v-esforco-barra span { height: 10px; border-radius: 3px; background: var(--v-nevoa-escura); }
+.v-esforco-barra .dentro { background: var(--v-principal); }
+
+/* Exercícios: ícone de 64 px à esquerda e o resto ao lado (maqueta Fase) */
+.v-cartao.v-exercicio { display: flex; gap: 12px; align-items: flex-start; padding: 14px;
+  border-radius: 18px; box-shadow: none; }
+.v-exercicio .v-icone { width: 4rem; height: 4rem; border-radius: 16px; }
+.v-exercicio .v-icone img { width: 3rem; height: 3rem; }
+.v-exercicio-corpo { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.stApp .v-exercicio h4 { font-family: inherit; font-weight: 700; font-size: 1rem; }
+.v-exercicio .v-chips span { border-radius: 10px; font-size: .75rem; padding: .15rem .55rem; }
+.stApp .v-exercicio p { margin: 0; font-size: .85rem; line-height: 1.4; }
+.stApp .v-exercicio .v-em-vez { color: var(--v-cobre); font-weight: 700; font-size: .8rem; }
+.stApp .v-exercicio .v-nota { color: var(--v-texto-secundario); font-size: .8rem; }
+
+/* ---- Progresso (maqueta Progresso): subtítulo, registo em falta e médias */
+.st-key-progresso_topo p { color: var(--v-texto-secundario); margin: 0; }
+.st-key-progresso_topo strong { font-weight: 400; }
+.v-por-fazer { background: var(--v-principal-profundo); border-radius: 20px; padding: 16px;
+  display: flex; align-items: center; gap: 14px; }
+.v-por-fazer > div { flex: 1; }
+.v-por-fazer p { margin: 0; }
+.v-por-fazer-titulo { color: var(--v-fundo); font-weight: 700; }
+.v-por-fazer-texto { color: var(--v-nevoa); font-size: .85rem; }
+.stApp a.v-por-fazer-botao { flex: none; min-height: 48px; padding: 0 18px; display: inline-flex;
+  align-items: center; border-radius: 14px; background: var(--v-pessego);
+  color: var(--v-principal-profundo); font-weight: 700; text-decoration: none; }
+.stApp a.v-por-fazer-botao:hover { background: var(--v-argila); }
+.v-medias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v-numero-unidade { font-family: "Atkinson Hyperlegible Next", sans-serif; font-size: .8rem;
+  font-weight: 400; color: var(--v-texto-secundario); }
+
+/* ---- Questionário (maqueta Questionario): opções de 56 px; «Voltar» só no telemóvel */
+.st-key-questionario [data-testid="stRadioGroup"] > div,
+.st-key-questionario [data-testid="stCheckbox"]:not(:has([role="switch"])) > label {
+  min-height: 3.5rem; border-radius: 16px; }
+@media (min-width: 769px) { .st-key-questionario_voltar { display: none; } }

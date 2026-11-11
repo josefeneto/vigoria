@@ -284,15 +284,65 @@ def exercicio(
     prescricao: Iterable[str],
     descricao: str,
     extras: Iterable[str] = (),
+    em_vez_de: str | None = None,
 ) -> str:
-    """Cartão de um exercício: ícone do movimento (assets/icones/exercicios/, figura em
-    petróleo profundo e equipamento em terracota, como na maqueta) ao lado do nome,
-    prescrição em etiquetas, descrição e notas (a toda a largura, para caber a 390 px)."""
+    """Cartão de um exercício (maqueta Fase): ícone do movimento (assets/icones/exercicios/,
+    figura em petróleo profundo e equipamento em terracota) à esquerda; à direita, o nome, a
+    prescrição em etiquetas, a descrição, «Em vez de: …» a cobre e as outras notas (por
+    exemplo, «Com halteres: …») a cinzento."""
     chips = "".join(f"<span>{escape(p)}</span>" for p in prescricao)
+    troca = f'<p class="v-em-vez">{escape(em_vez_de)}</p>' if em_vez_de else ""
     notas = "".join(f'<p class="v-nota">{escape(n)}</p>' for n in extras)
     icone_html = _icone(f"exercicios/{nome_icone}", "principal_profundo")
     return (
-        f'<div class="v-cartao v-exercicio"><div class="v-exercicio-topo">{icone_html}'
-        f'<h4>{escape(nome)}</h4></div><div class="v-chips">{chips}</div>'
-        f"<p>{escape(descricao)}</p>{notas}</div>"
+        f'<div class="v-cartao v-exercicio">{icone_html}<div class="v-exercicio-corpo">'
+        f'<h4>{escape(nome)}</h4><div class="v-chips">{chips}</div>'
+        f"<p>{escape(descricao)}</p>{troca}{notas}</div></div>"
+    )
+
+
+def escala_esforco(minimo: int, maximo: int, rotulo: str, descricao: str) -> str:
+    """Escala de esforço de 1 a 10, com o intervalo da fase preenchido e o texto «3 a 6».
+
+    `descricao` (frase completa) fica para os leitores de ecrã; os segmentos são decorativos.
+    """
+    segmentos = "".join(
+        f'<span class="{"dentro" if minimo <= i <= maximo else ""}"></span>' for i in range(1, 11)
+    )
+    return (
+        f'<div class="v-esforco" role="img" aria-label="{escape(descricao)}">'
+        f'<span class="v-esforco-rotulo">{escape(rotulo)}</span>'
+        f'<span class="v-esforco-barra" aria-hidden="true">{segmentos}</span>'
+        f'<span class="v-esforco-rotulo">{minimo} a {maximo}</span></div>'
+    )
+
+
+def cartao_treino_fase(nome: str, semanas: str, foco: str, esforco_html: str) -> str:
+    """Cartão da fase escolhida no Treino (névoa): nome, semanas, foco e escala de esforço."""
+    return (
+        f'<div class="v-fase"><div class="v-fase-topo"><p class="v-fase-nome">{escape(nome)}</p>'
+        f'<p class="v-fase-semanas">{escape(semanas)}</p></div><p>{escape(foco)}</p>'
+        f"{esforco_html}</div>"
+    )
+
+
+def medias(itens: Iterable[tuple[str, str, str]]) -> str:
+    """Médias do progresso em cartões claros: (rótulo, valor, unidade)."""
+    corpo = "".join(
+        f'<div class="v-numero"><p class="v-numero-rotulo">{escape(rotulo)}</p>'
+        f'<p class="v-numero-valor">{escape(valor)} <span class="v-numero-unidade">'
+        f"{escape(unidade)}</span></p></div>"
+        for rotulo, valor, unidade in itens
+    )
+    return f'<div class="v-numeros v-medias">{corpo}</div>'
+
+
+def registo_por_fazer(titulo: str, texto: str, botao: str, ancora: str) -> str:
+    """Cartão escuro do progresso: falta o registo deste período, com ligação ao formulário
+    (mesma página: a âncora não recarrega nada)."""
+    return (
+        f'<div class="v-por-fazer"><div><p class="v-por-fazer-titulo">{escape(titulo)}</p>'
+        f'<p class="v-por-fazer-texto">{escape(texto)}</p></div>'
+        f'<a class="v-por-fazer-botao" href="#{escape(ancora)}" target="_self">{escape(botao)}</a>'
+        "</div>"
     )
