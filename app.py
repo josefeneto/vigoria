@@ -6,8 +6,6 @@ rodapé (Fases 6, 8B e 8D); o resto exige login. A página para deixar de recebe
 (Fase 8) abre-se com ou sem sessão, fora do menu. Todas as páginas acabam no rodapé (comum.rodape).
 """
 
-from pathlib import Path
-
 import streamlit as st
 from sqlalchemy.exc import OperationalError
 from streamlit.navigation.page import StreamlitPage
@@ -17,10 +15,8 @@ from paginas import textos as t
 from vigoria.config import obter_configuracao
 from vigoria.dados.repositorios import Recusa
 
-RAIZ = Path(__file__).parent
-FAVICON = RAIZ / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
-
-st.set_page_config(page_title=t.MARCA, page_icon=FAVICON, layout="centered")
+# O favicon vai embutido (data URI): o /media/ do Streamlit expira ao reiniciar o servidor.
+st.set_page_config(page_title=t.MARCA, page_icon=estilos.favicon(), layout="centered")
 estilos.aplicar()
 # O logotipo está no topo desenhado por paginas/navegacao.py (Fase 8D), não no st.logo.
 

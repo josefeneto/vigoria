@@ -16,6 +16,7 @@ import streamlit as st
 RAIZ = Path(__file__).resolve().parents[1]
 PASTA_ICONES = RAIZ / "assets" / "icones"
 CSS = Path(__file__).with_name("estilos.css")
+FAVICON_PNG = RAIZ / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
 
 CORES = {
     "principal": "#1F5C63",  # petróleo: botões, ligações, progresso
@@ -119,6 +120,19 @@ def icone(nome: str, cor: str = "principal", destaque: str = "terracota") -> str
     svg = svg.replace('class="d"', f'stroke="{CORES[destaque]}"')
     dados = base64.b64encode(svg.encode("utf-8")).decode("ascii")
     return f'<img src="data:image/svg+xml;base64,{dados}" alt="">'
+
+
+@cache
+def favicon() -> str:
+    """O favicon (static/icones/icone-32.png) como data URI, para o st.set_page_config.
+
+    Com o caminho do ficheiro, o Streamlit serve-o em /media/…, um endereço guardado na
+    memória do servidor: quando o servidor reinicia (no Cloud, a cada push ou quando a app
+    adormece), o endereço passa a dar 404 e o separador fica sem ícone. Embutido no endereço,
+    não depende do servidor nem do caminho do Cloud (Fase 8D).
+    """
+    dados = base64.b64encode(FAVICON_PNG.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{dados}"
 
 
 def _variaveis() -> str:
