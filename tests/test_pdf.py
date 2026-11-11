@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from vigoria.conteudo.carregar import carregar_manutencao
+from vigoria.conteudo.carregar import carregar_avisos, carregar_manutencao
 from vigoria.exportacao import pdf
 from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.plano import Plano
@@ -333,3 +333,13 @@ def test_proteina_e_hidratacao_na_pagina_da_alimentacao(
     for p, _, t in escrito:
         paginas.setdefault(t, p)  # a primeira «Alimentação» (há outra na manutenção)
     assert paginas["Proteína"] == paginas["Hidratação"] == paginas["Alimentação"]
+
+
+def test_dias_da_semana_numa_so_linha_no_pdf() -> None:
+    """A coluna do dia (menos 2 mm de margem de cada lado) leva «Segunda-feira» inteira."""
+    doc = pdf._Documento("p. {pagina}")
+    doc.add_page()
+    doc.set_font("Atkinson", "", pdf.TEXTO_PT)
+    largura = pdf.LARGURAS_SEMANA[0] - 4
+    for dia in carregar_avisos().rotulos.dias.values():
+        assert doc.get_string_width(dia) <= largura, dia

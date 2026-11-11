@@ -22,6 +22,8 @@ def _comecar(chave: str) -> None:
         if st.button(
             t.COMECAR, type="primary", icon=":material/arrow_forward:", width="stretch", key=chave
         ):
+            # Começa sempre no passo 1; as respostas já dadas mantêm-se na sessão.
+            st.session_state[comum.PASSO] = "0"
             st.switch_page(comum.PAGINA_QUESTIONARIO)
     elif st.button(t.ENTRAR, type="primary", icon=":material/login:", width="stretch", key=chave):
         comum.pedir_login()

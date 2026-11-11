@@ -309,3 +309,14 @@ def test_cartao_hoje_abre_o_treino_da_fase_descanso_e_manutencao(
     assert t.HOJE_MANUTENCAO in _texto(at) and t.SEMANA_MANUTENCAO in _texto(at)
     _botao(at, t.HOJE_VER_MANUTENCAO).click().run()
     assert at.session_state["plano_seccao"] == "manutencao"
+
+
+@pytest.mark.parametrize("chave_botao", ["comecar", "comecar_fim"])
+def test_comecar_no_inicio_volta_ao_passo_1_e_mantem_as_respostas(chave_botao: str) -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.session_state["passo"] = "4a"
+    at.session_state[chave("peso_kg")] = 80.0
+    at.button(key=chave_botao).click().run()
+    assert not at.exception
+    assert at.session_state["passo"] == "0"
+    assert at.session_state[chave("peso_kg")] == 80.0

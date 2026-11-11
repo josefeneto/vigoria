@@ -34,6 +34,8 @@ from vigoria.regras.textos import numero
 
 RECURSOS = files("vigoria.exportacao") / "recursos"
 ICONES = RECURSOS / "icones"  # cópias de assets/icones/exercicios/ (scripts/folha_icones.py)
+# Semana-tipo: dia, atividade, duração, descrição (mm). «Segunda-feira» numa só linha.
+LARGURAS_SEMANA = [31, 36, 21, 86]
 
 # Paleta da marca (paginas/estilos.py, CORES; um teste confirma que são iguais).
 CORES = {
@@ -722,7 +724,7 @@ def _semana(pdf: _Documento, plano: Plano, r: dict[str, str]) -> None:
             ]
             for s in plano.semana_tipo
         ],
-        [26, 38, 22, 88],
+        LARGURAS_SEMANA,
     )
     sessao = plano.treino.estrutura_sessao
     pdf.subtitulo(r["estrutura_sessao"])

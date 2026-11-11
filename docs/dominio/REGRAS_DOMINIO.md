@@ -58,7 +58,7 @@ Deteção das condições e limitações: apenas a partir das escolhas fechadas 
 | IMC | peso (kg) / altura (m)², arredondado a 1 casa decimal | Vol. 1 |
 | Classe de IMC | < 18,5 baixo peso; 18,5–24,9 normal; 25–29,9 excesso de peso; 30–34,9 obesidade I; ≥ 35 fora da versão-base | Vol. 1 / OMS |
 | Cintura de risco | > 94 cm (H) ou > 80 cm (M) ⇒ ativa o módulo de gordura visceral | Prompt v2, 1.F |
-| Hidratação diária | 25 a 35 ml × peso (kg); valor central 30 ml/kg; mostrar o intervalo | Prompt v2, ponto 4 |
+| Hidratação diária | 25 a 35 ml × peso (kg); valor central 30 ml/kg; mostrar o intervalo; os três valores arredondados à centena de ml acima (decisão de 11/11/2026: o máximo pode passar os 35 ml/kg em menos de 100 ml) | Prompt v2, ponto 4 |
 | Hidratação com doença renal | sem valor em ml no plano: «a quantidade de líquidos deve ser definida pelo seu médico» | Segurança (26/10) |
 | Hidratação com doença cardiovascular | mostra o intervalo, com a nota: «se tiver indicação médica para limitar líquidos (por exemplo, insuficiência cardíaca), siga essa indicação» | Segurança (26/10) |
 | Proteína diária | 1,0 a 1,2 g × peso (kg), em todas as idades.<br>**A CONFIRMAR (revisão profissional):** com IMC ≥ 35, avaliar o uso de peso ajustado em vez do peso atual. | Prompt v2, ponto 3; decisão de 25/10 |

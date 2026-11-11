@@ -70,6 +70,16 @@ class IconeExercicio(StrEnum):
     MARCHA = "marcha"
     MOBILIDADE = "mobilidade"
     EQUILIBRIO = "equilibrio"
+    # Fase 8D (11/11/2026): ícones mais fiéis ao movimento, pedidos pelo José.
+    FLEXAO_PAREDE = "flexao_parede"
+    ABDOMINAL = "abdominal"
+    ELEVACAO_LATERAL = "elevacao_lateral"
+    ELEVACAO_FRONTAL = "elevacao_frontal"
+    PASSADEIRA = "passadeira"
+    ELIPTICA = "eliptica"
+    PRANCHA_LATERAL = "prancha_lateral"
+    ROTACAO_TRONCO = "rotacao_tronco"
+    CAMINHADA = "caminhada"
 
 
 class Exercicio(_Conteudo):

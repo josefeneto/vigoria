@@ -118,13 +118,18 @@ def cintura_de_risco(sexo: Sexo, cintura_cm: float) -> bool:
 
 
 def calcular_hidratacao(peso_kg: float, condicoes: Collection[Condicao]) -> Hidratacao:
-    """25 a 35 ml/kg (central 30). Sem valores com doença renal; nota com doença cardiovascular."""
+    """25 a 35 ml/kg (central 30), à centena de ml acima. Sem valores com doença renal; nota
+    com doença cardiovascular.
+
+    Arredondar para cima (decisão do José, 11/11/2026) dá números mais diretos («2500 a
+    3400 ml»); o máximo pode passar os 35 ml/kg em menos de 100 ml.
+    """
     if Condicao.DOENCA_RENAL in condicoes:
         return Hidratacao(
             minimo_ml=None, central_ml=None, maximo_ml=None, nota=textos.HIDRATACAO_DOENCA_RENAL
         )
     peso = _d(peso_kg)
-    minimo, central, maximo = (_inteiro(peso * ml) for ml in HIDRATACAO_ML_POR_KG)
+    minimo, central, maximo = (_centena_acima(peso * ml) for ml in HIDRATACAO_ML_POR_KG)
     nota = (
         textos.HIDRATACAO_DOENCA_CARDIOVASCULAR
         if Condicao.DOENCA_CARDIOVASCULAR in condicoes
@@ -271,6 +276,11 @@ def _arredondar(valor: Decimal, casas: str) -> float:
 
 def _inteiro(valor: Decimal, modo: str = ROUND_HALF_UP) -> int:
     return int(valor.quantize(Decimal(1), rounding=modo))
+
+
+def _centena_acima(valor: Decimal) -> int:
+    """Arredonda para a centena seguinte (2401 → 2500; 2400 fica 2400)."""
+    return _ceil(valor / 100) * 100
 
 
 def _ceil(valor: Decimal) -> int:

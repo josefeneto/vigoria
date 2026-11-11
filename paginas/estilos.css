@@ -216,7 +216,10 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 /* ---- Cabeçalho do Streamlit: transparente e sem apanhar os cliques (fica o indicador
    «a correr»); o topo visível é o nosso (.st-key-topo, paginas/navegacao.py). */
 [data-testid="stHeader"] { background: transparent; pointer-events: none; }
-[data-testid="stHeader"] * { pointer-events: auto; }
+/* Só os botões e ligações voltam a receber cliques: o stToolbar ocupa a largura toda e,
+   com pointer-events em todos os filhos, tapava a navegação do computador. */
+.stApp [data-testid="stHeader"] * { pointer-events: none; }
+.stApp [data-testid="stHeader"] :is(button, a) { pointer-events: auto; }
 /* Botões que só o Streamlit Community Cloud junta ao cabeçalho (Fork, GitHub, Share…):
    tapavam a navegação. Fora do Cloud não existem. */
 [data-testid="stToolbarActions"] { display: none; }
@@ -262,8 +265,11 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
   /* Sem a seta do menu «Conta» (o único div com aria-hidden dentro do botão). */
   .st-key-barra_nav [data-testid="stPopoverButton"] div[aria-hidden="true"] { display: none; }
   /* Na demonstração (Community Cloud), o selo do Cloud fica no canto inferior direito, fora
-     da app: a barra deixa-lhe espaço livre à direita. */
-  body:has(.st-key-aviso_demo) .st-key-barra_nav { padding-right: 4.75rem; }
+     da app, com a fotografia do dono ao lado (cerca de 120 px, medido num iPhone): a barra
+     deixa-lhes espaço livre à direita. Em produção não há selo e a barra usa a largura toda. */
+  body:has(.st-key-aviso_demo) .st-key-barra_nav { padding-right: 128px; padding-left: 4px; }
+  body:has(.st-key-aviso_demo) .st-key-barra_nav :is([data-testid="stPageLink"] p,
+    [data-testid="stPopoverButton"] p) { font-size: .7rem; }
   /* O conteúdo e o rodapé acabam acima da barra, nunca tapados por ela. */
   body:has(.st-key-barra_nav) [data-testid="stMainBlockContainer"] {
     padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }

@@ -93,8 +93,23 @@ def test_limiar_cintura_por_sexo() -> None:
 
 def test_hidratacao_sem_condicoes() -> None:
     h = calcular_hidratacao(94, [Condicao.NENHUMA])
-    assert (h.minimo_ml, h.central_ml, h.maximo_ml) == (2350, 2820, 3290)
+    assert (h.minimo_ml, h.central_ml, h.maximo_ml) == (2400, 2900, 3300)
     assert h.nota is None
+
+
+@pytest.mark.parametrize(
+    ("peso", "esperado"),
+    [
+        (96, (2400, 2900, 3400)),  # 2400 exato fica; 2880 → 2900; 3360 → 3400
+        (97, (2500, 3000, 3400)),  # 2425 → 2500; 2910 → 3000; 3395 → 3400
+        (60.04, (1600, 1900, 2200)),  # 1501 → 1600: um ml acima já passa à centena seguinte
+        (40, (1000, 1200, 1400)),
+    ],
+)
+def test_hidratacao_arredondada_a_centena_acima(peso: float, esperado: tuple[int, ...]) -> None:
+    h = calcular_hidratacao(peso, [Condicao.NENHUMA])
+    assert (h.minimo_ml, h.central_ml, h.maximo_ml) == esperado
+    assert all(v % 100 == 0 for v in esperado)
 
 
 def test_hidratacao_doenca_renal_sem_valores() -> None:
@@ -105,7 +120,7 @@ def test_hidratacao_doenca_renal_sem_valores() -> None:
 
 def test_hidratacao_doenca_cardiovascular_com_nota_de_liquidos() -> None:
     h = calcular_hidratacao(94, [Condicao.DOENCA_CARDIOVASCULAR])
-    assert (h.minimo_ml, h.central_ml, h.maximo_ml) == (2350, 2820, 3290)
+    assert (h.minimo_ml, h.central_ml, h.maximo_ml) == (2400, 2900, 3300)
     assert h.nota == textos.HIDRATACAO_DOENCA_CARDIOVASCULAR
 
 

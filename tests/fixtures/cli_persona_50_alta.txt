@@ -11,7 +11,7 @@ INDICADORES
   IMC: 31,8 (obesidade grau I)
   Cintura: 108 cm (acima do limiar de 94 cm)
   Módulo de gordura visceral: ativo
-  Hidratação: 2350 a 3290 ml/dia (central 2820 ml)
+  Hidratação: 2400 a 3300 ml/dia (central 2900 ml)
   Proteína: 94 a 112 g/dia; 25 a 30 g por refeição principal
   Peso-alvo usado: 85 kg | perda pedida 9 kg | ritmo necessário 0,56 kg/semana | máximo 0,47 kg/semana
   Realista em 16 semanas: não | alvo à semana 16: 86,5 kg | objetivo completo por volta da semana 20

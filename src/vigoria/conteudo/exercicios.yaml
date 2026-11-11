@@ -31,7 +31,7 @@ exercicios:
     nome: Flexão na parede
     descricao: Manter o corpo alinhado e aproximar o peito da parede de forma controlada.
     grupo: forca
-    icone: flexao
+    icone: flexao_parede
     fase_minima: 1
     equipamento: [parede]
     impacto: baixo
@@ -72,7 +72,7 @@ exercicios:
     nome: Elevação lateral leve
     descricao: Elevar os braços numa amplitude confortável, sem balanço.
     grupo: forca
-    icone: bracos_acima
+    icone: elevacao_lateral
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -199,7 +199,7 @@ exercicios:
     nome: Abdominal Crunch
     descricao: Deitado de costas, retirar apenas as escápulas/ombros do chão.
     grupo: forca
-    icone: ponte
+    icone: abdominal
     fase_minima: 2
     impacto: baixo
     nivel: base
@@ -276,7 +276,7 @@ exercicios:
     nome: Elevação Frontal
     descricao: Elevar braços esticados à frente até à linha dos olhos de forma fluida.
     grupo: forca
-    icone: bracos_acima
+    icone: elevacao_frontal
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -290,7 +290,7 @@ exercicios:
     nome: Prancha Lateral com Joelhos Apoiados
     descricao: Apoio num antebraço e na lateral do joelho, bacia elevada e alinhada.
     grupo: forca
-    icone: prancha
+    icone: prancha_lateral
     fase_minima: 3
     impacto: baixo
     nivel: base
@@ -339,7 +339,7 @@ exercicios:
       Mãos numa bancada estável, corpo alinhado; tocar alternadamente no ombro oposto sem
       rodar a bacia.
     grupo: forca
-    icone: prancha
+    icone: flexao
     fase_minima: 4
     equipamento: [bancada]
     impacto: baixo
@@ -394,7 +394,7 @@ exercicios:
       Começar com marcha confortável. Aumentar primeiro o tempo; depois, se adequado, a
       velocidade e a inclinação.
     grupo: cardio
-    icone: marcha
+    icone: passadeira
     fase_minima: 1
     equipamento: [passadeira]
     impacto: baixo
@@ -409,7 +409,7 @@ exercicios:
       Usar resistência baixa a moderada e movimento fluido. Reduzir a resistência se a
       técnica se deteriorar.
     grupo: cardio
-    icone: marcha
+    icone: eliptica
     fase_minima: 1
     equipamento: [eliptica]
     impacto: baixo
@@ -422,7 +422,7 @@ exercicios:
     nome: Caminhada
     descricao: Excelente opção para recuperação ativa e aumento da atividade diária.
     grupo: cardio
-    icone: marcha
+    icone: caminhada
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -447,7 +447,7 @@ exercicios:
     nome: Rotações torácicas
     descricao: Rotações controladas do tronco, dentro de uma amplitude confortável.
     grupo: mobilidade
-    icone: mobilidade
+    icone: rotacao_tronco
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -458,7 +458,7 @@ exercicios:
     nome: Mobilidade da anca
     descricao: Movimentos suaves e controlados dentro da amplitude disponível.
     grupo: mobilidade
-    icone: mobilidade
+    icone: equilibrio
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -563,7 +563,7 @@ exercicios:
     nome: Prancha lateral completa
     descricao: com apoio no pé
     grupo: forca
-    icone: prancha
+    icone: prancha_lateral
     fase_minima: 3
     impacto: baixo
     nivel: intermedio
