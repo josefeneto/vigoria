@@ -343,3 +343,20 @@ def test_dias_da_semana_numa_so_linha_no_pdf() -> None:
     largura = pdf.LARGURAS_SEMANA[0] - 4
     for dia in carregar_avisos().rotulos.dias.values():
         assert doc.get_string_width(dia) <= largura, dia
+
+
+def test_tabela_com_linha_no_fim(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Depois da última fila (Domingo, na semana-tipo) também há linha separadora."""
+    doc = pdf._Documento("p. {pagina}")
+    doc.add_page()
+    linhas_desenhadas: list[tuple[float, float, float, float]] = []
+    original = doc.line
+
+    def registar(x1: float, y1: float, x2: float, y2: float) -> None:
+        linhas_desenhadas.append((x1, y1, x2, y2))
+        original(x1, y1, x2, y2)
+
+    monkeypatch.setattr(doc, "line", registar)
+    doc.tabela(["Dia", "Atividade"], [["Sábado", "Cardio"], ["Domingo", "Descanso"]], [40, 40])
+    fim = doc.get_y() - 4
+    assert (doc.l_margin, fim, doc.l_margin + doc.epw, fim) in linhas_desenhadas

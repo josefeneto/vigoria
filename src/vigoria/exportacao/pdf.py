@@ -335,6 +335,8 @@ class _Documento(FPDF):
                 fila = t.row()
                 for celula in linha:
                     fila.cell(_limpo(celula))
+        # O HORIZONTAL_LINES só desenha as linhas entre filas: falta a de baixo da última.
+        self.line(self.l_margin, self.get_y(), self.l_margin + self.epw, self.get_y())
         self.ln(4)
 
     # ------------------------------------------------------------ textos medidos

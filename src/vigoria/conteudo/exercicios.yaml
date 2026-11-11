@@ -197,7 +197,7 @@ exercicios:
   # V2 Fase 2; REGRAS §1.1 e §6.3, ponto 5 (com osteoporose, bird-dog)
   - id: abdominal_crunch
     nome: Abdominal Crunch
-    descricao: Deitado de costas, retirar apenas as escápulas/ombros do chão.
+    descricao: Deitado de costas, retirar apenas os ombros do chão.
     grupo: forca
     icone: abdominal
     fase_minima: 2
@@ -458,7 +458,7 @@ exercicios:
     nome: Mobilidade da anca
     descricao: Movimentos suaves e controlados dentro da amplitude disponível.
     grupo: mobilidade
-    icone: equilibrio
+    icone: mobilidade_anca
     fase_minima: 1
     impacto: baixo
     nivel: base
@@ -469,7 +469,7 @@ exercicios:
     nome: Mobilidade dos tornozelos
     descricao: Mobilização controlada, incluindo elevação dos calcanhares.
     grupo: mobilidade
-    icone: mobilidade
+    icone: tornozelo
     fase_minima: 1
     impacto: baixo
     nivel: base

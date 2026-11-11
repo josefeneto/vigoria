@@ -80,6 +80,8 @@ class IconeExercicio(StrEnum):
     PRANCHA_LATERAL = "prancha_lateral"
     ROTACAO_TRONCO = "rotacao_tronco"
     CAMINHADA = "caminhada"
+    MOBILIDADE_ANCA = "mobilidade_anca"
+    TORNOZELO = "tornozelo"
 
 
 class Exercicio(_Conteudo):

@@ -154,7 +154,7 @@ fases:
         series: 3
         repeticoes: "20"
         descanso_s: {min: 30, max: 30}
-        como_executar: Deitado de costas, retirar apenas as escápulas/ombros do chão.
+        como_executar: Deitado de costas, retirar apenas os ombros do chão.
         com_halteres: Manter igual. Subida controlada com contração forte.
 
   - numero: 3
