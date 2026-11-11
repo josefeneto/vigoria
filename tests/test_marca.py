@@ -64,7 +64,8 @@ def test_icone_png_com_o_tamanho_certo(lado: int) -> None:
 
 
 def test_favicon_definido() -> None:
-    """app.py passa a FAVICON a st.set_page_config e o ficheiro existe."""
+    """app.py passa estilos.favicon() (data URI, Fase 8D) a st.set_page_config e o ficheiro
+    existe."""
     codigo = (RAIZ / "app.py").read_text(encoding="utf-8")
     arvore = ast.parse(codigo)
     chamadas = [
@@ -74,9 +75,8 @@ def test_favicon_definido() -> None:
     ]
     assert len(chamadas) == 1
     icone = next(k.value for k in chamadas[0].keywords if k.arg == "page_icon")
-    assert isinstance(icone, ast.Name) and icone.id == "FAVICON"
+    assert isinstance(icone, ast.Call) and ast.unparse(icone) == "estilos.favicon()"
     assert (RAIZ / "static" / "icones" / "icone-32.png").is_file()
-    assert '"icone-32.png"' in codigo
 
 
 def test_manifesto_com_os_icones() -> None:
