@@ -23,7 +23,8 @@ estilos.aplicar()
 # Na demonstração (Streamlit Community Cloud), em todas as páginas.
 config = obter_configuracao()
 if config.ambiente == "demo":
-    st.warning(t.DEMO_AVISO, icon=":material/science:")
+    with st.container(key="aviso_demo"):  # o CSS usa-a para afastar a barra do selo do Cloud
+        st.warning(t.DEMO_AVISO, icon=":material/science:")
 
 
 def _sair() -> None:

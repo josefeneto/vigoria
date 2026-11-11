@@ -3,7 +3,7 @@
 app.py chama st.navigation(..., position="hidden") e depois `desenhar`, antes de correr a
 página. Um só contentor serve os dois tamanhos (estilos.css, pelas chaves):
 - telemóvel (até 768 px): barra fixa no fundo, Início · Plano · Progresso · Conta;
-- computador: no topo, à direita do logotipo, Início · Plano · Progresso · Ajuda · Conta ▾.
+- computador: no topo, à direita do logotipo, Início · Plano · Progresso · Conta ▾.
 «Conta» abre um menu (st.popover) com A minha conta, Ajuda, Privacidade e Terminar sessão.
 Sem o CSS, as ligações ficam numa fila no topo da página e continuam a funcionar.
 
@@ -27,7 +27,7 @@ ICONES = {
     "privacidade": ":material/policy:",
     "sair": ":material/logout:",
 }
-PRINCIPAIS = ("inicio", "plano", "progresso", "ajuda")
+PRINCIPAIS = ("inicio", "plano", "progresso")  # a Ajuda está no menu «Conta»
 NO_MENU_CONTA = ("conta", "ajuda", "privacidade", "sair")
 
 
@@ -48,7 +48,7 @@ def desenhar(atual: StreamlitPage, paginas: Mapping[str, StreamlitPage] | None) 
             for nome in PRINCIPAIS:
                 with st.container(key=_chave(nome, nome == ativa)):
                     st.page_link(paginas[nome], label=t.NAV[nome], icon=ICONES[nome])
-            conta_ativa = ativa in ("conta", "privacidade")
+            conta_ativa = ativa in NO_MENU_CONTA
             with (
                 st.container(key=_chave("conta", conta_ativa)),
                 st.popover(t.NAV["conta"], icon=ICONES["conta"], key="nav_conta_menu"),

@@ -18,7 +18,7 @@ from vigoria.config import obter_configuracao
 
 RAIZ = Path(__file__).resolve().parents[1]
 APP = str(RAIZ / "app.py")
-BARRA = ["Início", "Plano", "Progresso", "Ajuda"]
+BARRA = ["Início", "Plano", "Progresso"]  # a Ajuda está no menu «Conta»
 MENU_CONTA = ["A minha conta", "Ajuda", "Privacidade", "Terminar sessão"]
 OCULTAS = {"privacidade", "cancelar-lembretes"}
 
@@ -77,8 +77,8 @@ def test_com_sessao_barra_com_o_menu_conta(menu: list[Any], com_sessao: None) ->
     paginas, opcoes = menu[-1]
     assert opcoes["position"] == "hidden"
     assert {p.url_path for p in paginas} >= {"questionario", "plano", "conta", "sair"} | OCULTAS
-    # Barra: Início, Plano, Progresso e Ajuda; «Conta» abre A minha conta, Ajuda, Privacidade
-    # e Terminar sessão (no telemóvel, a Ajuda da barra esconde-se por CSS).
+    # Barra: Início, Plano e Progresso; «Conta» abre A minha conta, Ajuda, Privacidade e
+    # Terminar sessão.
     assert _ligacoes(at, "barra_nav") == [*BARRA, *MENU_CONTA]
     assert _ligacoes(at, "nav_conta_menu") == MENU_CONTA
     assert "Questionário" not in _ligacoes(at, "barra_nav")
@@ -90,7 +90,7 @@ def test_com_sessao_barra_com_o_menu_conta(menu: list[Any], com_sessao: None) ->
         ("paginas/inicio.py", "inicio"),
         ("paginas/plano.py", "plano"),
         ("paginas/progresso.py", "progresso"),
-        ("paginas/ajuda.py", "ajuda"),
+        ("paginas/ajuda.py", "conta"),
         ("paginas/conta.py", "conta"),
         ("paginas/privacidade.py", "conta"),
     ],

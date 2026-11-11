@@ -217,6 +217,9 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
    «a correr»); o topo visível é o nosso (.st-key-topo, paginas/navegacao.py). */
 [data-testid="stHeader"] { background: transparent; pointer-events: none; }
 [data-testid="stHeader"] * { pointer-events: auto; }
+/* Botões que só o Streamlit Community Cloud junta ao cabeçalho (Fork, GitHub, Share…):
+   tapavam a navegação. Fora do Cloud não existem. */
+[data-testid="stToolbarActions"] { display: none; }
 
 /* ---- Topo: logotipo à esquerda; à direita, «Entrar» ou (no computador) a navegação */
 .st-key-topo { justify-content: space-between; flex-wrap: nowrap; }
@@ -242,9 +245,6 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
     padding: .4rem .5rem calc(.6rem + env(safe-area-inset-bottom));
     background: var(--v-cartao); border-top: 1px solid var(--v-borda);
     box-shadow: 0 -4px 14px rgba(46,51,56,.06); }
-  /* A Ajuda está no menu «Conta»: fora da barra (no computador, fica no topo). */
-  .st-key-barra_nav > [class*="st-key-nav_"][class*="_ajuda"],
-  .st-key-barra_nav > :has(> [class*="st-key-nav_"][class*="_ajuda"]) { display: none !important; }
   /* Cada ligação ocupa a sua coluna inteira, com o ícone por cima do texto. */
   .st-key-barra_nav [data-testid="stVerticalBlock"] { align-items: stretch; }
   .st-key-barra_nav :is([data-testid="stElementContainer"], [data-testid="stLayoutWrapper"],
@@ -261,6 +261,9 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
   .st-key-barra_nav [data-testid="stIconMaterial"] { font-size: 1.6rem !important; }
   /* Sem a seta do menu «Conta» (o único div com aria-hidden dentro do botão). */
   .st-key-barra_nav [data-testid="stPopoverButton"] div[aria-hidden="true"] { display: none; }
+  /* Na demonstração (Community Cloud), o selo do Cloud fica no canto inferior direito, fora
+     da app: a barra deixa-lhe espaço livre à direita. */
+  body:has(.st-key-aviso_demo) .st-key-barra_nav { padding-right: 4.75rem; }
   /* O conteúdo e o rodapé acabam acima da barra, nunca tapados por ela. */
   body:has(.st-key-barra_nav) [data-testid="stMainBlockContainer"] {
     padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
