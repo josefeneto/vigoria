@@ -3,6 +3,7 @@ email, sem sessão iniciada, e o interruptor em «A minha conta»."""
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
@@ -72,6 +73,11 @@ def _abrir(token: str | None) -> AppTest:
     return at
 
 
+def _botoes(at: AppTest) -> list[Any]:
+    """Os botões da página (sem o «Entrar» do topo, Fase 8D)."""
+    return [b for b in at.button if b.key != "topo_entrar"]
+
+
 def test_abrir_a_ligacao_nao_desliga_so_o_botao(bd: str) -> None:
     uid = _criar_conta(bd)
     at = _abrir(gerar_token(uid, "auth0|ana", SecretStr(SEGREDO)))
@@ -87,17 +93,17 @@ def test_abrir_a_ligacao_nao_desliga_so_o_botao(bd: str) -> None:
 def test_ligacao_invalida(bd: str, token: str | None) -> None:
     _criar_conta(bd)
     at = _abrir(token)
-    if not at.button:  # malformado: aviso logo à entrada
+    if not _botoes(at):  # malformado: aviso logo à entrada
         assert any("não é válida" in w.value for w in at.warning)
         return
-    at.button[0].click().run()
+    _botoes(at)[0].click().run()
     assert any("não é válida" in w.value for w in at.warning)
 
 
 def test_ligacao_de_outra_conta_nao_serve(bd: str) -> None:
     uid = _criar_conta(bd)
     at = _abrir(gerar_token(uid, "auth0|outra", SecretStr(SEGREDO)))
-    at.button[0].click().run()
+    _botoes(at)[0].click().run()
     assert any("não é válida" in w.value for w in at.warning)
     assert _preferencias(bd, uid).lembretes_email is True
 

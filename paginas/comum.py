@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from paginas import sessao
 from paginas import textos as t
+from vigoria import config
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.dados import repositorios
 from vigoria.exportacao.pdf import plano_pdf
@@ -49,6 +50,14 @@ def rodape() -> None:
         st.page_link(PAGINA_PRIVACIDADE, label=t.PAGINAS["privacidade"])
         st.page_link(PAGINA_AJUDA, label=t.PAGINAS["ajuda"])
         st.markdown(f"[{t.CONTACTO}](mailto:{t.CONTACTO})", width="content")
+
+
+def pedir_login() -> None:
+    """«Entrar»: o Auth0 trata do registo e da entrada (st.login)."""
+    if config.obter_auth0() is None:  # pelo módulo: os testes substituem-na
+        st.error(t.LOGIN_POR_CONFIGURAR, icon=":material/key_off:")
+    else:
+        st.login("auth0")
 
 
 def parar() -> NoReturn:

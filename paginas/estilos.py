@@ -39,6 +39,10 @@ CORES = {
     "sucesso": "#2F6B45",
     "erro": "#A6342B",
     "branco": "#FFFFFF",
+    # Só formas, nunca texto (Fase 8D, maquetas): a informação está sempre também em texto.
+    "grelha": "#EDE6DA",  # linhas de grelha dos gráficos
+    "nevoa_escura": "#C9DCDA",  # segmentos por preencher na escala de esforço
+    "petroleo_medio": "#2C5A60",  # semanas por fazer, sobre o petróleo profundo
 }
 
 # Pares de texto e fundo usados na interface: todos com pelo menos 4,5:1 (testado).
@@ -73,6 +77,11 @@ PARES_TEXTO = (
     ("texto_secundario", "faixa"),
     ("principal", "faixa"),
     ("principal_profundo", "faixa"),
+    # Fase 8D: selo e textos sobre o petróleo, números, pastilhas e o cartão «Hoje»
+    ("nevoa", "principal_profundo"),
+    ("nevoa", "principal"),
+    ("principal_profundo", "cartao"),
+    ("texto_secundario", "nevoa"),
 )
 
 ICONES_PASSOS = {

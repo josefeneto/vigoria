@@ -185,15 +185,66 @@ def cartoes(itens: Iterable[tuple[str, str, str]], colunas: int = 3) -> str:
     return f'<div class="v-grelha v-grelha-{colunas}">{corpo}</div>'
 
 
-def numeros(itens: Iterable[tuple[str, str, str]]) -> str:
-    """Cartão de topo do plano: (ícone, rótulo, valor)."""
+def numeros(itens: Iterable[tuple[str, str]]) -> str:
+    """Os números-chave do plano em 3 cartões claros lado a lado: (rótulo, valor)."""
     corpo = "".join(
-        f'<div class="v-numero">{_icone(i, "fundo", "pessego")}<div>'
-        f'<p class="v-numero-rotulo">{escape(rotulo)}</p>'
-        f'<p class="v-numero-valor">{escape(valor)}</p></div></div>'
-        for i, rotulo, valor in itens
+        f'<div class="v-numero"><p class="v-numero-rotulo">{escape(rotulo)}</p>'
+        f'<p class="v-numero-valor">{escape(valor)}</p></div>'
+        for rotulo, valor in itens
     )
     return f'<div class="v-numeros">{corpo}</div>'
+
+
+def semanas(semana: int, titulo: str, fase: str, texto: str, aria: str, total: int = 16) -> str:
+    """Cartão «Semana X de 16»: segmentos feitos, o atual e os por fazer (Fase 8D).
+
+    Depois da semana 16 (manutenção), todos feitos. A informação está também no texto.
+    """
+    atual = min(semana, total + 1)
+    segmentos = "".join(
+        f'<span class="{"feito" if i < atual else "atual" if i == atual else ""}"></span>'
+        for i in range(1, total + 1)
+    )
+    return (
+        f'<div class="v-semanas"><div class="v-semanas-topo"><p class="v-semanas-titulo">'
+        f'{escape(titulo)}</p><p class="v-semanas-fase">{escape(fase)}</p></div>'
+        f'<div class="v-semanas-barra" role="progressbar" aria-label="{escape(aria)}" '
+        f'aria-valuemin="1" aria-valuemax="{total}" aria-valuenow="{min(semana, total)}">'
+        f'{segmentos}</div><p class="v-semanas-texto">{escape(texto)}</p></div>'
+    )
+
+
+def hoje(nome_icone: str, sobretitulo: str, titulo: str, texto: str) -> str:
+    """Cartão «Hoje» (sem o botão, que é um st.button ao lado)."""
+    return (
+        f'<div class="v-hoje">{_icone(nome_icone)}<div class="v-hoje-texto">'
+        f'<p class="v-sobretitulo">{escape(sobretitulo)}</p>'
+        f'<p class="v-hoje-titulo">{escape(titulo)}</p>'
+        f'<p class="v-hoje-detalhe">{escape(texto)}</p></div></div>'
+    )
+
+
+def notas(titulo: str, itens: Iterable[str]) -> str:
+    """«Notas para si»: cartão argila com a lista das notas personalizadas."""
+    lista = "".join(f"<li>{escape(n)}</li>" for n in itens)
+    return (
+        f'<div class="v-notas"><p class="v-notas-titulo">{escape(titulo)}</p><ul>{lista}</ul></div>'
+    )
+
+
+def selo(texto: str) -> str:
+    """Etiqueta pequena sobre o petróleo profundo (topo do início)."""
+    return f'<p class="v-selo">{escape(texto)}</p>'
+
+
+def passos(itens: Iterable[tuple[str, str]]) -> str:
+    """«Como funciona»: círculos numerados com título e texto: (título, texto)."""
+    linhas = "".join(
+        f'<li><span class="v-passos-n" aria-hidden="true">{i}</span><div>'
+        f'<p class="v-passos-titulo">{escape(titulo)}</p><p>{escape(texto)}</p></div></li>'
+        for i, (titulo, texto) in enumerate(itens, start=1)
+    )
+    return f'<ol class="v-passos">{linhas}</ol>'
 
 
 def cartao_fase(

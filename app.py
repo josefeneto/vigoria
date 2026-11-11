@@ -1,9 +1,9 @@
 """Ponto de entrada da Vigoria (Streamlit): configuração, sessão e navegação.
 
 As cores vêm de .streamlit/config.toml e de paginas/estilos.py; os textos, de paginas/textos.py.
-Sem sessão iniciada só se veem o Início e a Ajuda no menu, e a Privacidade no rodapé (Fases 6
-e 8B); o resto exige login. A página para deixar de receber lembretes (Fase 8) abre-se com ou
-sem sessão, fora do menu. Todas as páginas acabam no rodapé (comum.rodape).
+Sem sessão iniciada só se vê o Início, com «Entrar» no topo, e a Ajuda e a Privacidade no
+rodapé (Fases 6, 8B e 8D); o resto exige login. A página para deixar de receber lembretes
+(Fase 8) abre-se com ou sem sessão, fora do menu. Todas as páginas acabam no rodapé (comum.rodape).
 """
 
 from pathlib import Path
@@ -12,20 +12,17 @@ import streamlit as st
 from sqlalchemy.exc import OperationalError
 from streamlit.navigation.page import StreamlitPage
 
-from paginas import comum, estilos, sessao
+from paginas import comum, estilos, navegacao, sessao
 from paginas import textos as t
 from vigoria.config import obter_configuracao
 from vigoria.dados.repositorios import Recusa
 
 RAIZ = Path(__file__).parent
 FAVICON = RAIZ / "static" / "icones" / "icone-32.png"  # scripts/gerar_logotipo.py
-LOGOTIPO = RAIZ / "assets" / "marca" / "vigoria_logo.svg"
 
 st.set_page_config(page_title=t.MARCA, page_icon=FAVICON, layout="centered")
 estilos.aplicar()
-# Fixo no topo de todas as páginas (imagem de marca). Sem icon_image, para se ver sempre a
-# palavra Vigoria, mesmo com a barra lateral fechada (telemóvel).
-st.logo(str(LOGOTIPO), size="large")
+# O logotipo está no topo desenhado por paginas/navegacao.py (Fase 8D), não no st.logo.
 
 # Na demonstração (Streamlit Community Cloud), em todas as páginas.
 config = obter_configuracao()
@@ -73,8 +70,6 @@ elif entrada is not None:
         comum.carregar_da_conta(entrada)
     except OperationalError as erro:
         sessao.base_indisponivel(erro)
-    if config.vigoria_utilizador_local:
-        st.sidebar.caption(t.UTILIZADOR_LOCAL)
 
 inicio = st.Page(
     comum.PAGINA_INICIO, title=t.PAGINAS["inicio"], icon=":material/home:", default=True
@@ -98,37 +93,37 @@ cancelar_lembretes = st.Page(
     url_path="cancelar-lembretes",
     visibility="hidden",
 )
-paginas: list[StreamlitPage] | dict[str, list[StreamlitPage]]
+paginas: list[StreamlitPage]
+nomeadas: dict[str, StreamlitPage] | None = None
 if isinstance(entrada, int):
-    # Com secções e position="top": no computador, «Conta» é um menu que se abre; no
-    # telemóvel (painel lateral), um título com as duas páginas por baixo. As páginas da
-    # secção "" vêm primeiro.
-    paginas = {
-        "": [
-            inicio,
-            st.Page(
-                comum.PAGINA_QUESTIONARIO,
-                title=t.PAGINAS["questionario"],
-                icon=":material/checklist:",
-            ),
-            st.Page(comum.PAGINA_PLANO, title=t.PAGINAS["plano"], icon=":material/description:"),
-            st.Page(
-                comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"
-            ),
-            ajuda,
-            privacidade,
-            cancelar_lembretes,
-        ],
-        t.SECCAO_CONTA: [
-            st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
-            st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
-        ],
+    nomeadas = {
+        "inicio": inicio,
+        "questionario": st.Page(
+            comum.PAGINA_QUESTIONARIO, title=t.PAGINAS["questionario"], icon=":material/checklist:"
+        ),
+        "plano": st.Page(
+            comum.PAGINA_PLANO, title=t.PAGINAS["plano"], icon=":material/description:"
+        ),
+        "progresso": st.Page(
+            comum.PAGINA_PROGRESSO, title=t.PAGINAS["progresso"], icon=":material/monitoring:"
+        ),
+        "ajuda": ajuda,
+        "conta": st.Page(comum.PAGINA_CONTA, title=t.PAGINAS["conta"], icon=":material/person:"),
+        "privacidade": privacidade,
+        "sair": st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
+        "cancelar_lembretes": cancelar_lembretes,
     }
+    paginas = list(nomeadas.values())
 else:
     paginas = [inicio, ajuda, privacidade, cancelar_lembretes]
 
 try:
-    st.navigation(paginas, position="top").run()
+    # Menu do Streamlit escondido: a navegação é a de paginas/navegacao.py (Fase 8D).
+    atual = st.navigation(paginas, position="hidden")
+    navegacao.desenhar(atual, nomeadas)
+    atual.run()
     comum.rodape()  # as páginas que param a meio usam comum.parar(), que o desenha antes
+    if isinstance(entrada, int) and config.vigoria_utilizador_local:
+        st.caption(t.UTILIZADOR_LOCAL)  # no fim, para não abrir a barra lateral
 except OperationalError as erro:
     sessao.base_indisponivel(erro)

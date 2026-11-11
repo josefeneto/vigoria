@@ -39,7 +39,7 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
 .v-cartao h3 { font-size: 1.15rem; margin: .75rem 0 .35rem; padding: 0; }
 .v-cartao p { margin: 0; }
 .v-grelha { display: grid; gap: 1rem; grid-template-columns: 1fr; }
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .v-grelha-3 { grid-template-columns: repeat(3, 1fr); }
   .v-grelha-2 { grid-template-columns: repeat(2, 1fr); } }
 
@@ -49,10 +49,10 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
    A promessa, logo a seguir, fica sempre mais pequena do que a palavra (27 px e 31,5 px). */
 .v-logo { display: block; width: auto; height: 29px; margin: 0 0 .25rem; }
 .v-logo-grande { height: 40px; margin: 0 0 1.25rem; }
-@media (min-width: 640px) { .v-logo-grande { height: 49px; } }
+@media (min-width: 769px) { .v-logo-grande { height: 49px; } }
 .v-promessa { font-size: 1.5rem; line-height: 1.25; font-weight: 700; margin: 0 0 .75rem;
   color: var(--v-principal-profundo); }
-@media (min-width: 640px) { .v-promessa { font-size: 1.75rem; } }
+@media (min-width: 769px) { .v-promessa { font-size: 1.75rem; } }
 
 /* ---- Questionário: cabeçalho do passo e barra de progresso */
 .v-passo { display: flex; gap: .9rem; align-items: center; }
@@ -83,16 +83,6 @@ button[data-variant="segmented_control"][aria-checked="true"] { font-weight: 700
   background: var(--v-nevoa); border-color: var(--v-principal); color: var(--v-principal-profundo);
   font-weight: 700; }
 .st-key-questionario button[data-variant="pills"][aria-pressed="true"] p::before { content: "✓ "; }
-
-/* ---- Plano: cartão de topo com os números-chave */
-.v-numeros { background: var(--v-principal-profundo); color: var(--v-fundo); border-radius: var(--v-raio);
-  padding: 1.25rem; display: grid; gap: 1rem; grid-template-columns: 1fr; box-shadow: var(--v-sombra); }
-@media (min-width: 640px) { .v-numeros { grid-template-columns: repeat(3, 1fr); } }
-.v-numero { display: flex; gap: .8rem; align-items: center; }
-.v-numero .v-icone { background: rgba(255,255,255,.1); }
-.v-numero p { margin: 0; }
-.v-numero-rotulo { font-size: .95rem; color: var(--v-pessego); }
-.v-numero-valor { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
 
 /* ---- Plano: fases, semana-tipo e exercícios */
 .v-sobretitulo { color: var(--v-cobre); font-weight: 700; font-size: .95rem; margin: 0; }
@@ -134,35 +124,30 @@ body:has(.st-key-a_preparar) [data-testid="stMain"] :is([data-testid="stVertical
 /* ---- Questionário no telemóvel: «Anterior / Seguinte» fixos no fundo do ecrã.
    O «sticky» vai no invólucro (stLayoutWrapper), que tem a altura da barra; no próprio bloco
    não teria para onde se mover. */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   [data-testid="stLayoutWrapper"]:has(> .st-key-navegacao_fixa) {
     position: sticky; bottom: 0; z-index: 20; background: var(--v-fundo);
     margin: 0 -1rem; padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
     box-shadow: 0 -6px 16px rgba(46,51,56,.10); width: calc(100% + 2rem);
     max-width: none; box-sizing: border-box; } }
 
-/* ---- Plano: secções em botões grandes; a ativa em petróleo, com texto branco (7,6:1) */
-/* Duas colunas no telemóvel; duas linhas de 3, com a mesma largura, no computador. */
-.st-key-plano_seccao button[data-variant="segmented_control"] { flex: 1 1 calc(50% - 1px);
-  min-width: 0; padding-inline: 0.25rem; border-color: var(--v-principal);
-  background: var(--v-cartao); }
-/* «Acompanhamento» inteiro a 390 px, sem reticências. */
+/* ---- Plano: secções em pastilhas (maqueta Resumo), a ativa em petróleo com texto branco
+   (7,6:1). Separadas umas das outras e em várias linhas: as 6 sempre visíveis. */
+.st-key-plano_seccao button[data-variant="segmented_control"] { flex: 0 1 auto; min-width: 0;
+  padding: 0 .8rem; margin: 0 .4rem .5rem 0; border-radius: 999px !important;
+  border: 1.5px solid var(--v-borda) !important; background: var(--v-cartao);
+  color: var(--v-principal-profundo); }
+.st-key-plano_seccao button[data-variant="segmented_control"] p { font-size: .85rem; }
 .st-key-plano_seccao button[data-variant="segmented_control"] * { overflow: visible;
   text-overflow: clip; }
-@media (min-width: 640px) {
-  .st-key-plano_seccao button[data-variant="segmented_control"] {
-    flex: 1 1 calc(33.333% - 1px); } }
-/* O Streamlit esconde a borda direita dos botões do meio; a quebra de linha deixava o último
-   da linha aberto. Borda inteira em todos, sobreposta 1 px para não ficar dupla. */
-.stApp .st-key-plano_seccao button[data-variant="segmented_control"]:not(:last-child) {
-  border-right-color: var(--v-principal); margin-right: -1px; }
 .stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"],
 .stApp .st-key-plano_seccao button[data-variant="segmented_control"][aria-checked="true"]:hover {
-  background: var(--v-principal); border-color: var(--v-principal); color: var(--v-branco); }
+  background: var(--v-principal); border-color: var(--v-principal) !important; color: var(--v-branco); }
 .st-key-plano_seccao button[aria-checked="true"] p { color: var(--v-branco); }
 
 /* ---- Fraunces (títulos) também nos títulos e números dos componentes da Vigoria */
-.v-promessa, .v-passo h1, .v-cartao h3, .v-exercicio h4, .v-numero-valor, .v-faixa-titulo {
+.v-promessa, .v-passo h1, .v-cartao h3, .v-exercicio h4, .v-numero-valor, .v-faixa-titulo,
+.v-semanas-titulo, .v-notas-titulo {
   font-family: "Fraunces", Georgia, serif; font-weight: 600; letter-spacing: -0.005em; }
 
 /* ---- Início em faixas a toda a largura (só nesta página: existe .st-key-faixa_topo) */
@@ -171,7 +156,7 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] {
 body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
   gap: 0; }
 [class*="st-key-faixa_"] { padding: 2.5rem max(1rem, calc((100% - 1120px) / 2)); }
-@media (min-width: 640px) { [class*="st-key-faixa_"] { padding-top: 4rem; padding-bottom: 4rem; } }
+@media (min-width: 769px) { [class*="st-key-faixa_"] { padding-top: 4rem; padding-bottom: 4rem; } }
 .st-key-faixa_topo { background: var(--v-principal-profundo); }
 .st-key-faixa_beneficios { background: var(--v-fundo); }
 .st-key-faixa_como { background: var(--v-argila); }
@@ -208,9 +193,6 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .v-video-botao::before { content: "▶  "; }
 .v-video-botao.a-correr::before { content: "❚❚  "; }
 
-/* ---- Cabeçalho (menu e logotipo) no tom «faixa», como o rodapé; a página atual sobre o fundo. */
-[data-testid="stHeader"] { background: var(--v-faixa); }
-[data-testid="stTopNavLink"][aria-current="page"] { background: var(--v-fundo); }
 
 /* ---- Rodapé comum (comum.rodape): Privacidade · Ajuda · contacto, centrado, ligações em petróleo,
    numa caixa no tom «faixa», como o cabeçalho. */
@@ -232,3 +214,182 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
   color: var(--v-principal); font-size: 1rem; font-weight: 400 !important; margin: 0;
   line-height: 1.5; text-decoration: none; }
 .st-key-rodape a:hover p, .st-key-rodape a:hover { text-decoration: underline; }
+
+/* ================================================================ Fase 8D (maquetas) */
+
+/* ---- Cabeçalho do Streamlit: transparente e sem apanhar os cliques (fica o indicador
+   «a correr»); o topo visível é o nosso (.st-key-topo, paginas/navegacao.py). */
+[data-testid="stHeader"] { background: transparent; pointer-events: none; }
+[data-testid="stHeader"] * { pointer-events: auto; }
+
+/* ---- Topo: logotipo à esquerda; à direita, «Entrar» ou (no computador) a navegação */
+.st-key-topo { justify-content: space-between; flex-wrap: nowrap; }
+.st-key-topo .v-logo { height: 27px; margin: 0; }
+.st-key-topo_entrar button { border-radius: 999px; border: 1.5px solid var(--v-principal);
+  color: var(--v-principal); background: transparent; padding: 0 1.1rem; }
+
+/* Ligações da navegação: sem o fundo que o Streamlit dá à página atual; a ativa em petróleo. */
+.st-key-barra_nav [data-testid="stPageLink"] a { background: transparent !important; }
+.st-key-barra_nav [data-testid="stPageLink"] :is(p, span),
+.st-key-barra_nav [data-testid="stPopover"] button :is(p, span) {
+  color: var(--v-texto-secundario); font-weight: 600; }
+.st-key-barra_nav [class*="st-key-nav_ativo_"] :is(p, span) { color: var(--v-principal);
+  font-weight: 700; }
+.st-key-barra_nav [data-testid="stPopoverButton"] { border: 0; background: transparent;
+  box-shadow: none; }
+
+/* ---- Telemóvel: barra fixa no fundo, 4 ligações com o ícone por cima (toque ≥ 52 px) */
+@media (max-width: 768px) {
+  .st-key-barra_nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+    display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+    width: auto !important; margin: 0;
+    padding: .4rem .5rem calc(.6rem + env(safe-area-inset-bottom));
+    background: var(--v-cartao); border-top: 1px solid var(--v-borda);
+    box-shadow: 0 -4px 14px rgba(46,51,56,.06); }
+  /* A Ajuda está no menu «Conta»: fora da barra (no computador, fica no topo). */
+  .st-key-barra_nav > [class*="st-key-nav_"][class*="_ajuda"],
+  .st-key-barra_nav > :has(> [class*="st-key-nav_"][class*="_ajuda"]) { display: none !important; }
+  /* Cada ligação ocupa a sua coluna inteira, com o ícone por cima do texto. */
+  .st-key-barra_nav [data-testid="stVerticalBlock"] { align-items: stretch; }
+  .st-key-barra_nav :is([data-testid="stElementContainer"], [data-testid="stLayoutWrapper"],
+    [data-testid="stPageLink"], [data-testid="stPopover"]) { width: 100% !important; }
+  .st-key-barra_nav [data-testid="stPageLink"] a,
+  .st-key-barra_nav [data-testid="stPopoverButton"] [data-has-shortcut] {
+    flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .st-key-barra_nav [data-testid="stPageLink"] a,
+  .st-key-barra_nav [data-testid="stPopoverButton"] {
+    min-height: 52px; width: 100%; padding: .25rem 0; margin: 0; }
+  .st-key-barra_nav [data-testid="stPopoverButton"] [data-has-shortcut] { display: flex; }
+  .st-key-barra_nav [data-testid="stPageLink"] p,
+  .st-key-barra_nav [data-testid="stPopoverButton"] p { font-size: .75rem; line-height: 1.1; }
+  .st-key-barra_nav [data-testid="stIconMaterial"] { font-size: 1.6rem !important; }
+  /* Sem a seta do menu «Conta» (o único div com aria-hidden dentro do botão). */
+  .st-key-barra_nav [data-testid="stPopoverButton"] div[aria-hidden="true"] { display: none; }
+  /* O conteúdo e o rodapé acabam acima da barra, nunca tapados por ela. */
+  body:has(.st-key-barra_nav) [data-testid="stMainBlockContainer"] {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
+  /* No questionário, «Anterior / Seguinte» ocupam o fundo (maqueta Questionario). E com o
+     teclado aberto (campo em foco), a barra sai do caminho. */
+  body:has(.st-key-navegacao_fixa) .st-key-barra_nav,
+  body:has(input:focus, textarea:focus) .st-key-barra_nav { display: none !important; } }
+
+/* ---- Computador: topo fixo a toda a largura, no tom «faixa», com a navegação em linha */
+@media (min-width: 769px) {
+  .st-key-topo { position: fixed; top: 0; left: 0; right: 0; z-index: 100; height: 4rem;
+    box-sizing: border-box; padding: 0 max(1rem, calc((100% - 1100px) / 2));
+    background: var(--v-faixa); }
+  [data-testid="stMainBlockContainer"] { padding-top: 6rem; }
+  .st-key-barra_nav { width: auto !important; flex: none; gap: .25rem; }
+  .st-key-barra_nav > [data-testid="stLayoutWrapper"] { width: auto !important; flex: none; }
+  /* As ligações vão para a direita, o logotipo fica à esquerda. */
+  .st-key-topo > :has(> .st-key-barra_nav), .st-key-barra_nav { margin-left: auto; }
+  .st-key-barra_nav [data-testid="stPageLink"] a { padding: .4rem .8rem; border-radius: 999px; }
+  .st-key-barra_nav [class*="st-key-nav_ativo_"] [data-testid="stPageLink"] a {
+    background: var(--v-fundo) !important; } }
+
+/* ---- Larguras: até cerca de 1100 px no plano e no progresso (o questionário, a conta e os
+   textos longos ficam na coluna estreita do layout "centered"). */
+@media (min-width: 769px) {
+  body:has(.st-key-plano_topo, .st-key-progresso_topo) [data-testid="stMainBlockContainer"] {
+    max-width: calc(1100px + 2rem); } }
+
+/* ---- Início (maqueta Main): no telemóvel, cartão de topo com cantos de 24 px */
+.st-key-topo_texto, .st-key-topo_media, .st-key-topo_acao { gap: .9rem; }
+.v-selo { display: inline-block; margin: 0 0 .9rem; padding: .35rem .75rem; border-radius: 14px;
+  background: var(--v-principal); color: var(--v-nevoa); font-size: .75rem; font-weight: 700; }
+.v-topo-duracao { margin: 0; text-align: center; color: var(--v-nevoa); font-size: .8rem; }
+.st-key-faixa_topo .v-faixa-texto { color: var(--v-nevoa); margin: 0; }
+.v-aviso-final { text-align: center; color: var(--v-texto-secundario); font-size: .8rem;
+  margin: 1.5rem 1rem 0; }
+@media (max-width: 768px) {
+  body:has(.st-key-faixa_topo) .st-key-topo { padding-left: 1rem; padding-right: 1rem; }
+  body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] { padding-top: 3.5rem; }
+  .st-key-faixa_topo { margin: .25rem 1rem 0; width: auto !important; border-radius: 24px;
+    padding: 22px 20px 20px; gap: 14px; }
+  .st-key-faixa_topo .v-promessa { font-size: 1.6rem; line-height: 1.15; margin: 0 0 .6rem; }
+  .st-key-faixa_topo .v-faixa-texto { font-size: .95rem; }
+  [class*="st-key-faixa_"]:not(.st-key-faixa_topo) { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+  .st-key-faixa_como { background: var(--v-fundo); }
+  .st-key-faixa_como .v-faixa-titulo, .st-key-faixa_final .v-faixa-titulo { font-size: 1.2rem;
+    margin-bottom: .75rem; }
+  /* Benefícios em 3 mosaicos pequenos, só com o ícone e o título. */
+  .st-key-faixa_beneficios .v-grelha-3 { grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px; }
+  .st-key-faixa_beneficios .v-cartao { padding: 14px 8px; display: flex; flex-direction: column;
+    align-items: center; text-align: center; gap: 8px; box-shadow: none; }
+  .st-key-faixa_beneficios .v-cartao h3 { font-family: inherit; font-size: .8rem; font-weight: 700;
+    line-height: 1.25; margin: 0; }
+  .st-key-faixa_beneficios .v-cartao p { display: none; } }
+/* Computador: texto e botão à esquerda, vídeo à direita (grelha sobre os três blocos). */
+@media (min-width: 769px) {
+  .st-key-faixa_topo { display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "texto media" "acao media"; column-gap: 3rem; row-gap: 1.25rem;
+    align-content: center; }
+  .st-key-topo_texto, .st-key-faixa_topo > :has(> .st-key-topo_texto) { grid-area: texto;
+    align-self: end; }
+  .st-key-topo_media, .st-key-faixa_topo > :has(> .st-key-topo_media) { grid-area: media;
+    align-self: center; }
+  .st-key-topo_acao, .st-key-faixa_topo > :has(> .st-key-topo_acao) { grid-area: acao;
+    align-self: start; }
+  .st-key-topo_acao { max-width: 26rem; } }
+
+/* Passos do início: círculos numerados */
+.stApp .v-passos { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
+@media (min-width: 769px) { .stApp .v-passos { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+.stApp .v-passos li { display: flex; gap: .8rem; align-items: flex-start; margin: 0; padding: 0; }
+.v-passos-n { flex: none; width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--v-principal); color: var(--v-branco); font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; }
+.v-passos p { margin: 0; }
+.v-passos-titulo { font-weight: 700; color: var(--v-principal-profundo); }
+.v-passos-titulo + p { color: var(--v-texto-secundario); font-size: .9rem; }
+
+/* ---- Plano (maqueta Resumo): topo com a semana, os números, «Hoje» e as notas */
+.st-key-plano_titulo { flex-wrap: wrap; row-gap: .25rem; }
+.st-key-plano_titulo h1 { padding: 0; }
+@media (max-width: 768px) { .st-key-plano_titulo h1 { font-size: 1.6rem; line-height: 1.15; } }
+.st-key-plano_pdf button { border-radius: 999px; border: 1.5px solid var(--v-borda);
+  background: var(--v-cartao); color: var(--v-principal-profundo); }
+.st-key-plano_topo { gap: .9rem; }
+.v-semanas { background: var(--v-principal-profundo); border-radius: 22px; padding: 18px;
+  display: grid; gap: 12px; }
+.v-semanas p { margin: 0; }
+.v-semanas-topo { display: flex; justify-content: space-between; align-items: baseline;
+  gap: .5rem; flex-wrap: wrap; }
+.v-semanas-titulo { color: var(--v-fundo); font-size: 1.25rem; font-weight: 700; }
+.v-semanas-fase { color: var(--v-pessego); font-size: .8rem; font-weight: 700; }
+.v-semanas-texto { color: var(--v-nevoa); font-size: .85rem; }
+.v-semanas-barra { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+.v-semanas-barra span { height: 8px; border-radius: 2px; background: var(--v-petroleo-medio); }
+.v-semanas-barra .feito { background: var(--v-pessego); }
+.v-semanas-barra .atual { background: var(--v-fundo); }
+.v-numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.v-numero { background: var(--v-cartao); border: 1px solid var(--v-borda); border-radius: 16px;
+  padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.v-numero p { margin: 0; }
+.v-numero-rotulo { font-size: .75rem; line-height: 1.25; color: var(--v-texto-secundario); }
+.v-numero-valor { font-size: 1.3rem; line-height: 1.2; color: var(--v-principal-profundo); }
+@media (min-width: 769px) {
+  .v-numero { padding: 16px 18px; } .v-numero-valor { font-size: 1.6rem; } }
+/* «Hoje»: o cartão é o contentor (o HTML e o botão redondo lá dentro). */
+.st-key-plano_hoje { background: var(--v-cartao); border: 1px solid var(--v-borda);
+  border-radius: 20px; padding: 16px; flex-wrap: nowrap; height: 100%; box-sizing: border-box; }
+.v-hoje { display: flex; gap: 14px; align-items: center; }
+.v-hoje .v-icone { width: 56px; height: 56px; border-radius: 18px; background: var(--v-nevoa); }
+.v-hoje .v-icone img { width: 34px; height: 34px; }
+.v-hoje p { margin: 0; }
+.v-hoje .v-sobretitulo { font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; }
+.v-hoje-titulo { font-size: 1.05rem; font-weight: 700; color: var(--v-principal-profundo);
+  line-height: 1.25; }
+.v-hoje-detalhe { font-size: .85rem; color: var(--v-texto-secundario); }
+/* Botão redondo com a seta; o rótulo fica para os leitores de ecrã. */
+.st-key-plano_hoje_ver button { width: 48px; min-width: 48px; height: 48px; min-height: 48px;
+  border-radius: 50%; padding: 0; }
+.st-key-plano_hoje_ver button [data-testid="stMarkdownContainer"] { position: absolute;
+  width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.v-notas { background: var(--v-argila); border-radius: 18px; padding: 14px 16px; height: 100%;
+  box-sizing: border-box; }
+.v-notas-titulo { margin: 0 0 .35rem; font-size: 1.05rem; color: var(--v-principal-profundo); }
+.stApp .v-notas ul { margin: 0; padding-left: 1.1rem; }
+.stApp .v-notas li { font-size: .9rem; line-height: 1.45; margin: 0 0 .25rem; }

@@ -1,4 +1,4 @@
-"""Navegação e rodapé (arrumação antes da Fase 10), sem browser (AppTest).
+"""Navegação (Fase 8D: barra própria) e rodapé, sem browser (AppTest).
 
 O menu verifica-se com um espião sobre st.navigation (o AppTest não expõe as secções); os
 endereços, com as páginas que a app regista.
@@ -18,21 +18,19 @@ from vigoria.config import obter_configuracao
 
 RAIZ = Path(__file__).resolve().parents[1]
 APP = str(RAIZ / "app.py")
-MENU_COM_SESSAO = {
-    "": ["Início", "Questionário", "O meu plano", "O meu progresso", "Ajuda"],
-    "Conta": ["A minha conta", "Terminar sessão"],
-}
+BARRA = ["Início", "Plano", "Progresso", "Ajuda"]
+MENU_CONTA = ["A minha conta", "Ajuda", "Privacidade", "Terminar sessão"]
 OCULTAS = {"privacidade", "cancelar-lembretes"}
 
 
 @pytest.fixture
 def menu(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
-    """O último menu passado a st.navigation (lista ou dicionário de secções)."""
+    """Cada chamada a st.navigation: (páginas, argumentos com nome)."""
     vistos: list[Any] = []
     original: Callable[..., Any] = st.navigation
 
     def espiao(paginas: Any, **kwargs: Any) -> Any:
-        vistos.append(paginas)
+        vistos.append((paginas, kwargs))
         return original(paginas, **kwargs)
 
     monkeypatch.setattr(st, "navigation", espiao)
@@ -61,10 +59,6 @@ def sem_sessao(monkeypatch: pytest.MonkeyPatch) -> None:
     obter_configuracao.cache_clear()
 
 
-def _visiveis(paginas: list[Any]) -> list[str]:
-    return [p.title for p in paginas if p.visibility == "visible"]
-
-
 def _rodape(at: AppTest) -> tuple[list[str], str]:
     rodape = at.get_by_key("rodape")
     ligacoes = [p.proto.label for p in rodape.get("page_link")]
@@ -72,22 +66,71 @@ def _rodape(at: AppTest) -> tuple[list[str], str]:
     return ligacoes, texto
 
 
-def test_com_sessao_menu_com_o_grupo_conta(menu: list[Any], com_sessao: None) -> None:
-    at = AppTest.from_file(APP, default_timeout=30).run()
-    assert not at.exception
-    seccoes = menu[-1]
-    assert isinstance(seccoes, dict)
-    assert {s: _visiveis(p) for s, p in seccoes.items()} == MENU_COM_SESSAO
-    assert list(seccoes) == ["", t.SECCAO_CONTA]  # a conta é a última entrada
-    ocultas = {p.url_path for p in seccoes[""] if p.visibility == "hidden"}
-    assert ocultas == OCULTAS
+def _ligacoes(at: AppTest, chave: str) -> list[str]:
+    return [p.proto.label for p in at.get_by_key(chave).get("page_link")]
 
 
-def test_sem_sessao_so_inicio_e_ajuda(menu: list[Any], sem_sessao: None) -> None:
+def test_com_sessao_barra_com_o_menu_conta(menu: list[Any], com_sessao: None) -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     assert not at.exception
-    assert _visiveis(menu[-1]) == ["Início", "Ajuda"]
-    assert {p.url_path for p in menu[-1] if p.visibility == "hidden"} == OCULTAS
+    # O menu do Streamlit fica escondido: a navegação é a de paginas/navegacao.py.
+    paginas, opcoes = menu[-1]
+    assert opcoes["position"] == "hidden"
+    assert {p.url_path for p in paginas} >= {"questionario", "plano", "conta", "sair"} | OCULTAS
+    # Barra: Início, Plano, Progresso e Ajuda; «Conta» abre A minha conta, Ajuda, Privacidade
+    # e Terminar sessão (no telemóvel, a Ajuda da barra esconde-se por CSS).
+    assert _ligacoes(at, "barra_nav") == [*BARRA, *MENU_CONTA]
+    assert _ligacoes(at, "nav_conta_menu") == MENU_CONTA
+    assert "Questionário" not in _ligacoes(at, "barra_nav")
+
+
+@pytest.mark.parametrize(
+    ("pagina", "ativa"),
+    [
+        ("paginas/inicio.py", "inicio"),
+        ("paginas/plano.py", "plano"),
+        ("paginas/progresso.py", "progresso"),
+        ("paginas/ajuda.py", "ajuda"),
+        ("paginas/conta.py", "conta"),
+        ("paginas/privacidade.py", "conta"),
+    ],
+)
+def test_pagina_atual_marcada_na_barra(pagina: str, ativa: str, com_sessao: None) -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.switch_page(pagina).run()
+    assert not at.exception
+    ativas = [
+        n
+        for n in ("inicio", "plano", "progresso", "ajuda", "conta")
+        if _tem_chave(at, f"nav_ativo_{n}")
+    ]
+    assert ativas == [ativa]
+
+
+def test_questionario_sem_pagina_ativa_na_barra(com_sessao: None) -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.switch_page("paginas/questionario.py").run()
+    assert not any(
+        _tem_chave(at, f"nav_ativo_{n}") for n in ("inicio", "plano", "progresso", "ajuda", "conta")
+    )
+
+
+def _tem_chave(at: AppTest, chave: str) -> bool:
+    try:
+        at.get_by_key(chave)
+    except KeyError:
+        return False
+    return True
+
+
+def test_sem_sessao_so_inicio_e_entrar(menu: list[Any], sem_sessao: None) -> None:
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception
+    paginas, opcoes = menu[-1]
+    assert opcoes["position"] == "hidden"
+    assert [p.url_path for p in paginas if p.url_path not in OCULTAS] == ["", "ajuda"]
+    assert not _tem_chave(at, "barra_nav")
+    assert at.button(key="topo_entrar").label == "Entrar"
     assert "Entrar ou criar conta" in [b.label for b in at.button]
 
 

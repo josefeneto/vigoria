@@ -1,9 +1,10 @@
-"""Página de boas-vindas, em faixas a toda a largura (Fase 5C).
+"""Página de boas-vindas (Fase 5C, aspeto da Fase 8D: maqueta Main.dc.html).
 
-Topo em petróleo profundo (promessa, botão e vídeo), benefícios, «Como funciona» e um
-convite final. No telemóvel, o texto e o botão vêm antes do vídeo, para o botão caber no
-primeiro ecrã; no computador, ficam lado a lado. As faixas e a largura maior só existem
-nesta página (estilos.css, pelas chaves faixa_*).
+Topo em petróleo profundo em três blocos: texto, vídeo e ação. No telemóvel é um cartão
+com cantos redondos e os blocos seguem esta ordem (como na maqueta); no computador, uma
+faixa a toda a largura com o texto e o botão à esquerda e o vídeo à direita (grelha CSS em
+estilos.css; sem o CSS, ficam pela ordem do telemóvel). Depois: benefícios (no telemóvel,
+mosaicos só com o título), «Como funciona» em passos numerados e um convite final.
 
 Sem sessão iniciada, o botão principal é «Entrar ou criar conta» (st.login, Auth0).
 """
@@ -14,7 +15,6 @@ import streamlit as st
 
 from paginas import componentes, comum, sessao
 from paginas import textos as t
-from vigoria.config import obter_auth0
 
 
 def _comecar(chave: str) -> None:
@@ -24,21 +24,21 @@ def _comecar(chave: str) -> None:
         ):
             st.switch_page(comum.PAGINA_QUESTIONARIO)
     elif st.button(t.ENTRAR, type="primary", icon=":material/login:", width="stretch", key=chave):
-        if obter_auth0() is None:
-            st.error(t.LOGIN_POR_CONFIGURAR, icon=":material/key_off:")
-        else:
-            st.login("auth0")
+        comum.pedir_login()
 
 
 with st.container(key="faixa_topo"):
-    texto, media = st.columns([1, 1], gap="large", vertical_alignment="center")
-    with texto:
+    with st.container(key="topo_texto"):
         st.html(
-            componentes.logotipo(t.MARCA, claro=True, grande=True)
-            + f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
+            componentes.selo(t.INICIO_SELO) + f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
             f'<p class="v-faixa-texto">{escape(t.INICIO_TEXTO)}</p>'
         )
+    with st.container(key="topo_media"):
+        if not componentes.video_topo(t.VIDEO_DESCRICOES, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR):
+            componentes.fotografia("inicio_topo", t.ALT_FOTO_INICIO)
+    with st.container(key="topo_acao"):
         _comecar("comecar")
+        st.html(f'<p class="v-topo-duracao">{escape(t.INICIO_DURACAO)}</p>')
         if comum.RESULTADO in st.session_state:
             st.page_link(
                 comum.PAGINA_PLANO,
@@ -46,19 +46,18 @@ with st.container(key="faixa_topo"):
                 icon=":material/description:",
                 width="stretch",
             )
-    with media:
-        if not componentes.video_topo(t.VIDEO_DESCRICOES, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR):
-            componentes.fotografia("inicio_topo", t.ALT_FOTO_INICIO)
 
 with st.container(key="faixa_beneficios"):
     st.html(componentes.cartoes(t.BENEFICIOS))
 
 with st.container(key="faixa_como"):
     st.html(f'<h2 class="v-faixa-titulo">{escape(t.INICIO_COMO_TITULO)}</h2>')
-    st.html(componentes.cartoes(t.COMO_FUNCIONA))
+    st.html(componentes.passos((titulo, texto) for _, titulo, texto in t.COMO_FUNCIONA))
 
 with st.container(key="faixa_final"):
     st.html(f'<h2 class="v-faixa-titulo">{escape(t.FINAL_TITULO)}</h2>')
     _comecar("comecar_fim")
     st.caption(t.INICIO_SESSAO)
     comum.ligacao_ajuda("como_funciona")
+
+st.html(f'<p class="v-aviso-final">{escape(t.INICIO_AVISO)}</p>')

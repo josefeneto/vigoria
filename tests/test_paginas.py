@@ -261,3 +261,51 @@ def test_promessa_sem_travessao_no_inicio_da_linha() -> None:
 
     assert "\u00a0— para" in t.PROMESSA
     assert " — " not in t.PROMESSA
+
+
+def test_cartao_hoje_abre_o_treino_da_fase_descanso_e_manutencao(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fase 8D: o «Hoje» segue o dia (comum.hoje, substituído aqui) e a semana do plano."""
+    from datetime import timedelta
+
+    from paginas import comum
+    from paginas import textos as t
+    from vigoria.regras.hoje import dia_da_semana
+    from vigoria.regras.progresso import inicio_do_plano
+
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "7"
+    at.run()
+    _botao(at, "Gerar o meu plano").click().run(timeout=60)
+    resultado = at.session_state["resultado"]
+    inicio = inicio_do_plano(resultado.criado_em)
+    semana_tipo = {s.dia: s for s in resultado.plano.semana_tipo}
+
+    def dia(semana: int, com_sessao: bool):  # type: ignore[no-untyped-def]
+        base = inicio + timedelta(weeks=semana - 1)
+        return next(
+            d
+            for d in (base + timedelta(days=i) for i in range(7))
+            if (semana_tipo[dia_da_semana(d)].duracao_min > 0) == com_sessao
+        )
+
+    monkeypatch.setattr(comum, "hoje", lambda: dia(6, True))
+    at.switch_page("paginas/plano.py").run()
+    assert not at.exception
+    texto = _texto(at)
+    assert "Semana 6 de 16" in texto and "esforço" in texto
+    _botao(at, t.HOJE_VER).click().run()
+    assert at.session_state["plano_seccao"] == "treino" and at.session_state["plano_fase"] == 2
+
+    monkeypatch.setattr(comum, "hoje", lambda: dia(3, False))
+    at.run()
+    assert t.HOJE_DESCANSO in _texto(at)
+    assert t.HOJE_VER not in [b.label for b in at.button]
+
+    monkeypatch.setattr(comum, "hoje", lambda: inicio + timedelta(weeks=17))
+    at.run()
+    assert t.HOJE_MANUTENCAO in _texto(at) and t.SEMANA_MANUTENCAO in _texto(at)
+    _botao(at, t.HOJE_VER_MANUTENCAO).click().run()
+    assert at.session_state["plano_seccao"] == "manutencao"

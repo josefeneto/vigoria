@@ -160,19 +160,17 @@ def _percorrer(page: Page, largura: str) -> None:
 
 
 def _menu_e_rodape(page: Page, largura: str, url: str, n: str) -> None:
-    """O menu aberto (computador: «Conta»; telemóvel: o painel lateral) e o rodapé da Ajuda."""
+    """O menu «Conta» aberto (só com sessão) e o rodapé da Ajuda."""
     page.goto(f"{url}/ajuda")
     _esperar(page)
     rodape = page.locator(".st-key-rodape")
     rodape.wait_for()
     page.wait_for_timeout(600)
     rodape.screenshot(path=str(SAIDA / f"{largura}_{n}b_rodape.png"))
-    if largura == "telemovel":
-        page.locator('[data-testid="stExpandSidebarButton"]').click()
-    else:
-        conta = page.get_by_text("Conta", exact=True)
-        if conta.count():  # sem sessão não há grupo «Conta»
-            conta.first.click()
+    # Fase 8D: «Conta» abre um menu (telemóvel: na barra do fundo; computador: no topo).
+    conta = page.locator('.st-key-barra_nav [data-testid="stPopoverButton"]')
+    if conta.count():  # sem sessão não há barra
+        conta.first.click()
     page.wait_for_timeout(800)
     _capturar(page, largura, f"{n}_menu")
 

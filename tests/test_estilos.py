@@ -198,3 +198,37 @@ def test_video_do_inicio_leve_sem_som_e_com_capa(nome: str) -> None:
     assert capa.stat().st_size <= 120 * 1024
     with Image.open(capa) as imagem:
         assert imagem.format == "WEBP" and imagem.size[0] == 1280
+
+
+# ---------------------------------------------------------------- Fase 8D
+
+
+@pytest.mark.parametrize(
+    ("semana", "feitos", "atual"), [(1, 0, 1), (7, 6, 1), (16, 15, 1), (20, 16, 0)]
+)
+def test_barra_das_semanas(semana: int, feitos: int, atual: int) -> None:
+    html = componentes.semanas(semana, "Semana", "Fase", "texto", "aria")
+    assert html.count("<span") == 16
+    assert html.count('class="feito"') == feitos and html.count('class="atual"') == atual
+    assert f'aria-valuenow="{min(semana, 16)}"' in html and 'role="progressbar"' in html
+
+
+def test_componentes_novos_escapam_o_texto() -> None:
+    perigoso = "<b>x</b>"
+    for html in (
+        componentes.semanas(3, perigoso, perigoso, perigoso, perigoso),
+        componentes.hoje("forca", perigoso, perigoso, perigoso),
+        componentes.notas(perigoso, [perigoso]),
+        componentes.selo(perigoso),
+        componentes.passos([(perigoso, perigoso)]),
+        componentes.numeros([(perigoso, perigoso)]),
+    ):
+        assert "<b>" not in html and "&lt;b&gt;" in html
+
+
+def test_cores_so_para_formas_distintas_do_fundo() -> None:
+    """As cores novas das maquetas só desenham formas: chega-lhes distinguir-se do fundo onde
+    ficam (a informação está sempre também em texto)."""
+    assert contraste(estilos.CORES["principal"], estilos.CORES["nevoa_escura"]) >= 3
+    assert contraste(estilos.CORES["pessego"], estilos.CORES["principal_profundo"]) >= 3
+    assert contraste(estilos.CORES["fundo"], estilos.CORES["principal_profundo"]) >= 3

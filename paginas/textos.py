@@ -56,6 +56,16 @@ AJUDA_INTRO = (
 )
 COMO_FUNCIONA_LIGACAO = "Como funciona?"
 SECCAO_CONTA = "Conta"  # grupo do menu com «A minha conta» e «Terminar sessão»
+# Navegação (Fase 8D): rótulos curtos na barra; os títulos das páginas (separador) não mudam.
+NAV = {
+    "inicio": "Início",
+    "plano": "Plano",
+    "progresso": "Progresso",
+    "ajuda": "Ajuda",
+    "conta": "Conta",
+}
+NAV_TITULO = "Navegação principal"
+ENTRAR_CURTO = "Entrar"
 
 # ---------------------------------------------------------------- Conta e sessão
 
@@ -147,17 +157,17 @@ INICIO_TEXTO = (
 COMO_FUNCIONA = (
     (
         "lista",
-        "1. Responda ao questionário",
+        "Responda ao questionário",
         f"Cerca de {MINUTOS_QUESTIONARIO} minutos sobre si, a sua saúde e a sua rotina.",
     ),
     (
         "intensidade",
-        "2. Veja as nossas decisões",
+        "Veja as nossas decisões",
         "Explicamos o que adaptámos e porquê, antes de preparar o plano.",
     ),
     (
         "calendario",
-        "3. Receba o seu plano",
+        "Receba o seu plano",
         "16 semanas em 4 fases, com treino em casa, alimentação, hábitos e orientações "
         "para continuar.",
     ),
@@ -195,6 +205,9 @@ ALT_FOTO_PLANO = "Pessoa a fazer um alongamento de pernas no chão de uma sala d
 ALT_FOTO_FIM = (
     "Pessoa ao ar livre, à sombra de uma árvore, a beber água com um tapete debaixo do braço."
 )
+INICIO_SELO = "Para quem tem 45 anos ou mais"
+INICIO_DURACAO = f"Cerca de {MINUTOS_QUESTIONARIO} minutos · sem compromisso"
+INICIO_AVISO = "A Vigoria orienta; não substitui o seu médico."
 INICIO_SESSAO = (
     "Para guardar o seu plano, entre com a conta Google ou com email e palavra-passe. "
     "Pode descarregar ou apagar os seus dados a qualquer momento."
@@ -601,14 +614,31 @@ CINTURA_FASES = "**{rotulo}**, no fim de cada fase: {texto}"
 FASE_SEMANAS = "Fase {n} · Semanas {min} a {max}"
 MINUTOS = "{n} min"
 SECCAO_PLANO = "Secção do plano"
-SECCOES_PLANO = {
-    "resumo": ":material/summarize: Resumo",
-    "treino": ":material/fitness_center: Treino",
-    "alimentacao": ":material/restaurant: Alimentação",
-    "habitos": ":material/self_improvement: Hábitos",
-    "acompanhamento": ":material/monitoring: Acompanhamento",
-    "manutencao": ":material/autorenew: Manutenção",
+SECCOES_PLANO = {  # em pastilhas, sem ícone (maqueta Resumo.dc.html)
+    "resumo": "Resumo",
+    "treino": "Treino",
+    "alimentacao": "Alimentação",
+    "habitos": "Hábitos",
+    "acompanhamento": "Acompanhamento",
+    "manutencao": "Manutenção",
 }
+# Topo do plano (Fase 8D): semana do programa, números e cartão «Hoje».
+DIAS_VALOR = {1: "1 dia"}  # os outros: «{n} dias»
+DIAS_VALOR_N = "{n} dias"
+SEMANA_DE = "Semana {s} de 16"
+SEMANA_FASE = "Fase {n} · {nome}"
+SEMANA_MARCO = "Próximo marco: semana {m} · peso indicativo {kg} kg"
+SEMANA_MANUTENCAO = "Manutenção"
+SEMANA_MANUTENCAO_TEXTO = "Terminou as 16 semanas do programa (semana atual: {s})."
+SEMANAS_ARIA = "Semana {s} de 16 do programa"
+HOJE_DIA = "Hoje · {dia}"
+HOJE_SESSAO = "{min} min · esforço {a} a {b} em 10"
+HOJE_DESCANSO = "Hoje é dia de descanso"
+HOJE_DESCANSO_SEM_TREINO = "Sem sessão de treino."
+HOJE_MANUTENCAO = "Depois das 16 semanas"
+HOJE_MANUTENCAO_TEXTO = "Veja em «Manutenção» como continuar ao seu ritmo."
+HOJE_VER = "Ver a sessão de hoje"
+HOJE_VER_MANUTENCAO = "Ver a manutenção"
 # Depois das 16 semanas (Fase 6B): textos aprovados a 05/11/2026 (P8).
 RESUMO_MANUTENCAO = "Depois da semana 16, veja em «Manutenção» como continuar."
 RECOMECAR_QUESTIONARIO = "Responder de novo ao questionário"

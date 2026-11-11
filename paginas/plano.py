@@ -17,7 +17,13 @@ from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carr
 from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
 from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.calculos import SEMANAS_PROGRAMA
-from vigoria.regras.progresso import inicio_do_plano, semana_do_plano
+from vigoria.regras.hoje import Hoje, TipoHoje, sessao_de_hoje
+from vigoria.regras.progresso import (
+    fase_da_semana,
+    inicio_do_plano,
+    proximo_marco,
+    semana_do_plano,
+)
 from vigoria.regras.textos import numero
 
 rotulos = carregar_avisos().rotulos
@@ -82,9 +88,6 @@ def _resumo(plano: Plano) -> None:
         cartoes.append(componentes.cartao_fase(sobretitulo, fase.nome, fase.foco, detalhes))
     st.html(componentes.grelha(cartoes, colunas=2))
     st.caption(t.RESUMO_MANUTENCAO)
-    if plano.notas_personalizadas:
-        st.subheader(r["notas"])
-        st.markdown("\n".join(f"- {n}" for n in plano.notas_personalizadas))
 
 
 def _semana(plano: Plano) -> None:
@@ -242,6 +245,68 @@ def _manutencao(plano: Plano) -> None:
     )
 
 
+# ---------------------------------------------------------------- Topo (Fase 8D)
+
+
+def _semanas(plano: Plano, semana: int) -> str:
+    """Cartão «Semana X de 16» com a fase e o próximo marco (ou a manutenção)."""
+    aria = t.SEMANAS_ARIA.format(s=min(semana, SEMANAS_PROGRAMA))
+    fase = fase_da_semana(semana)
+    if fase is None:
+        texto = t.SEMANA_MANUTENCAO_TEXTO.format(s=semana)
+        return componentes.semanas(semana, t.SEMANA_MANUTENCAO, "", texto, aria)
+    nome = next(f.nome for f in plano.treino.fases if f.numero == fase)
+    marco = proximo_marco(semana)
+    peso = next((m.peso_indicativo_kg for m in plano.marcos if m.semana == marco), None)
+    texto = t.SEMANA_MARCO.format(m=marco, kg=numero(peso)) if peso is not None else ""
+    return componentes.semanas(
+        semana, t.SEMANA_DE.format(s=semana), t.SEMANA_FASE.format(n=fase, nome=nome), texto, aria
+    )
+
+
+def _abrir(seccao: str, fase: int | None = None) -> None:
+    """Botão do cartão «Hoje»: abre a secção (e a fase) antes de a página se desenhar."""
+    st.session_state["plano_seccao"] = seccao
+    if fase is not None:
+        st.session_state["plano_fase"] = fase
+
+
+def _hoje(hoje: Hoje, fases: dict[int, TreinoFase]) -> None:
+    """Cartão «Hoje»: a entrada da semana-tipo deste dia, o descanso ou a manutenção."""
+    sobretitulo = t.HOJE_DIA.format(dia=rotulos.dias[hoje.dia])
+    botao: tuple[str, str, int | None] | None = None  # (rótulo, secção, fase)
+    if hoje.tipo is TipoHoje.MANUTENCAO:
+        cartao = componentes.hoje(
+            "rebento", sobretitulo, t.HOJE_MANUTENCAO, t.HOJE_MANUTENCAO_TEXTO
+        )
+        botao = (t.HOJE_VER_MANUTENCAO, "manutencao", None)
+    elif hoje.tipo is TipoHoje.DESCANSO or hoje.sessao is None or hoje.fase is None:
+        atividade = hoje.sessao.atividade if hoje.sessao is not None else ""
+        # «Caminhada leve (opcional)» ou «Caminhada diária»: fica dita; «Descanso», não.
+        detalhe = t.HOJE_DESCANSO_SEM_TREINO
+        if atividade and componentes.icone_atividade(atividade) != "descanso":
+            detalhe = f"{detalhe} {atividade}."
+        cartao = componentes.hoje("descanso", sobretitulo, t.HOJE_DESCANSO, detalhe)
+    else:
+        a, b = fases[hoje.fase].esforco
+        detalhe = t.HOJE_SESSAO.format(min=hoje.sessao.duracao_min, a=a, b=b)
+        icone = componentes.icone_atividade(hoje.sessao.atividade)
+        cartao = componentes.hoje(icone, sobretitulo, hoje.sessao.atividade, detalhe)
+        botao = (t.HOJE_VER, "treino", hoje.fase)
+    with st.container(key="plano_hoje", horizontal=True, vertical_alignment="center", gap="small"):
+        st.html(cartao, width="stretch")
+        if botao is not None:
+            rotulo, seccao, fase = botao
+            st.button(
+                rotulo,
+                icon=":material/arrow_forward:",
+                type="primary",
+                key="plano_hoje_ver",
+                on_click=_abrir,
+                args=(seccao, fase),
+            )
+
+
 # ---------------------------------------------------------------- Página
 
 
@@ -255,37 +320,51 @@ if resultado is None:
 plano: Plano = resultado.plano
 if plano.provedor == "simulado":
     st.warning(t.PLANO_SIMULADO_NOTA, title=t.PLANO_SIMULADO, icon=":material/science:")
-componentes.fotografia("plano_topo", t.ALT_FOTO_PLANO, proporcao="8 / 3")
-st.title(r["titulo"])
+with st.container(key="plano_titulo", horizontal=True, vertical_alignment="center"):
+    st.title(r["titulo"], width="stretch")
+    comum.botao_pdf(
+        resultado.criado_em,
+        plano=plano,
+        idade=getattr(resultado, "idade", None),
+        chave="plano_pdf",
+    )
 if st.session_state.get(comum.ERRO_GUARDAR):
     st.error(t.ERRO_GUARDAR, icon=":material/cloud_off:")
 else:
     st.caption(t.NOTA_SESSAO_PLANO.format(data=t.data_hora(resultado.criado_em)))
-comum.botao_pdf(
-    resultado.criado_em, plano=plano, idade=getattr(resultado, "idade", None), chave="plano_pdf"
-)
-intensidade = resultado.estrategia.intensidade_efetiva
-st.html(
-    componentes.numeros(
-        (
+
+inicio_plano = inicio_do_plano(resultado.criado_em)
+dia_hoje = comum.hoje()
+hoje = sessao_de_hoje(plano.semana_tipo, inicio_plano, dia_hoje)
+fases_plano = {f.numero: f for f in plano.treino.fases}
+with st.container(key="plano_topo"):
+    st.html(_semanas(plano, hoje.semana))
+    intensidade = resultado.estrategia.intensidade_efetiva
+    dias = sum(1 for s in plano.semana_tipo if s.duracao_min)
+    st.html(
+        componentes.numeros(
             (
-                "bandeira",
-                t.NUMEROS_PLANO["objetivo"],
-                f"{numero(plano.marcos[-1].peso_indicativo_kg)} kg",
-            ),
-            (
-                "intensidade",
-                t.NUMEROS_PLANO["intensidade"],
-                t.INTENSIDADE.get(intensidade or "", t.SEM_RESPOSTA),
-            ),
-            (
-                "calendario",
-                t.NUMEROS_PLANO["dias"],
-                str(sum(1 for s in plano.semana_tipo if s.duracao_min)),
-            ),
+                (
+                    t.NUMEROS_PLANO["objetivo"],
+                    f"{numero(plano.marcos[-1].peso_indicativo_kg)} kg",
+                ),
+                (
+                    t.NUMEROS_PLANO["intensidade"],
+                    t.INTENSIDADE.get(intensidade or "", t.SEM_RESPOSTA),
+                ),
+                (t.NUMEROS_PLANO["dias"], t.DIAS_VALOR.get(dias, t.DIAS_VALOR_N.format(n=dias))),
+            )
         )
     )
-)
+    if plano.notas_personalizadas:
+        coluna_hoje, coluna_notas = st.columns(2, gap="small")
+    else:
+        coluna_hoje = coluna_notas = st.container()
+    with coluna_hoje:
+        _hoje(hoje, fases_plano)
+    if plano.notas_personalizadas:
+        with coluna_notas:
+            st.html(componentes.notas(r["notas"], plano.notas_personalizadas))
 
 SECCOES = {
     "resumo": _resumo,
