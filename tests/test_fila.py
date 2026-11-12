@@ -74,3 +74,11 @@ def test_fila_cheia_tem_mensagem_propria_em_pt_pt() -> None:
     assert tipo is TipoErroUtilizador.FILA_CHEIA
     assert "Tente de novo daqui a alguns minutos" in t.ERROS_GERACAO[tipo]
     assert t.A_ESPERA == "Estamos a preparar o seu plano, pode demorar um minuto."
+
+
+def test_teto_de_gasto_aparece_como_servico_indisponivel() -> None:
+    from vigoria.llm.base import ErroLLM, TipoFalha
+
+    tipo = classificar_erro(ErroLLM("x", 429, tipo=TipoFalha.LIMITE_GASTO))
+    assert tipo is TipoErroUtilizador.INDISPONIVEL
+    assert "não está disponível neste momento" in t.ERROS_GERACAO[tipo]

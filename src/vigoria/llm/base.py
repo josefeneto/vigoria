@@ -148,6 +148,9 @@ class TipoFalha(StrEnum):
     QUOTA_DIARIA = "quota_diaria"  # 429 que não se repete
     INDISPONIVEL = "indisponivel"  # 503/504: repete; no fim, reserva
     DEMASIADO_GRANDE = "demasiado_grande"  # 413: não repete; reserva
+    # Teto de gasto mensal da conta atingido (Groq blocked_api_access, Gemini «spending cap»):
+    # não repete nem usa a reserva (a reserva Groq partilha o teto da organização).
+    LIMITE_GASTO = "limite_gasto"
     OUTRA = "outra"
 
 
@@ -317,6 +320,15 @@ class ProvedorBase:
         )
         reserva = falha.tipo in PARA_RESERVA
         match falha.tipo:
+            case TipoFalha.LIMITE_GASTO:
+                # Linha para o José nos registos do Railway (só metadados).
+                registo.error(
+                    "limite de gasto mensal atingido (%s, %s): subir o teto na consola "
+                    "ou esperar pelo mês seguinte",
+                    self.nome,
+                    self.modelo,
+                )
+                mensagem = f"O {self.rotulo} recusou o pedido: limite de gasto mensal atingido."
             case TipoFalha.QUOTA_DIARIA:
                 mensagem = f"O {self.rotulo} recusou o pedido: {self._texto_quota_diaria(falha)}."
             case TipoFalha.POR_MINUTO:

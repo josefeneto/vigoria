@@ -10,7 +10,7 @@ import pytest
 from pydantic import SecretStr
 
 from vigoria.config import Configuracao
-from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM, aviso_de_espera
+from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM, TipoFalha, aviso_de_espera
 from vigoria.llm.groq import ProvedorGroq
 from vigoria.llm.openai_compat import schema_estrito
 from vigoria.llm.simulado import ler_resposta_simulada
@@ -316,3 +316,21 @@ def test_503_nao_conta_como_429(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level("WARNING", logger="vigoria.llm"):
         provedor.gerar_json("s", PEDIDO, PlanoGerado)
     assert "429 por minuto" not in caplog.text
+
+
+# ---------------------------------------------------------------- Teto de gasto (Fase 10C)
+
+
+@pytest.mark.parametrize("codigo", [400, 403, 429])
+def test_blocked_api_access_nao_repete_nem_usa_reserva(
+    codigo: int, caplog: pytest.LogCaptureFixture
+) -> None:
+    corpo = {"error": {"message": f"Spend limit reached. {PEDIDO}", "code": "blocked_api_access"}}
+    provedor, registo = _provedor(httpx.Response(codigo, json=corpo), _ok())
+    with caplog.at_level("ERROR", logger="vigoria.llm"), pytest.raises(ErroLLM) as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert erro.value.tipo is TipoFalha.LIMITE_GASTO
+    assert not erro.value.permite_reserva
+    assert len(registo.pedidos) == 1 and registo.esperas == []
+    assert "limite de gasto mensal atingido (groq, openai/gpt-oss-120b)" in caplog.text
+    assert "hipertensão" not in str(erro.value) + caplog.text

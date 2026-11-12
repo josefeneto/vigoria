@@ -43,6 +43,13 @@ class ErroHttp(Exception):
         self.cabecalhos = cabecalhos
         self.corpo = corpo
 
+    def codigo_servico(self) -> str:
+        """error.code do corpo (por exemplo «blocked_api_access»); só para classificar."""
+        try:
+            return str(json.loads(self.corpo)["error"]["code"])
+        except ValueError, KeyError, TypeError:
+            return ""
+
     def mensagem_servico(self) -> str:
         """error.message do corpo (só para classificar o erro; nunca se mostra)."""
         try:
@@ -171,7 +178,9 @@ class ProvedorCompativelOpenAI(ProvedorBase):
         if not isinstance(erro, ErroHttp):
             return None
         codigo = erro.codigo
-        if codigo == 429:
+        if erro.codigo_servico() == "blocked_api_access":
+            tipo = TipoFalha.LIMITE_GASTO  # teto de gasto mensal da organização (Groq)
+        elif codigo == 429:
             tipo = (
                 TipoFalha.QUOTA_DIARIA
                 if _POR_DIA.search(erro.mensagem_servico())

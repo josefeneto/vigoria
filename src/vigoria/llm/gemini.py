@@ -43,6 +43,17 @@ def _detalhes(erro: errors.APIError) -> list[dict[str, Any]]:
     return [d for d in detalhes if isinstance(d, dict)]
 
 
+_TETO_GASTO = re.compile(r"spend(?:ing)?[\s_-]*cap", re.IGNORECASE)
+
+
+def e_limite_gasto(erro: BaseException) -> bool:
+    """429 do «Monthly spend cap» do projeto (Google AI Studio): a mensagem ou os detalhes
+    falam em «spending cap». Nunca se mostra a mensagem; só se procura o termo."""
+    if not isinstance(erro, errors.APIError) or erro.code != 429:
+        return False
+    return bool(_TETO_GASTO.search(f"{erro.message or ''} {_detalhes(erro)}"))
+
+
 def e_quota_diaria(erro: BaseException) -> bool:
     """429 com uma violação de quota por dia (quotaId «...PerDay...»)."""
     if not isinstance(erro, errors.APIError) or erro.code != 429:
@@ -130,7 +141,9 @@ class ProvedorGemini(ProvedorBase):
         if not isinstance(erro, errors.APIError):
             return None
         codigo = erro.code
-        if e_quota_diaria(erro):
+        if e_limite_gasto(erro):
+            tipo = TipoFalha.LIMITE_GASTO
+        elif e_quota_diaria(erro):
             tipo = TipoFalha.QUOTA_DIARIA
         elif codigo == 429:
             tipo = TipoFalha.POR_MINUTO  # sem detalhes: tratado como por minuto

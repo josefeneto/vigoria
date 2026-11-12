@@ -10,7 +10,7 @@ Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU We
 **Ordem recomendada:** cada passo precisa do anterior.
 
 1. Neon (base de dados de produção)
-2. Groq (fornecedor de IA)
+2. Fornecedor de IA (Groq, ou Gemini pago) com teto de gasto
 3. Auth0 de produção, Google e Brevo
 4. Railway: serviço web
 5. Domínio app.vigoria.pt (CNAME no cPanel)
@@ -29,25 +29,47 @@ Os dados reais não se misturam com os fictícios da demo.
 2. Em *Dashboard → Connect*, escolhe a base `neondb` (ou cria uma `vigoria`). **Desliga** a opção *Connection pooling*, porque as migrações correm melhor com a ligação direta. Copia o endereço `postgresql://…` diretamente para o Railway no passo 4 (`DATABASE_URL`).
 3. As tabelas criam-se sozinhas no primeiro arranque do serviço web (migrações Alembic).
 
-## 2. Groq — fornecedor de IA
+## 2. Fornecedor de IA (Groq ou Gemini pago)
 
-Produção: principal `openai/gpt-oss-120b`, reserva `openai/gpt-oss-20b`, ambos na Groq. O Gemini fica **desligado** em produção. O código recusa-o no arranque, salvo `VIGORIA_GEMINI_PAGO=true` (o nível gratuito do Gemini não pode servir utilizadores do EEE).
+**Decisão do fornecedor: depois da comparação** (ver «Comparação de qualidade», mais abaixo). Proposta atual: principal `openai/gpt-oss-120b`, reserva `openai/gpt-oss-20b`, ambos na Groq. O Gemini gratuito fica **desligado** em produção. O código recusa-o no arranque, salvo `VIGORIA_GEMINI_PAGO=true` (o nível gratuito do Gemini não pode servir utilizadores do EEE). Se a escolha for o Gemini pago, os passos equivalentes estão em «2.2 Se a escolha for o Gemini pago».
+
+### 2.1 Groq
 
 1. Em console.groq.com, cria uma organização para a Vigoria (ou usa a tua).
-2. **Plano:** no plano gratuito, o limite de 8000 tokens por minuto é menor do que um pedido de plano, por isso os planos falham. Passa ao plano **Developer** (pago por utilização) em *Settings → Billing*. Confirma lá os limites dos dois modelos.
-3. **Zero Data Retention:** ativa-o **antes do primeiro utilizador real**, em *Settings → Data Controls* (ou equivalente). Confirma na página que os pedidos não ficam guardados nem são usados para treino.
-4. Cria uma chave em *API Keys → Create API Key*, com o nome `vigoria-producao`. Copia-a diretamente para o Railway (`GROQ_API_KEY`). É uma chave diferente da que usas em local.
-5. **A CONFIRMAR (revisão jurídica):** o acordo de tratamento de dados (DPA) da Groq e a base da transferência para os EUA (cláusulas-tipo ou EU-US Data Privacy Framework). Ver a lista no fim deste guia.
+2. **Plano:** no plano gratuito, o limite é de 8000 tokens por minuto, e cada chamada gasta cerca de 7000 (teste de 12/11/2026). Na prática, só passa uma chamada por minuto, e um plano pode precisar de até 3. Antes do primeiro utilizador real, passa ao plano **Developer** (pago por utilização, sem mensalidade) em *Settings → Billing*. Confirma lá os limites dos dois modelos. Custo estimado: menos de 1 cêntimo de dólar por plano.
+3. **Teto de gasto: 5 $ por mês.** Em *Settings → Billing → Spend limit* (ou equivalente), define um limite mensal de **5 $** e alertas por email aos **50 %, 75 % e 90 %**. Quando o limite é atingido, a Groq bloqueia a conta (erro `blocked_api_access`). A Groq só aplica o limite com cerca de **10 a 15 minutos de atraso**, por isso o gasto pode passar ligeiramente dos 5 $.
+4. **Zero Data Retention:** ativa-o **antes do primeiro utilizador real**, em *Settings → Data Controls* (ou equivalente). Confirma na página que os pedidos não ficam guardados nem são usados para treino.
+5. Cria uma chave em *API Keys → Create API Key*, com o nome `vigoria-producao`. Copia-a diretamente para o Railway (`GROQ_API_KEY`). É uma chave diferente da que usas em local.
+6. **A CONFIRMAR (revisão jurídica):** o acordo de tratamento de dados (DPA) da Groq e a base da transferência para os EUA (cláusulas-tipo ou EU-US Data Privacy Framework). Ver a lista no fim deste guia.
+
+### 2.2 Se a escolha for o Gemini pago
+
+1. No Google AI Studio, liga uma conta de faturação ao projeto (*Billing*). Sem faturação, é o nível gratuito, e esse fica recusado em produção.
+2. **Teto de gasto: 5 $ por mês.** Em *Billing → Monthly spend cap* do projeto, define **5 $**. No Google Cloud Console, em *Billing → Budgets & alerts*, cria um orçamento de 5 $ com alertas aos **50 %, 75 % e 90 %**. O teto bloqueia o serviço; o orçamento só avisa. O Google aplica o teto com cerca de **10 a 15 minutos de atraso**.
+3. No Railway: `VIGORIA_PROVEDOR_LLM=gemini`, `GEMINI_MODEL`, `GEMINI_API_KEY` (secreto, chave nova do projeto pago) e `VIGORIA_GEMINI_PAGO=true`. Para a reserva, escolhe outro fornecedor ou outro modelo do Gemini.
+4. **A CONFIRMAR (revisão jurídica):** os termos do Gemini pago para dados de utilizadores do EEE e a transferência para os EUA.
+
+### Quando o teto de gasto é atingido
+
+A app trata o erro como serviço temporariamente indisponível e não faz novas tentativas nem usa a reserva. A Groq aplica o teto à organização inteira, por isso a reserva também estaria bloqueada. Quem está a gerar um plano vê «O serviço que prepara os planos não está disponível neste momento…», e as respostas ficam guardadas. Nos registos do Railway aparece:
+
+```
+limite de gasto mensal atingido (groq, openai/gpt-oss-120b): subir o teto na consola ou esperar pelo mês seguinte
+```
+
+Para resolver: sobe o teto na consola ou espera pelo mês seguinte.
 
 ### Comparação de qualidade (antes de abrir o beta)
 
 O `scripts/comparar_fornecedores.py` gera 10 planos (5 personas fictícias × Gemini e Groq 120b) e compara-os: falhas da verificação, menções a meses, palavras desconhecidas, tempo e tokens.
 
-**Chama a LLM real:** corre-o só tu, à mão, com a chave Groq do plano Developer no teu `.env` local. No PowerShell, com o `.venv` ativo:
+**Chama a LLM real:** corre-o só tu, à mão. Os planos gratuitos do Gemini e do Groq chegam, desde que haja uma pausa de 60 s entre personas. O script só usa as 5 personas fictícias de `exemplos/`. No PowerShell, na pasta do projeto, com o `.venv` ativo:
 
 ```powershell
-python scripts/comparar_fornecedores.py --modelo-groq openai/gpt-oss-120b
+python scripts/comparar_fornecedores.py --modelo-groq openai/gpt-oss-120b --pausa 60
 ```
+
+Demora cerca de 6 a 8 minutos. Se aparecer «nova tentativa daqui a … s», é uma espera normal. Com Ctrl+C, guarda as personas já completas.
 
 A tabela aparece no ecrã e fica em `saidas/comparacao/`. Mostra-me o resumo e eu dou-te a minha recomendação.
 
@@ -223,6 +245,8 @@ No Auth0 de produção, em *Branding → Universal Login → Customization Optio
 
 | O quê | Onde está | Estado |
 |---|---|---|
+| Fornecedor de IA escolhido (depois da comparação) | passo 2 | por decidir |
+| Teto de gasto de 5 $/mês com alertas aos 50/75/90 % | consola do fornecedor | por fazer |
 | Zero Data Retention ativo na Groq | consola da Groq | por fazer |
 | DPA da Groq e base da transferência para os EUA | revisão jurídica | por confirmar |
 | Texto do consentimento de saúde em produção (tratamento pela IA nos EUA, sem uso para treino) | `paginas/textos.py`, `CONSENTIMENTO_SAUDE_PRODUCAO` | por confirmar (revisão jurídica) |
@@ -240,3 +264,4 @@ No Auth0 de produção, em *Branding → Universal Login → Customization Optio
 | Login volta com erro «Callback URL mismatch» | `AUTH_REDIRECT_URI` diferente das *Allowed Callback URLs* do tenant de produção. |
 | «Há muitas pessoas a preparar o plano» | Mais de 3 minutos na fila: várias gerações seguidas. Nos registos, procura `fila:` e `429 por minuto`. |
 | Planos falham sempre com «muitos pedidos» | Groq no plano gratuito (limite de tokens por minuto). Ver o passo 2. |
+| «O serviço que prepara os planos não está disponível» e, nos registos, `limite de gasto mensal atingido` | Teto de 5 $ atingido. Ver «Quando o teto de gasto é atingido», no passo 2. |

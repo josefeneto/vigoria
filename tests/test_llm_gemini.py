@@ -360,3 +360,32 @@ def test_cli_testar_ligacao_diagnostico(falha: BaseException, diagnostico: str) 
 def test_cli_sem_questionario_nem_teste() -> None:
     with pytest.raises(SystemExit):
         cli.main(["--so-estrategia"])
+
+
+# ---------------------------------------------------------------- Teto de gasto (Fase 10C)
+
+
+def test_teto_de_gasto_mensal_nao_repete_nem_usa_reserva(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    corpo = {
+        "error": {
+            "code": 429,
+            "message": f"Your project has exceeded its monthly spending cap. {PEDIDO}",
+            "status": "RESOURCE_EXHAUSTED",
+        }
+    }
+    provedor, modelos, registo = _provedor(errors.ClientError(429, corpo), _resposta())
+    with caplog.at_level("ERROR", logger="vigoria.llm"), pytest.raises(ErroLLM) as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert erro.value.tipo is TipoFalha.LIMITE_GASTO
+    assert not erro.value.permite_reserva
+    assert len(modelos.chamadas) == 1 and registo.esperas == []
+    assert "limite de gasto mensal atingido (gemini, modelo-de-teste)" in caplog.text
+    assert PEDIDO not in str(erro.value) and PEDIDO not in caplog.text
+
+
+def test_429_sem_teto_continua_por_minuto() -> None:
+    provedor, modelos, _ = _provedor(_quota(POR_MINUTO, "1s"), _resposta())
+    provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert len(modelos.chamadas) == 2
