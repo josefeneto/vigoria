@@ -106,21 +106,29 @@ def correr(
     pausa_s: float = 0.0,
     dormir: Callable[[float], None] = time.sleep,
 ) -> list[tuple[str, Avaliacao]]:
-    """Gera um plano por persona e fornecedor; uma falha não para os outros."""
+    """Gera um plano por persona e fornecedor; uma falha não para os outros.
+
+    Com Ctrl+C, para e devolve as personas já completas (a tabela é guardada na mesma).
+    """
     resultados: list[tuple[str, Avaliacao]] = []
-    for n, caminho in enumerate(personas):
-        if n and pausa_s:
-            dormir(pausa_s)  # dá tempo ao limite de tokens por minuto
-        nome = caminho.stem.removeprefix("persona_")
-        q = Questionario.model_validate(json.loads(caminho.read_text(encoding="utf-8")))
-        estrategia = gerar_estrategia(q)
-        try:
-            avaliacoes = comparar(q, estrategia, provedores)
-        except ErroGeracao as erro:
-            avaliacoes = [
-                Avaliacao(provedor=p.nome, modelo=p.modelo, erro=str(erro)) for p in provedores
-            ]
-        resultados += [(nome, a) for a in avaliacoes]
+    try:
+        for n, caminho in enumerate(personas):
+            if n and pausa_s:
+                print(f"Pausa de {pausa_s:g} s (limite de tokens por minuto)…", flush=True)
+                dormir(pausa_s)
+            nome = caminho.stem.removeprefix("persona_")
+            print(f"\n== Persona {n + 1}/{len(personas)}: {nome} ==", flush=True)
+            q = Questionario.model_validate(json.loads(caminho.read_text(encoding="utf-8")))
+            estrategia = gerar_estrategia(q)
+            try:
+                avaliacoes = comparar(q, estrategia, provedores)
+            except ErroGeracao as erro:
+                avaliacoes = [
+                    Avaliacao(provedor=p.nome, modelo=p.modelo, erro=str(erro)) for p in provedores
+                ]
+            resultados += [(nome, a) for a in avaliacoes]
+    except KeyboardInterrupt:
+        print("\nInterrompido: guardo só as personas já completas.", flush=True)
     return resultados
 
 

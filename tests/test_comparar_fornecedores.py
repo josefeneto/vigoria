@@ -56,3 +56,14 @@ def test_tabela_com_uma_linha_por_persona_e_fornecedor() -> None:
     assert "**groq (q120)**: 0/2 planos gerados" in texto
     assert "**gemini**: 2/2 planos gerados" in texto  # sem métricas, o falso não diz o modelo
     assert "código 429" in texto
+
+
+def test_ctrl_c_guarda_as_personas_ja_completas() -> None:
+    m = _script()
+
+    def interromper(_: float) -> None:
+        raise KeyboardInterrupt
+
+    provedores = [_Falso("gemini", "g")]
+    resultados = m.correr(list(m.PERSONAS[:3]), provedores, pausa_s=1, dormir=interromper)
+    assert [p for p, _ in resultados] == ["teste"]
