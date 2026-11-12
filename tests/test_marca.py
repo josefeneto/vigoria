@@ -84,5 +84,5 @@ def test_manifesto_com_os_icones() -> None:
     tamanhos = {i["sizes"] for i in manifesto["icons"]}
     assert {"192x192", "512x512"} <= tamanhos
     for i in manifesto["icons"]:
-        ficheiro = RAIZ / i["src"].removeprefix("/app/")  # servido em app/static/
+        ficheiro = RAIZ / "pwa" / i["src"].lstrip("/")  # servido pelo Caddy (Fase 10)
         assert ficheiro.is_file(), i["src"]

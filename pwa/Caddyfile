@@ -1,0 +1,37 @@
+# Caddy à frente do Streamlit (Fase 10), no mesmo contentor.
+# O Railway termina o HTTPS e entrega o pedido em HTTP na porta $PORT; por isso, sem HTTPS
+# automático aqui. Sem registo de acessos (os endereços pedidos podem ter tokens).
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:{$PORT:8080} {
+	header {
+		# Só este domínio: sem includeSubDomains nem preload (decisão do José, 11/11/2026).
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Os componentes do Streamlit usam iframes da mesma origem.
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+	# Sem Content-Security-Policy no MVP: o Streamlit usa scripts e estilos em linha.
+
+	# Ficheiros da PWA, na raiz do site (pwa/ no repositório, /srv/pwa na imagem).
+	@pwa path /manifest.webmanifest /apple-touch-icon.png /favicon.ico /icones/*
+	handle @pwa {
+		root * /srv/pwa
+		header /manifest.webmanifest Content-Type "application/manifest+json"
+		header Cache-Control "public, max-age=86400"
+		encode gzip
+		file_server
+	}
+
+	# Tudo o resto para o Streamlit, incluindo os websockets (/_stcore/stream) e a
+	# verificação de saúde (/_stcore/health).
+	handle {
+		reverse_proxy 127.0.0.1:8501
+	}
+}

@@ -1,0 +1,32 @@
+# O que nunca entra na imagem Docker (Fase 10). O Dockerfile só copia pastas escolhidas;
+# esta lista é a segunda barreira, sobretudo para os segredos.
+
+# Segredos e ambiente local
+.env
+.env.*
+**/.env
+.streamlit/secrets.toml
+.venv/
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentação (incluindo docs/privado/), testes e saídas
+docs/
+tests/
+saidas/
+exemplos/
+scripts/
+
+# Git, editores e caches
+.git/
+.github/
+.claude/
+.vscode/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Fotografias originais (a app só usa as webp convertidas)
+assets/img/originais/
