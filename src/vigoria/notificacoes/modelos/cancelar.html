@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>$titulo · Vigoria</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+  body { margin: 0; background: $cor_fundo; color: $cor_texto;
+         font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 34rem; margin: 0 auto; padding: 2rem 1rem; }
+  .marca { color: $cor_principal_profundo; font-weight: 700; font-size: 1.3rem; }
+  .cartao { background: $cor_cartao; border: 1px solid $cor_borda; border-radius: 12px;
+            padding: 1.5rem; margin-top: 1rem; }
+  h1 { color: $cor_principal_profundo; font-size: 1.6rem; margin: 0 0 1rem; }
+  p { margin: 0 0 1rem; }
+  button { width: 100%; min-height: 52px; border: 0; border-radius: 10px; cursor: pointer;
+           background: $cor_principal; color: $cor_branco; font: inherit; font-weight: 700; }
+  button:focus-visible, a:focus-visible { outline: 3px solid $cor_principal_profundo;
+                                         outline-offset: 2px; }
+  a { color: $cor_principal; }
+</style>
+</head>
+<body>
+<main>
+  <div class="marca">Vigoria</div>
+  <div class="cartao">
+    <h1>$titulo</h1>
+    $conteudo
+  </div>
+</main>
+</body>
+</html>

@@ -33,7 +33,7 @@ from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 from vigoria.modelos.registo import ValoresRegisto
 from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
 from vigoria.notificacoes.cancelamento import cancelar_lembretes
-from vigoria.notificacoes.token import gerar_token
+from vigoria.notificacoes.token import EstadoToken, gerar_token
 from vigoria.regras.lembretes import Lembrete
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -578,13 +578,20 @@ def test_cancelar_lembretes_pela_ligacao(fabrica: sessionmaker[Session]) -> None
     with fabrica.begin() as s:
         a = _conta(s, A)
         b = _conta(s, B)
-    token_a = gerar_token(a, A.sub, SEGREDO)
+    agora = datetime(2026, 11, 12, 9, 7, tzinfo=UTC)
+    token_a = gerar_token(a, A.sub, SEGREDO, agora)
+    invalido = EstadoToken.INVALIDO
     with fabrica.begin() as s:
-        assert not cancelar_lembretes(s, token_a, None)  # sem segredo configurado
-        assert not cancelar_lembretes(s, gerar_token(b, A.sub, SEGREDO), SEGREDO)
-        assert not cancelar_lembretes(s, "999." + token_a.split(".")[1], SEGREDO)
+        assert cancelar_lembretes(s, token_a, None, agora) is invalido  # sem segredo
+        assert cancelar_lembretes(s, gerar_token(b, A.sub, SEGREDO, agora), SEGREDO, agora) is (
+            invalido
+        )
+        _, expira, assinatura = token_a.split(".")
+        assert cancelar_lembretes(s, f"999.{expira}.{assinatura}", SEGREDO, agora) is invalido
+        depois = agora + timedelta(days=91)
+        assert cancelar_lembretes(s, token_a, SEGREDO, depois) is EstadoToken.EXPIRADO
         assert r.obter_preferencias(s, a).lembretes_email is True
-        assert cancelar_lembretes(s, token_a, SEGREDO)
+        assert cancelar_lembretes(s, token_a, SEGREDO, agora) is EstadoToken.VALIDO
     with fabrica.begin() as s:
         assert r.obter_preferencias(s, a) == r.Preferencias(lembretes_email=False)
         assert r.obter_preferencias(s, b).lembretes_email is True  # B não muda

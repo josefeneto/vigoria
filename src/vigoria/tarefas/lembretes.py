@@ -1,6 +1,7 @@
 """Tarefa diária dos lembretes por email (Fase 8): python -m vigoria.tarefas.lembretes.
 
-Corre no GitHub Actions (.github/workflows/lembretes.yml), uma vez por dia. Para cada pessoa
+Corre uma vez por dia como serviço cron do Railway (produção, Fase 10B; docs/GUIA_PRODUCAO.md)
+e, só à mão, no GitHub Actions (.github/workflows/lembretes.yml, demo). Para cada pessoa
 com acompanhamento e lembretes ligados, e na lista de convidados, decide pelas regras L1 a L5
 (regras/lembretes.py) se lhe cabe um lembrete hoje. Grava o envio e só confirma a gravação
 se o Brevo aceitar o email; se falhar, tenta de novo no dia seguinte.
@@ -46,6 +47,12 @@ class Resumo(BaseModel):
     enviados: int = 0
     ja_enviados: int = 0  # outra execução gravou-o entretanto
     falhados: int = 0
+
+
+def _um_clique(config: Configuracao) -> bool:
+    """Cancelamento num clique (RFC 8058) só em produção, onde o Caddy encaminha /cancelar
+    para o serviço que aceita o POST; na demo, a ligação abre a página Streamlit."""
+    return config.ambiente == "producao"
 
 
 def _faltas(config: Configuracao) -> list[str]:
@@ -109,7 +116,8 @@ def executar(
             d.email,
             lembrete.numero,
             config.app_url,
-            gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes),
+            gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes, agora),
+            um_clique=_um_clique(config),
         )
         try:
             # Grava e envia na mesma transação: se o Brevo falhar, a gravação é desfeita.
@@ -146,6 +154,7 @@ def testar_envio(
     *,
     utilizador_id: int | None,
     simular: bool,
+    agora: datetime | None = None,
     enviar: Enviar = brevo.enviar,
     escrever: Callable[[str], None] = print,
 ) -> int:
@@ -171,6 +180,7 @@ def testar_envio(
         escrever(f"Teste: há {len(destinatarios)} pessoas ({ids}); escolha uma com --utilizador.")
         return 2
     (d,) = destinatarios
+    agora = datetime.now(UTC) if agora is None else agora
     if simular:
         escrever(f"Teste: utilizador {d.utilizador_id}, lembrete de exemplo: simulado")
         return 0
@@ -179,7 +189,8 @@ def testar_envio(
         d.email,
         1,
         config.app_url,
-        gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes),
+        gerar_token(d.utilizador_id, d.sub, config.vigoria_segredo_lembretes, agora),
+        um_clique=_um_clique(config),
     )
     try:
         enviar(
@@ -227,7 +238,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     motor = criar_motor(config.database_url)
     try:
-        migrar(motor)
+        # Fora do ambiente local, as migrações são do serviço web (arranque); o cron não as
+        # corre, para não haver duas a mexer na mesma base ao mesmo tempo (Fase 10B).
+        if config.ambiente == "local":
+            migrar(motor)
         if args.testar_envio:
             return testar_envio(
                 fabrica_sessoes(motor),

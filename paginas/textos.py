@@ -11,6 +11,7 @@ from vigoria.dados.repositorios import Recusa
 from vigoria.interface.erros import TipoErroUtilizador
 from vigoria.interface.passos import MINUTOS_QUESTIONARIO, CodigoErro, ErroCampo
 from vigoria.modelos.registo import Comparacao
+from vigoria.notificacoes.lembrete import textos_cancelar
 from vigoria.regras.calculos import ClasseImc
 from vigoria.regras.elegibilidade import Modo
 
@@ -780,20 +781,17 @@ ROTULOS_QUESTIONARIO_FREQUENCIA = "Com que frequência quer registar o seu progr
 CONTA_ACOMPANHAMENTO_GUARDADO = "As suas preferências foram guardadas."
 CONTA_LEMBRETES_EMAIL = "Enviar-me um lembrete por email quando faltar um registo"
 
-# Deixar de receber lembretes (ligação dos emails, sem sessão iniciada; Fase 8)
-CANCELAR_TITULO = "Lembretes por email"
-CANCELAR_PERGUNTA = (
-    "Quer deixar de receber os lembretes por email da Vigoria? O seu plano e os seus "
-    "registos ficam como estão."
-)
-CANCELAR_BOTAO = "Deixar de receber lembretes"
-CANCELAR_FEITO = "Pronto: já não vai receber lembretes por email."
-CANCELAR_REATIVAR = "Pode voltar a ativá-los em «A minha conta»."
-CANCELAR_INVALIDA = (
-    "Esta ligação não é válida ou já não corresponde a nenhuma conta. Se ainda recebe "
-    "lembretes, pode desativá-los em «A minha conta»."
-)
-CANCELAR_INICIO = "Ir para o Início"
+# Deixar de receber lembretes (ligação dos emails, sem sessão iniciada; Fase 8). Os textos
+# estão em notificacoes/modelos/cancelar.yaml, partilhados com o serviço de produção (Fase 10).
+_CANCELAR = textos_cancelar()
+CANCELAR_TITULO = _CANCELAR.titulo
+CANCELAR_PERGUNTA = _CANCELAR.pergunta
+CANCELAR_BOTAO = _CANCELAR.botao
+CANCELAR_FEITO = _CANCELAR.feito
+CANCELAR_REATIVAR = _CANCELAR.reativar
+CANCELAR_INVALIDA = _CANCELAR.invalida
+CANCELAR_EXPIRADA = _CANCELAR.expirada
+CANCELAR_INICIO = _CANCELAR.inicio
 
 
 def periodo_de(primeira: int, ultima: int) -> str:

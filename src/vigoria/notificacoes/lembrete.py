@@ -14,9 +14,13 @@ import yaml
 from pydantic import BaseModel, ConfigDict
 
 from vigoria.notificacoes.brevo import Email
+from vigoria.notificacoes.token import VALIDADE
 
 CAMINHO_PROGRESSO = "progresso"  # paginas/progresso.py
-CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py)
+CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py): demo e local
+# Produção (Fase 10): o serviço Starlette por trás do Caddy (vigoria/web/cancelar.py), que
+# aceita o POST do cancelamento num clique (RFC 8058).
+CAMINHO_CANCELAR_UM_CLIQUE = "cancelar"
 
 # Paleta da marca (paginas/estilos.py, CORES; um teste confirma que são iguais).
 CORES = {
@@ -48,20 +52,53 @@ def _ficheiro(nome: str) -> str:
     return files("vigoria.notificacoes").joinpath("modelos", nome).read_text(encoding="utf-8")
 
 
+class TextosCancelar(BaseModel):
+    """Página «Deixar de receber lembretes» (modelos/cancelar.yaml)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    titulo: str
+    pergunta: str
+    botao: str
+    feito: str
+    reativar: str
+    invalida: str
+    expirada: str
+    inicio: str
+
+
 @cache
 def textos_lembrete() -> TextosLembrete:
     return TextosLembrete.model_validate(yaml.safe_load(_ficheiro("lembrete.yaml")))
 
 
-def url_cancelar(app_url: str, token: str) -> str:
-    return f"{app_url.rstrip('/')}/{CAMINHO_CANCELAR}?t={quote(token, safe='')}"
+@cache
+def textos_cancelar() -> TextosCancelar:
+    dados = yaml.safe_load(_ficheiro("cancelar.yaml"))
+    dados["expirada"] = dados["expirada"].format(dias=VALIDADE.days)
+    return TextosCancelar.model_validate(dados)
 
 
-def email_lembrete(para: str, numero: int, app_url: str, token: str) -> Email:
-    """O lembrete número 1 ou 2 (o segundo diz que é o último)."""
+def modelo_cancelar() -> str:
+    return _ficheiro("cancelar.html")
+
+
+def url_cancelar(app_url: str, token: str, *, um_clique: bool = False) -> str:
+    caminho = CAMINHO_CANCELAR_UM_CLIQUE if um_clique else CAMINHO_CANCELAR
+    return f"{app_url.rstrip('/')}/{caminho}?t={quote(token, safe='')}"
+
+
+def email_lembrete(
+    para: str, numero: int, app_url: str, token: str, *, um_clique: bool = False
+) -> Email:
+    """O lembrete número 1 ou 2 (o segundo diz que é o último).
+
+    Com `um_clique` (produção), a ligação vai para o serviço que aceita o POST e o email leva
+    List-Unsubscribe-Post (RFC 8058): o Gmail e outros mostram «Anular subscrição».
+    """
     t = textos_lembrete()
     base = app_url.rstrip("/")
-    cancelar = url_cancelar(base, token)
+    cancelar = url_cancelar(base, token, um_clique=um_clique)
     ligacoes = {
         "url_registo": f"{base}/{CAMINHO_PROGRESSO}",
         "url_cancelar": cancelar,
@@ -76,12 +113,7 @@ def email_lembrete(para: str, numero: int, app_url: str, token: str) -> Email:
     corpo_html = Template(_ficheiro("lembrete.html")).substitute(
         seguro, ultimo_html=paragrafo, **{f"cor_{k}": v for k, v in CORES.items()}
     )
-    return Email(
-        para=para,
-        assunto=t.assunto,
-        html=corpo_html,
-        texto=texto,
-        # Só a ligação https (abre a página de confirmação). Sem List-Unsubscribe-Post: a app
-        # ainda não aceita o pedido POST do cancelamento num clique (RFC 8058, Fase 10).
-        cabecalhos={"List-Unsubscribe": f"<{cancelar}>"},
-    )
+    cabecalhos = {"List-Unsubscribe": f"<{cancelar}>"}
+    if um_clique:
+        cabecalhos["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    return Email(para=para, assunto=t.assunto, html=corpo_html, texto=texto, cabecalhos=cabecalhos)

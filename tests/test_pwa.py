@@ -123,3 +123,12 @@ def test_script_de_arranque_so_escuta_em_localhost() -> None:
     assert "python -m vigoria.arranque" in script
     assert "--server.address 127.0.0.1" in script and "--server.port 8501" in script
     assert "wait -n" in script
+
+
+def test_cancelar_vai_para_o_servico_starlette_sem_registo_de_acessos() -> None:
+    """Fase 10B: /cancelar (RFC 8058) para o uvicorn; o endereço leva o token."""
+    assert "handle /cancelar {\n\t\treverse_proxy 127.0.0.1:8001" in CADDYFILE
+    script = (RAIZ / "docker" / "arrancar.sh").read_text(encoding="utf-8")
+    assert "vigoria.web.cancelar:criar_app" in script
+    assert "--host 127.0.0.1" in script and "--port 8001" in script
+    assert "--no-access-log" in script

@@ -48,8 +48,7 @@ def test_pedido_ao_brevo() -> None:
     assert corpo["headers"] == {
         "List-Unsubscribe": "<https://vigoria.exemplo/cancelar-lembretes?t=12.assinatura>"
     }
-    # Sem cancelamento num clique até a app aceitar o POST (Fase 10).
-    assert "List-Unsubscribe-Post" not in corpo["headers"]
+    # Os cabeçalhos passam tal como vêm do email (o List-Unsubscribe-Post só em produção).
 
 
 @pytest.mark.parametrize(

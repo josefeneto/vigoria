@@ -3,6 +3,7 @@ simulado: nenhum envio real."""
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
@@ -143,7 +144,11 @@ def test_recebe_quem_tem_tudo_ligado(fabrica: sessionmaker[Session]) -> None:
     (email,) = envio.emails
     assert email.para == "pessoa1@exemplo.pt"
     token = email.cabecalhos["List-Unsubscribe"].split("?t=")[1].rstrip(">")
-    assert token_valido(token, "auth0|1", SecretStr(SEGREDO))
+    enviado = datetime(DIA_DO_PRIMEIRO.year, DIA_DO_PRIMEIRO.month, DIA_DO_PRIMEIRO.day, tzinfo=UTC)
+    assert token_valido(token, "auth0|1", SecretStr(SEGREDO), enviado + timedelta(days=89))
+    assert not token_valido(token, "auth0|1", SecretStr(SEGREDO), enviado + timedelta(days=91))
+    assert "/cancelar-lembretes?t=" in email.cabecalhos["List-Unsubscribe"]  # local: Streamlit
+    assert "List-Unsubscribe-Post" not in email.cabecalhos
     with fabrica.begin() as s:
         assert r.lembretes_enviados(s, uid, plano_id)[0].semanas == (1, 1)
     assert f"utilizador {uid}, plano {plano_id}, semanas 1 a 1, lembrete 1: enviado" in linhas
@@ -376,7 +381,7 @@ def test_teste_ligacao_de_cancelar_funciona(fabrica: sessionmaker[Session]) -> N
         uid, _ = _pessoa(s, 1)
     _, envio, _ = _testar(fabrica)
     token = envio.emails[0].cabecalhos["List-Unsubscribe"].split("?t=")[1].rstrip(">")
-    assert token_valido(token, "auth0|1", SecretStr(SEGREDO))
+    assert token_valido(token, "auth0|1", SecretStr(SEGREDO), datetime.now(UTC))
 
 
 def test_teste_so_para_convidados_com_lembretes_ligados(fabrica: sessionmaker[Session]) -> None:
@@ -418,3 +423,36 @@ def test_teste_falhado_da_codigo_1(fabrica: sessionmaker[Session]) -> None:
 def test_utilizador_so_com_testar_envio(ambiente: None) -> None:
     with pytest.raises(SystemExit):
         lembretes.main(["--utilizador", "1"])
+
+
+# ---------------------------------------------------------------- Produção (Fase 10B)
+
+
+def test_em_producao_cancelamento_num_clique(fabrica: sessionmaker[Session]) -> None:
+    """RFC 8058: a ligação vai para /cancelar (serviço que aceita o POST) e o email leva o
+    List-Unsubscribe-Post."""
+    with fabrica.begin() as s:
+        _pessoa(s, 1)
+    _, envio, _ = _correr(fabrica, DIA_DO_PRIMEIRO, config=_config(ambiente="producao"))
+    (email,) = envio.emails
+    assert email.cabecalhos["List-Unsubscribe"].startswith("<https://vigoria.exemplo/cancelar?t=")
+    assert email.cabecalhos["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    assert "https://vigoria.exemplo/cancelar?t=" in email.texto
+
+
+@pytest.mark.parametrize(("ambiente", "migra"), [("local", True), ("producao", False)])
+def test_so_migra_em_local(
+    ambiente: str, migra: bool, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """No Railway, as migrações são do serviço web; o cron não as corre (Fase 10B)."""
+    url = f"sqlite:///{tmp_path / 'v.db'}"
+    motor = criar_motor(url)
+    migrar(motor)
+    motor.dispose()
+    chamadas: list[object] = []
+    monkeypatch.setattr(lembretes, "migrar", chamadas.append)
+    monkeypatch.setattr(
+        lembretes, "obter_configuracao", lambda: _config(ambiente=ambiente, database_url=url)
+    )
+    assert lembretes.main(["--simular"]) == 0
+    assert bool(chamadas) is migra

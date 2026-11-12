@@ -2,6 +2,7 @@
 email, sem sessão iniciada, e o interruptor em «A minha conta»."""
 
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -80,7 +81,7 @@ def _botoes(at: AppTest) -> list[Any]:
 
 def test_abrir_a_ligacao_nao_desliga_so_o_botao(bd: str) -> None:
     uid = _criar_conta(bd)
-    at = _abrir(gerar_token(uid, "auth0|ana", SecretStr(SEGREDO)))
+    at = _abrir(gerar_token(uid, "auth0|ana", SecretStr(SEGREDO), datetime.now(UTC)))
     assert _preferencias(bd, uid).lembretes_email is True  # abrir não chega
     (botao,) = [b for b in at.button if b.label == "Deixar de receber lembretes"]
     botao.click().run()
@@ -89,7 +90,7 @@ def test_abrir_a_ligacao_nao_desliga_so_o_botao(bd: str) -> None:
     assert _preferencias(bd, uid) == r.Preferencias(lembretes_email=False)
 
 
-@pytest.mark.parametrize("token", [None, "", "abc", "1.assinatura-errada"])
+@pytest.mark.parametrize("token", [None, "", "abc", "1.assinatura-errada", "1.9999999999.errada"])
 def test_ligacao_invalida(bd: str, token: str | None) -> None:
     _criar_conta(bd)
     at = _abrir(token)
@@ -102,9 +103,18 @@ def test_ligacao_invalida(bd: str, token: str | None) -> None:
 
 def test_ligacao_de_outra_conta_nao_serve(bd: str) -> None:
     uid = _criar_conta(bd)
-    at = _abrir(gerar_token(uid, "auth0|outra", SecretStr(SEGREDO)))
+    at = _abrir(gerar_token(uid, "auth0|outra", SecretStr(SEGREDO), datetime.now(UTC)))
     _botoes(at)[0].click().run()
     assert any("não é válida" in w.value for w in at.warning)
+    assert _preferencias(bd, uid).lembretes_email is True
+
+
+def test_ligacao_expirada(bd: str) -> None:
+    uid = _criar_conta(bd)
+    antiga = datetime.now(UTC) - timedelta(days=91)
+    at = _abrir(gerar_token(uid, "auth0|ana", SecretStr(SEGREDO), antiga))
+    _botoes(at)[0].click().run()
+    assert any("expirou" in w.value and "90 dias" in w.value for w in at.warning)
     assert _preferencias(bd, uid).lembretes_email is True
 
 

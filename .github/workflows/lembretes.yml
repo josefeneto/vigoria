@@ -1,18 +1,15 @@
-# Lembretes de registo por email (Fase 8): uma vez por dia, às 9h07 de Lisboa.
+# Lembretes de registo por email (Fase 8) — SÓ EXECUÇÃO MANUAL, para a demo.
 #
-# Hora: o GitHub lê o cron em UTC, salvo com «timezone». Com Europe/Lisbon, a mudança de hora
-# (verão/inverno) fica a cargo do GitHub. Os 7 minutos evitam a hora certa, em que o GitHub
-# tem mais atrasos. Se uma execução se atrasar ou falhar, a do dia seguinte apanha os
-# lembretes em falta (até 7 dias depois do prazo, REGRAS_DOMINIO §9.2, L3).
+# Fase 10B (12/11/2026): o envio diário passou para o serviço cron do Railway
+# (docs/GUIA_PRODUCAO.md). Este workflow ficou só com «Run workflow» (workflow_dispatch) para
+# testar a demo à mão (simular, envio de teste), com os segredos da demo. Sem «schedule», o
+# GitHub deixa de tratar emails sem ninguém o pedir e não há dois envios diários.
 #
 # Os registos deste workflow podem ser públicos: a tarefa só escreve identificadores técnicos,
 # nunca emails nem dados de saúde.
-name: Lembretes por email
+name: Lembretes por email (manual, demo)
 
 on:
-  schedule:
-    - cron: "7 9 * * *"
-      timezone: "Europe/Lisbon"
   workflow_dispatch:
     inputs:
       simular:

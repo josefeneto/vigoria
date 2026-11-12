@@ -64,6 +64,17 @@ def test_ligacoes_no_html_e_no_texto(numero: int) -> None:
     assert "<img" not in e.html  # sem imagens: o Streamlit Cloud não as serve a clientes de email
 
 
+def test_um_clique_em_producao(numero: int) -> None:
+    """RFC 8058: a ligação vai para /cancelar e o email declara o POST de um clique."""
+    e = email_lembrete("ana@exemplo.pt", numero, APP_URL, TOKEN, um_clique=True)
+    cancelar = f"{APP_URL}/cancelar?t={TOKEN}"
+    assert _visivel(e.html).ligacoes[-1] == cancelar and cancelar in e.texto
+    assert e.cabecalhos == {
+        "List-Unsubscribe": f"<{cancelar}>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+
+
 def test_so_o_segundo_diz_que_e_o_ultimo() -> None:
     ultimo = textos_lembrete().ultimo
     assert ultimo not in _todo_o_texto(1)

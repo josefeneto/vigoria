@@ -29,6 +29,11 @@
 		file_server
 	}
 
+	# Cancelamento dos lembretes num clique (RFC 8058, Fase 10B): serviço Starlette.
+	handle /cancelar {
+		reverse_proxy 127.0.0.1:8001
+	}
+
 	# Tudo o resto para o Streamlit, incluindo os websockets (/_stcore/stream) e a
 	# verificação de saúde (/_stcore/health).
 	handle {
