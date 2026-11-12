@@ -105,6 +105,17 @@ class RegistoProgresso(Base):
     )
 
 
+class GeracaoPlano(Base):
+    """Cada pedido de geração de um plano (Fase 10D): conta para o limite por dia, mesmo que
+    a geração falhe ou o plano seja apagado depois. Só o id técnico e a hora."""
+
+    __tablename__ = "geracao_plano"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    utilizador_id: Mapped[int] = _dono()
+    pedido_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+
+
 class LembreteEnviado(Base):
     """Um lembrete por email já enviado: nunca se repete o mesmo número no mesmo período."""
 

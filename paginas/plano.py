@@ -403,4 +403,4 @@ desenhar(plano)
 comum.avisos(plano, chave=desenhar.__name__)
 
 st.page_link(comum.PAGINA_QUESTIONARIO, label=t.VOLTAR_QUESTIONARIO, icon=":material/arrow_back:")
-st.caption(r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt))
+st.caption(r["gerado_por"].format(versao=plano.versao_prompt))

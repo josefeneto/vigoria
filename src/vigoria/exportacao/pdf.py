@@ -16,7 +16,7 @@ Sem dados identificativos: nem nome nem email, só «O seu plano Vigoria» e a d
 import io
 import re
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from importlib.resources import as_file, files
@@ -199,6 +199,9 @@ class _Documento(FPDF):
     def __init__(self, rodape: str) -> None:
         super().__init__(format="A4", unit="mm")
         self._rodape = rodape
+        # Títulos à espera do primeiro bloco: só se escrevem quando se sabe que esse bloco
+        # (ou o seu primeiro pedaço) cabe com eles na mesma página (Fase 10D).
+        self._titulos: list[tuple[Callable[[], None], float]] = []
         self.set_margins(MARGEM, MARGEM, MARGEM)
         self.set_auto_page_break(auto=True, margin=MARGEM + 4)
         self.set_title(carregar_avisos().rotulos.plano["pdf_titulo"])
@@ -244,31 +247,72 @@ class _Documento(FPDF):
         """Título de secção: Fraunces, petróleo profundo, com um filete por baixo.
 
         `espaco`: altura mínima (mm) que tem de sobrar por baixo; se não sobrar, página nova.
+        Além disso, o título só é escrito com o primeiro bloco a seguir (`_antes_do_bloco`):
+        nunca fica sozinho no fundo da página.
         """
         if nova_pagina or self.get_y() > self.fundo - espaco:
             self.add_page()
-        else:
-            self.ln(4)
         self.set_font("Fraunces", "B", 19)
-        self.set_text_color(*_rgb("principal_profundo"))
-        self.multi_cell(0, 9, _limpo(texto), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.set_draw_color(*_rgb("cobre"))
-        self.set_line_width(0.6)
-        self.line(MARGEM, self.get_y() + 1, MARGEM + 24, self.get_y() + 1)
-        self.ln(5)
-        self.set_text_color(*_rgb("texto"))
+        altura = 4 + self._altura_texto(texto, 9) + 5
+
+        def desenhar() -> None:
+            if not self._no_topo():
+                self.ln(4)
+            self.set_font("Fraunces", "B", 19)
+            self.set_text_color(*_rgb("principal_profundo"))
+            self.multi_cell(0, 9, _limpo(texto), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.set_draw_color(*_rgb("cobre"))
+            self.set_line_width(0.6)
+            self.line(MARGEM, self.get_y() + 1, MARGEM + 24, self.get_y() + 1)
+            self.ln(5)
+            self.set_text_color(*_rgb("texto"))
+
+        self._titulos.append((desenhar, altura))
 
     def subtitulo(self, texto: str, *, espaco: float = 50) -> None:
         if self.get_y() > self.fundo - espaco:  # com espaço para, pelo menos, o primeiro bloco
             self.add_page()
-        self.ln(2)
         self.set_font("Fraunces", "", 14)
-        self.set_text_color(*_rgb("principal_profundo"))
-        self.multi_cell(0, 7, _limpo(texto), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        self.ln(1.5)
-        self.set_text_color(*_rgb("texto"))
+        altura = 2 + self._altura_texto(texto, 7) + 1.5
+
+        def desenhar() -> None:
+            self.ln(2)
+            self.set_font("Fraunces", "", 14)
+            self.set_text_color(*_rgb("principal_profundo"))
+            self.multi_cell(0, 7, _limpo(texto), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            self.ln(1.5)
+            self.set_text_color(*_rgb("texto"))
+
+        self._titulos.append((desenhar, altura))
+
+    def _no_topo(self) -> bool:
+        return self.get_y() <= TOPO_PAGINA + 1
+
+    def _altura_texto(self, texto: str, linha: float, largura: float = 0) -> float:
+        """Altura de um texto na letra atual (sem o escrever)."""
+        return float(
+            self.multi_cell(
+                largura, linha, _limpo(texto), dry_run=True, output=MethodReturnValue.HEIGHT
+            )
+        )
+
+    def _antes_do_bloco(self, altura: float) -> None:
+        """Escreve os títulos pendentes na mesma página que o primeiro pedaço do bloco que
+        vem a seguir (`altura`, em mm); se não couberem juntos, passam para a página seguinte.
+        Chamado no início de cada bloco, antes da verificação de página do próprio bloco."""
+        if not self._titulos:
+            return
+        titulos = sum(a for _, a in self._titulos)
+        if self.get_y() + titulos + altura > self.fundo and not self._no_topo():
+            self.add_page()
+        pendentes, self._titulos = self._titulos, []
+        for desenhar, _ in pendentes:
+            desenhar()
 
     def paragrafo(self, texto: str, *, estilo: str = "", cor: str = "texto") -> None:
+        self.set_font("Atkinson", estilo, TEXTO_PT)
+        # Um parágrafo pode partir-se: com o título, chegam as primeiras 3 linhas.
+        self._antes_do_bloco(min(self._altura_texto(texto, LINHA), 3 * LINHA))
         self.set_font("Atkinson", estilo, TEXTO_PT)
         self.set_text_color(*_rgb(cor))
         self.multi_cell(0, LINHA, _limpo(texto), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -277,6 +321,10 @@ class _Documento(FPDF):
 
     def rotulo(self, rotulo: str, texto: str) -> None:
         """«Rótulo» a negrito numa linha e o texto por baixo (lê-se bem impresso)."""
+        self.set_font("Atkinson", "B", TEXTO_PT)
+        altura = self._altura_texto(rotulo, LINHA)
+        self.set_font("Atkinson", "", TEXTO_PT)
+        self._antes_do_bloco(altura + self._altura_texto(texto, LINHA) + 2)
         with self.unbreakable() as doc:
             doc.set_font("Atkinson", "B", TEXTO_PT)
             doc.multi_cell(0, LINHA, _limpo(rotulo), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -284,6 +332,10 @@ class _Documento(FPDF):
 
     def lista(self, itens: list[str], *, numerada: bool = False) -> None:
         self.set_font("Atkinson", "", TEXTO_PT)
+        if itens:
+            primeiro = self._altura_texto(itens[0], LINHA, self.epw - 7)
+            self._antes_do_bloco(min(primeiro, 3 * LINHA) + 1)
+            self.set_font("Atkinson", "", TEXTO_PT)
         for i, item in enumerate(itens, start=1):
             marca = f"{i}." if numerada else "•"
             y = self.get_y()
@@ -314,7 +366,9 @@ class _Documento(FPDF):
 
     def tabela(self, cabecalho: list[str], linhas: list[list[str]], larguras: list[int]) -> None:
         """Tabela nunca partida entre páginas: se não couber, passa inteira para a seguinte."""
-        if self.get_y() + self._altura_tabela([cabecalho, *linhas], larguras) > self.fundo:
+        altura = self._altura_tabela([cabecalho, *linhas], larguras)
+        self._antes_do_bloco(altura)
+        if self.get_y() + altura > self.fundo:
             self.add_page()
         self.set_font("Atkinson", "", TEXTO_PT)
         self.set_draw_color(*_rgb("borda"))
@@ -400,6 +454,8 @@ class _Documento(FPDF):
         Cada linha da grelha fica inteira numa página."""
         largura = (self.epw - INTERVALO * (colunas - 1)) / colunas
         recuo = ICONE_PEQUENO + 2.5
+        if itens:
+            self._antes_do_bloco(self._altura_fila(itens[:colunas], largura - recuo))
         automatica = self.auto_page_break
         self.set_auto_page_break(False)
         for i in range(0, len(itens), colunas):
@@ -455,6 +511,8 @@ class _Documento(FPDF):
     def cartoes(self, cartoes: Sequence[Cartao], colunas: int = 2) -> None:
         """Cartões em grelha; os da mesma linha com a mesma altura; nunca partidos."""
         largura = (self.epw - INTERVALO * (colunas - 1)) / colunas
+        if cartoes:
+            self._antes_do_bloco(max(self._altura_cartao(c, largura) for c in cartoes[:colunas]))
         automatica = self.auto_page_break
         self.set_auto_page_break(False)
         for i in range(0, len(cartoes), colunas):
@@ -473,6 +531,7 @@ class _Documento(FPDF):
         """Faixa a toda a largura em névoa (abre a página de cada fase)."""
         interior = self.epw - 2 * FOLGA - 2
         altura = self.altura(textos, interior) + 2 * FOLGA - 1
+        self._antes_do_bloco(altura)
         y = self.get_y()
         self.set_fill_color(*_rgb("nevoa"))
         self.rect(MARGEM, y, self.epw, altura, style="F", round_corners=True)
@@ -486,6 +545,7 @@ class _Documento(FPDF):
         página, as duas colunas ficam com alturas parecidas (sobra espaço por baixo)."""
         largura = (self.epw - INTERVALO * 1.4) / 2
         alturas = [self.altura(b, largura) for b in blocos]
+        self._antes_do_bloco(alturas[0] if alturas else 0)
         inicio = self.get_y()
         lugares = _arrumar(alturas, inicio, TOPO_PAGINA, self.fundo)
         ultima = lugares[-1][0] if lugares else 0
@@ -515,6 +575,7 @@ class _Documento(FPDF):
         """Dois blocos curtos, um em cada coluna (p. ex., proteína e hidratação)."""
         largura = (self.epw - INTERVALO * 1.4) / 2
         altura = max(self.altura(esquerda, largura), self.altura(direita, largura))
+        self._antes_do_bloco(altura)
         if self.get_y() + altura > self.fundo:
             self.add_page()
         y = self.get_y()
@@ -533,6 +594,7 @@ class _Documento(FPDF):
         sua caixa (nunca partida).
         """
         alturas = [self._altura_aviso(a) for a in avisos]
+        self._antes_do_bloco(8 + 14 + 10 + (alturas[0] if alturas else 0))
         if self.get_y() + 8 + 14 + 10 + sum(alturas) > self.h - MARGEM - 8:
             self.add_page()
         else:
@@ -870,12 +932,15 @@ def _blocos_parte(titulo: str, parte: ParteOrientacao) -> list[list[Texto]]:
             primeiro.append(Texto(p, depois=2))
         else:
             blocos.append([Texto(p, depois=2)])
-    blocos.insert(0, primeiro)
     if parte.pontos:
         cabeca = [_negrito(parte.titulo_pontos)] if parte.titulo_pontos else []
         pontos = _pontos(parte.pontos)
         blocos.append([*cabeca, *pontos[0]])
         blocos.extend(pontos[1:])
+    if len(primeiro) == 1 and blocos:  # sem introdução: o subtítulo vai com o bloco seguinte
+        blocos[0] = [*primeiro, *blocos[0]]
+    else:
+        blocos.insert(0, primeiro)
     blocos.extend([Texto(n, depois=2)] for n in parte.notas)
     blocos[-1].append(Texto("", depois=2))  # espaço antes da parte seguinte
     return blocos
@@ -923,7 +988,7 @@ def _habitos_e_manutencao(
     blocos.append(
         [
             Texto(
-                r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt),
+                r["gerado_por"].format(versao=plano.versao_prompt),
                 cor="texto_secundario",
             )
         ]
@@ -948,4 +1013,5 @@ def plano_pdf(plano: Plano, criado_em: datetime, idade: int | None = None) -> by
     _alimentacao(pdf, plano, r)
     _habitos_e_manutencao(pdf, plano, idade, r)
     pdf.caixa_avisos(r["avisos"], list(plano.avisos))
+    pdf._antes_do_bloco(0)  # nenhum título por escrever
     return bytes(pdf.output())

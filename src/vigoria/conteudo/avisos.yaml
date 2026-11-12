@@ -199,7 +199,8 @@ rotulos:
     indicadores: O que registar
     notas: Notas para si
     avisos: Avisos importantes
-    gerado_por: "Plano gerado com {provedor} (prompt versão {versao})."
+    # Fase 10D: sem o nome do fornecedor de IA (decisão do José); {versao} é a do prompt.
+    gerado_por: "Versão do plano: {versao}."
     # Depois das 16 semanas (Fase 6B; texto em manutencao.yaml).
     manutencao: Depois das 16 semanas
     manutencao_treino: Treino

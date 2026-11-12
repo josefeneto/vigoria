@@ -8,6 +8,7 @@ import re
 import warnings
 from datetime import UTC, datetime
 from functools import cache
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -360,3 +361,70 @@ def test_tabela_com_linha_no_fim(monkeypatch: pytest.MonkeyPatch) -> None:
     doc.tabela(["Dia", "Atividade"], [["Sábado", "Cardio"], ["Domingo", "Descanso"]], [40, 40])
     fim = doc.get_y() - 4
     assert (doc.l_margin, fim, doc.l_margin + doc.epw, fim) in linhas_desenhadas
+
+
+# ---------------------------------------------------------------- Títulos (Fase 10D)
+
+TAMANHOS_TITULO = (19.0, 14.0)  # titulo() e subtitulo(), em Fraunces
+
+
+@pytest.mark.parametrize("persona", PERSONAS)
+def test_titulo_nunca_fica_sozinho_no_fundo_da_pagina(
+    persona: str, escrito: list[tuple[int, float, str]]
+) -> None:
+    """O que se escreve logo a seguir a um título fica na mesma página que ele."""
+    pdf.plano_pdf(_plano(persona), DATA)
+    for (pagina, tamanho, texto), (seguinte, _, depois) in pairwise(escrito):
+        if tamanho in TAMANHOS_TITULO:
+            assert seguinte == pagina, (persona, texto, depois)
+
+
+def _documento() -> pdf._Documento:
+    doc = pdf._Documento("{pagina}/{total}")
+    doc.add_page()
+    return doc
+
+
+@pytest.mark.parametrize("cabeca", ["titulo", "subtitulo"])
+def test_titulo_acompanha_um_bloco_maior_do_que_o_espaco_minimo(
+    cabeca: str, escrito: list[tuple[int, float, str]]
+) -> None:
+    """Sobram 60 mm (mais do que os 50 mm de espaço mínimo), mas a tabela a seguir tem
+    mais de 60 mm e não se parte: o título vai com ela para a página seguinte."""
+    doc = _documento()
+    doc.set_y(doc.fundo - 60)
+    getattr(doc, cabeca)("Semana-tipo")
+    linhas = [[f"Dia {i}", "texto " * 30] for i in range(8)]
+    doc.tabela(["Dia", "Descrição"], linhas, [30, 144])
+    paginas = {texto: pagina for pagina, _, texto in escrito}
+    assert paginas["Semana-tipo"] == paginas["Dia"] == 2
+
+
+def test_titulo_ja_no_topo_nao_gera_pagina_vazia(escrito: list[tuple[int, float, str]]) -> None:
+    doc = _documento()
+    doc.titulo("Grande")
+    linhas = [[f"Dia {i}", "texto " * 30] for i in range(30)]  # maior do que uma página
+    doc.lista([str(x) for x in linhas])
+    assert next(p for p, _, t in escrito if t == "Grande") == 1
+
+
+def test_titulos_seguidos_ficam_juntos_com_o_primeiro_bloco(
+    escrito: list[tuple[int, float, str]],
+) -> None:
+    doc = _documento()
+    doc.set_y(doc.fundo - 55)
+    doc.titulo("Alimentação")
+    doc.subtitulo("Ajustes às refeições")
+    doc.rotulo("Pequeno-almoço", "texto " * 40)
+    paginas = {texto: pagina for pagina, _, texto in escrito}
+    assert paginas["Alimentação"] == paginas["Ajustes às refeições"] == paginas["Pequeno-almoço"]
+
+
+def test_rodape_com_a_versao_do_plano_sem_o_fornecedor(
+    escrito: list[tuple[int, float, str]],
+) -> None:
+    plano = _plano()
+    pdf.plano_pdf(plano, DATA)
+    textos = [t for _, _, t in escrito]
+    assert f"Versão do plano: {plano.versao_prompt}." in textos
+    assert not any(plano.provedor in t for t in textos)

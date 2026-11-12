@@ -169,7 +169,7 @@ def test_cli_plano_grava_markdown(tmp_path: Path) -> None:
     assert "| Segunda-feira |" in md
     assert "**Pequeno-almoço:**" in md
     assert textos.AVISO_GERAL in md and textos.SINAIS_INTERROMPER in md
-    assert "Plano gerado com falso (prompt versão 7)." in md
+    assert "Versão do plano: 7." in md and "falso" not in md.split("---")[-1]
 
 
 def test_cli_plano_mostra_motivos_quando_falha(tmp_path: Path) -> None:

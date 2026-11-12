@@ -537,6 +537,11 @@ GERAR = "Gerar o meu plano"
 A_PREPARAR = "A preparar o seu plano… pode demorar até 2 minutos."
 # Fase 10C: à espera da vez na fila ou de um limite por minuto do serviço (429).
 A_ESPERA = "Estamos a preparar o seu plano, pode demorar um minuto."
+# Fase 10D: VIGORIA_PLANOS_POR_DIA (dia de Lisboa).
+LIMITE_DIARIO = (
+    "Hoje já chegou ao máximo de planos por dia ({n}). Amanhã pode pedir outro; as suas "
+    "respostas continuam aqui."
+)
 NAO_PODE_GERAR = "Não é possível preparar um plano com estas respostas."
 
 RESUMO_SECOES = {

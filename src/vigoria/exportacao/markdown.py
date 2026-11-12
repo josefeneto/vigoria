@@ -180,5 +180,5 @@ def plano_para_markdown(plano: Plano, idade: int | None = None) -> str:
 
     md += [f"## {r['avisos']}", ""]
     md += [f"> {x}\n" for x in plano.avisos]
-    md += ["---", "", r["gerado_por"].format(provedor=plano.provedor, versao=plano.versao_prompt)]
+    md += ["---", "", r["gerado_por"].format(versao=plano.versao_prompt)]
     return "\n".join(md) + "\n"

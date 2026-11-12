@@ -43,6 +43,7 @@ from vigoria.llm.escolha import criar_provedor
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
 from vigoria.motor.fila import vez_na_fila
+from vigoria.motor.limite_diario import inicio_do_dia, pode_gerar
 from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
 from vigoria.regras import textos as avisos_motor
 from vigoria.regras.textos import numero
@@ -417,7 +418,36 @@ def _decisoes(q: Questionario) -> bool:
     return d.pode_gerar_plano
 
 
+def _limite_atingido() -> bool:
+    """Já chegou ao limite de planos de hoje? Se a base de dados falhar, não bloqueia."""
+    limite = obter_configuracao().vigoria_planos_por_dia
+    if limite == 0:
+        return False
+    try:
+        with sessao.fabrica().begin() as s:
+            feitas = repositorios.geracoes_desde(
+                s, sessao.utilizador_id(), inicio_do_dia(datetime.now(UTC))
+            )
+    except Exception as e:  # sem o conteúdo: só o tipo do erro
+        registo.warning("limite diário não verificado: %s", type(e).__name__)
+        return False
+    return not pode_gerar(feitas, limite)
+
+
+def _registar_pedido() -> None:
+    """Conta o pedido para o limite de hoje (mesmo que a geração falhe depois)."""
+    try:
+        with sessao.fabrica().begin() as s:
+            repositorios.registar_geracao(s, sessao.utilizador_id(), datetime.now(UTC))
+    except Exception as e:
+        registo.warning("pedido de plano não registado: %s", type(e).__name__)
+
+
 def _gerar(q: Questionario) -> None:
+    if _limite_atingido():  # por exemplo, dois separadores abertos
+        st.session_state[A_GERAR] = False
+        st.rerun()
+    _registar_pedido()
     resultado = None
     aviso = st.empty()  # «pode demorar um minuto»: à espera da vez ou depois de um 429
 
@@ -481,7 +511,11 @@ def passo_7() -> None:
     if erro_geracao := st.session_state.get(ERRO_GERACAO):
         st.error(t.ERROS_GERACAO[erro_geracao], title=t.ERRO_GERACAO_TITULO)
     _revisao(q)
-    if _decisoes(q):
+    pode = _decisoes(q)  # desenha as decisões: chamar uma só vez
+    if pode and _limite_atingido():
+        limite = obter_configuracao().vigoria_planos_por_dia
+        st.info(t.LIMITE_DIARIO.format(n=limite), icon=":material/event_busy:")
+    elif pode:
         st.button(
             t.GERAR,
             type="primary",

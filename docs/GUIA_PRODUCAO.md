@@ -153,6 +153,7 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 | `VIGORIA_PROVEDOR_RESERVA` | `groq` |
 | `VIGORIA_MODELO_RESERVA` | `openai/gpt-oss-20b` |
 | `VIGORIA_EMAILS_PERMITIDOS` | os emails do beta, separados por vírgulas |
+| `VIGORIA_PLANOS_POR_DIA` | `3` (opcional: é o valor por omissão; `0` = sem limite) |
 | `VIGORIA_SEGREDO_LEMBRETES` | secreto **novo** (ver abaixo) |
 | `AUTH_REDIRECT_URI` | `https://app.vigoria.pt/oauth2callback` |
 | `AUTH_COOKIE_SECRET` | secreto **novo** (ver abaixo) |
@@ -220,7 +221,9 @@ Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem C
 | `EMAIL_REMETENTE` | `geral@vigoria.pt` |
 | `EMAIL_NOME_REMETENTE` | `Vigoria` |
 
-4. Para testar sem esperar pelo dia seguinte, muda **temporariamente** o *Custom Start Command* para `python -m vigoria.tarefas.lembretes --simular`. Carrega em *Deploy* e lê os registos. Depois volta ao comando normal.
+4. Para testar sem esperar pelo dia seguinte, muda **temporariamente** o *Custom Start Command* e carrega em *Deploy*. Depois de cada teste, volta ao comando normal.
+   - `python -m vigoria.tarefas.lembretes --simular`: mostra nos registos quem receberia que lembrete, sem enviar nada.
+   - `python -m vigoria.tarefas.lembretes --testar-envio`: envia já um lembrete de exemplo. Se houver mais de uma conta, junta `--utilizador <id>`.
 
 Os emails de produção levam o cabeçalho de cancelamento num clique (RFC 8058). O Gmail mostra «Anular subscrição», e o botão desliga os lembretes sem abrir a app.
 
@@ -237,7 +240,43 @@ No Auth0 de produção, em *Branding → Universal Login → Customization Optio
 
 1. Confirma que `VIGORIA_EMAILS_PERMITIDOS` tem só os emails convidados.
 2. Confirma a lista «A CONFIRMAR», abaixo.
-3. Faz os testes manuais (lista na Fase 10D): iPhone, Android, Gmail e cancelamento num clique.
+3. Faz os testes manuais (secção seguinte).
+
+## 9. Testes manuais antes de convidar pessoas
+
+Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falhar (o quê, em que aparelho) e mostra-me.
+
+### 9.1 iPhone (Safari)
+
+1. Abre https://app.vigoria.pt no Safari, entra e confirma que a página inicial aparece em português de Portugal.
+2. *Partilhar → Adicionar ao ecrã principal*. O ícone deve ser o da Vigoria, com fundo petróleo e sem cantos pretos, e o nome «Vigoria».
+3. Abre a app a partir do ícone. Deve abrir em ecrã inteiro, sem a barra do Safari.
+4. Entra com email e palavra-passe. No fim do login, o Auth0 tem de **voltar à app**, e não ficar no Safari. Se ficar no Safari, anota-o: é uma limitação conhecida das apps instaladas no iPhone.
+5. Fecha a app (desliza-a para cima no seletor de apps) e volta a abri-la. A sessão mantém-se, ou pede para entrar outra vez? Anota o que acontece.
+6. Responde ao questionário até ao fim e gera um plano. Confirma que aparece «Estamos a preparar o seu plano…» enquanto espera.
+7. Descarrega o PDF e abre-o: nenhum título sozinho no fundo de uma página, e no fim «Versão do plano: …».
+8. Pede mais planos até ao limite de 3 no mesmo dia. O 4.º deve mostrar «Hoje já chegou ao máximo de planos por dia (3)…».
+
+### 9.2 Android (Chrome)
+
+1. Abre https://app.vigoria.pt no Chrome. Deve aparecer a sugestão «Instalar app», ou então ⋮ → *Adicionar ao ecrã principal* → *Instalar*.
+2. Abre a app instalada: ecrã inteiro, com o ícone e as cores da Vigoria.
+3. Entra com Google e confirma que voltas à app.
+4. Gera um plano e descarrega o PDF.
+
+### 9.3 Lembretes no Gmail
+
+1. Em «A minha conta», confirma que os lembretes estão ligados. Faz o envio de teste do serviço cron (passo 6.4, com `--testar-envio`) ou espera pelo envio das 9h07.
+2. No **Gmail no telemóvel**, abre o email e toca na ligação para a app. Abre no navegador interno do Gmail: confirma que a página carrega e que consegues entrar. Se o login falhar aí, anota-o; o Google bloqueia por vezes o login com Google dentro de navegadores internos.
+3. Confirma que o email **não** tem dados de saúde: nem peso, nem cintura, nem condições.
+
+### 9.4 Cancelamento num clique
+
+1. No Gmail no computador, abre o lembrete. Ao lado do remetente deve aparecer **«Anular subscrição»**. O Gmail pode demorar alguns envios a mostrá-lo a um remetente novo.
+2. Carrega em «Anular subscrição» e confirma.
+3. Em https://app.vigoria.pt, «A minha conta»: os lembretes têm de estar **desligados**.
+4. Volta a ligá-los. Depois, no email, abre a ligação «Deixar de receber lembretes»: deve aparecer só a pergunta e o botão; os lembretes só desligam ao carregar no botão.
+5. Nos registos do Railway, procura as linhas `cancelar: POST, utilizador …, valido`. Não podem ter o email nem o token.
 
 ---
 
@@ -250,7 +289,7 @@ No Auth0 de produção, em *Branding → Universal Login → Customization Optio
 | Zero Data Retention ativo na Groq | consola da Groq | por fazer |
 | DPA da Groq e base da transferência para os EUA | revisão jurídica | por confirmar |
 | Texto do consentimento de saúde em produção (tratamento pela IA nos EUA, sem uso para treino) | `paginas/textos.py`, `CONSENTIMENTO_SAUDE_PRODUCAO` | por confirmar (revisão jurídica) |
-| Fornecedor de IA na política de privacidade e em «Onde ficam os meus dados?» | Fase 10D | por fazer |
+| Nome do fornecedor de IA na política de privacidade e em «Onde ficam os meus dados?» (hoje: «um fornecedor de inteligência artificial», EUA, sem treino) | `paginas/textos_privacidade.py` e `conteudo/ajuda.yaml` | por confirmar (depois da comparação) |
 | Segredos novos em produção (`AUTH_COOKIE_SECRET`, `VIGORIA_SEGREDO_LEMBRETES`) | Railway | por fazer |
 | Bloqueio de IPs do Brevo desligado | Brevo | por fazer |
 

@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from vigoria.contas.entrada import Identidade
 from vigoria.dados.tabelas import (
     Consentimento,
+    GeracaoPlano,
     LembreteEnviado,
     PlanoGuardado,
     QuestionarioGuardado,
@@ -151,6 +152,7 @@ def apagar_utilizador(s: Session, utilizador_id: int) -> str | None:
     sub = utilizador.sub
     # Explícito, além do ON DELETE CASCADE: não depende da configuração da base de dados.
     for tabela in (
+        GeracaoPlano,
         LembreteEnviado,
         RegistoProgresso,
         PlanoGuardado,
@@ -230,6 +232,24 @@ def guardar_plano(
         utilizador.lembretes_email = questionario.respostas.get("lembretes_email", True)
     s.flush()
     return _plano_da_conta(s, linha)
+
+
+def registar_geracao(s: Session, utilizador_id: int, quando: datetime) -> None:
+    """Um pedido de geração de plano (conta para o limite por dia, Fase 10D)."""
+    s.add(GeracaoPlano(utilizador_id=utilizador_id, pedido_em=quando))
+    s.flush()
+
+
+def geracoes_desde(s: Session, utilizador_id: int, desde: datetime) -> int:
+    """Quantos pedidos de geração este utilizador fez desde `desde`."""
+    return int(
+        s.scalar(
+            select(func.count())
+            .select_from(GeracaoPlano)
+            .where(GeracaoPlano.utilizador_id == utilizador_id, GeracaoPlano.pedido_em >= desde)
+        )
+        or 0
+    )
 
 
 def listar_planos(s: Session, utilizador_id: int) -> list[ResumoPlano]:
@@ -553,7 +573,14 @@ def exportar_dados(s: Session, utilizador_id: int) -> dict[str, Any]:
         return {}
 
     def todas[
-        T: (Consentimento, QuestionarioGuardado, PlanoGuardado, RegistoProgresso, LembreteEnviado)
+        T: (
+            Consentimento,
+            QuestionarioGuardado,
+            PlanoGuardado,
+            RegistoProgresso,
+            LembreteEnviado,
+            GeracaoPlano,
+        )
     ](
         tabela: type[T],
     ) -> list[T]:
@@ -572,6 +599,7 @@ def exportar_dados(s: Session, utilizador_id: int) -> dict[str, Any]:
             "frequencia_registo": utilizador.frequencia_registo,
             "lembretes_email": utilizador.lembretes_email,
         },
+        "pedidos_de_plano": [g.pedido_em.isoformat() for g in todas(GeracaoPlano)],
         "consentimentos": [
             {"tipo": c.tipo, "versao_texto": c.versao_texto, "data": c.data.isoformat()}
             for c in todas(Consentimento)

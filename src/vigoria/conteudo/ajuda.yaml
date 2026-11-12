@@ -182,12 +182,16 @@ temas:
           seu email à inteligência artificial.
       - id: dados_onde
         ambientes: [local, producao]
-        # A confirmar na Fase 10 (Railway, região europeia).
+        # Fase 10D. A CONFIRMAR: o nome do fornecedor de IA (depois da comparação) e a
+        # revisão jurídica da transferência para os EUA (docs/GUIA_PRODUCAO.md).
         pergunta: Onde ficam os meus dados?
         resposta: >-
-          Na base de dados da Vigoria, na União Europeia; a política de privacidade explica
-          quem trata os dados e para quê. Ao preparar o plano, não enviamos o seu nome nem o
-          seu email à inteligência artificial.
+          Na União Europeia: a app corre em servidores em Amesterdão e os seus dados ficam
+          numa base de dados em Frankfurt. Para escrever parte do texto do plano, um
+          fornecedor de inteligência artificial, que pode tratar os pedidos nos Estados
+          Unidos, recebe só as respostas necessárias (nunca o seu nome nem o seu email), não
+          as guarda e não as usa para treinar os seus modelos. A política de privacidade
+          explica quem trata os dados e para quê.
 
   - id: contacto
     titulo: Contacto

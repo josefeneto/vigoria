@@ -11,7 +11,7 @@ from functools import lru_cache
 from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, ConfigDict, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -76,6 +76,8 @@ class Configuracao(BaseSettings):
     # O Gemini gratuito pode usar os pedidos para melhorar os produtos da Google e não pode
     # servir utilizadores do EEE: em produção só é aceite com o nível pago (Fase 10C).
     vigoria_gemini_pago: bool = False
+    # Planos que cada pessoa pode pedir por dia (dia de Lisboa); 0 = sem limite (Fase 10D).
+    vigoria_planos_por_dia: Annotated[int, Field(ge=0)] = 3
     gemini_api_key: SecretStr | None = None
     gemini_model: str = ""
     groq_api_key: SecretStr | None = None
