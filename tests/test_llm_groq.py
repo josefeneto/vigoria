@@ -10,7 +10,7 @@ import pytest
 from pydantic import SecretStr
 
 from vigoria.config import Configuracao
-from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM
+from vigoria.llm.base import MAX_TENTATIVAS, PERGUNTA_TESTE, ErroLLM, aviso_de_espera
 from vigoria.llm.groq import ProvedorGroq
 from vigoria.llm.openai_compat import schema_estrito
 from vigoria.llm.simulado import ler_resposta_simulada
@@ -283,3 +283,36 @@ def test_cli_testa_principal_e_reserva() -> None:
     assert "Pedidos por dia (limite): 1000" in reserva
     assert "a funcionar" in reserva
     assert "chave-groq-falsa" not in texto and "chave-gemini-falsa" not in texto
+
+
+# ---------------------------------------------------------------- 429: contagem e aviso (Fase 10C)
+
+
+def test_429_por_minuto_conta_no_registo_e_avisa_quem_espera(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    avisos: list[str] = []
+    provedor, _ = _provedor(_erro(429, POR_MINUTO, "3"), _erro(429, POR_MINUTO), _ok())
+    with (
+        caplog.at_level("WARNING", logger="vigoria.llm"),
+        aviso_de_espera(lambda: avisos.append("x")),
+    ):
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    linhas = [r.getMessage() for r in caplog.records if "429 por minuto" in r.getMessage()]
+    assert len(linhas) == 2 and len(avisos) == 2
+    primeiro = int(linhas[0].split("n.º ")[1].split()[0])
+    assert linhas[1].startswith(f"429 por minuto: n.º {primeiro + 1} desde o arranque")
+    assert "(groq, openai/gpt-oss-120b)" in linhas[0]
+    assert "hipertensão" not in caplog.text  # só metadados
+
+
+def test_sem_aviso_registado_o_429_nao_falha() -> None:
+    provedor, _ = _provedor(_erro(429, POR_MINUTO, "3"), _ok())
+    assert isinstance(provedor.gerar_json("s", PEDIDO, PlanoGerado), PlanoGerado)
+
+
+def test_503_nao_conta_como_429(caplog: pytest.LogCaptureFixture) -> None:
+    provedor, _ = _provedor(httpx.Response(503, json={}), _ok())
+    with caplog.at_level("WARNING", logger="vigoria.llm"):
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert "429 por minuto" not in caplog.text

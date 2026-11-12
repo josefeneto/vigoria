@@ -98,7 +98,7 @@ SO_POR_CONVITE = (
 )
 UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
 # Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.
-VERSAO_CONSENTIMENTO = "2026-11-03"
+VERSAO_CONSENTIMENTO = "2026-11-12"
 ERRO_GUARDAR = (
     "O plano foi preparado, mas não conseguimos guardá-lo na sua conta. Pode vê-lo agora; "
     "se fechar a janela, perde-se. Tente gerá-lo de novo mais tarde."
@@ -244,6 +244,15 @@ ROTULOS_CONSENTIMENTO = {
     ),
     "confirma_maior_idade": "Confirmo que tenho 18 anos ou mais.",
 }
+# Em produção (AMBIENTE=producao), o consentimento de saúde nomeia o tratamento pela IA.
+# A CONFIRMAR (revisão jurídica): transferência para os EUA e a garantia de não-treino,
+# com o fornecedor escolhido (Groq com Zero Data Retention; docs/GUIA_PRODUCAO.md).
+CONSENTIMENTO_SAUDE_PRODUCAO = (
+    "Autorizo o tratamento dos meus dados de saúde para gerar e acompanhar o meu plano, "
+    "incluindo por um fornecedor de inteligência artificial que pode tratar os dados nos "
+    "Estados Unidos. Recebe só as respostas necessárias ao plano, sem o meu nome nem o meu "
+    "email, e não as usa para treinar os seus modelos."
+)
 LER_PRIVACIDADE = "Ler a política de privacidade"
 AJUDA_TEXTO_LIVRE = "Não escreva o seu nome nem contactos."
 TERMOS_EM_PREPARACAO = "Os termos de utilização estão em preparação (versão de teste)."
@@ -526,6 +535,8 @@ CAMINHADA_EXTRA = "Com poucos dias de treino, o plano junta uma caminhada diári
 AVISOS_TITULO = "Avisos que vão constar do plano"
 GERAR = "Gerar o meu plano"
 A_PREPARAR = "A preparar o seu plano… pode demorar até 2 minutos."
+# Fase 10C: à espera da vez na fila ou de um limite por minuto do serviço (429).
+A_ESPERA = "Estamos a preparar o seu plano, pode demorar um minuto."
 NAO_PODE_GERAR = "Não é possível preparar um plano com estas respostas."
 
 RESUMO_SECOES = {
@@ -558,6 +569,10 @@ ERROS_GERACAO = {
         "Preparámos o plano, mas ele não passou nas nossas verificações de segurança e não "
         "o vamos mostrar. Tente de novo; se voltar a acontecer, a falha é nossa e vamos "
         "corrigi-la."
+    ),
+    TipoErroUtilizador.FILA_CHEIA: (
+        "Há muitas pessoas a preparar o plano neste momento. Tente de novo daqui a alguns "
+        "minutos; as suas respostas continuam aqui."
     ),
     TipoErroUtilizador.OUTRO: (
         "Não foi possível preparar o plano por um erro inesperado. Tente de novo daqui a pouco."

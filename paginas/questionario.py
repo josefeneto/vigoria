@@ -38,9 +38,11 @@ from vigoria.interface.passos import (
     tem_gravidez,
     validar_passo,
 )
+from vigoria.llm.base import aviso_de_espera
 from vigoria.llm.escolha import criar_provedor
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.estrategia import gerar_estrategia
+from vigoria.motor.fila import vez_na_fila
 from vigoria.motor.pipeline import ResultadoPipeline, gerar_plano_verificado
 from vigoria.regras import textos as avisos_motor
 from vigoria.regras.textos import numero
@@ -165,12 +167,20 @@ def _texto(campo: str, maximo: int = 200) -> None:
     comum.erro(campo)
 
 
+def rotulos_consentimento(ambiente: str) -> dict[str, str]:
+    """Os rótulos do passo 0; em produção, o de saúde nomeia o fornecedor de IA."""
+    rotulos = dict(t.ROTULOS_CONSENTIMENTO)
+    if ambiente == "producao":
+        rotulos["consentimento_saude"] = t.CONSENTIMENTO_SAUDE_PRODUCAO
+    return rotulos
+
+
 # ---------------------------------------------------------------- Passos
 
 
 def passo_0() -> None:
     st.write(t.BOAS_VINDAS)
-    for campo, rotulo in t.ROTULOS_CONSENTIMENTO.items():
+    for campo, rotulo in rotulos_consentimento(obter_configuracao().ambiente).items():
         st.checkbox(rotulo, width="stretch", **W(campo))
         comum.erro(campo)
     st.page_link(comum.PAGINA_PRIVACIDADE, label=t.LER_PRIVACIDADE, icon=":material/policy:")
@@ -409,9 +419,15 @@ def _decisoes(q: Questionario) -> bool:
 
 def _gerar(q: Questionario) -> None:
     resultado = None
+    aviso = st.empty()  # «pode demorar um minuto»: à espera da vez ou depois de um 429
+
+    def avisar() -> None:
+        aviso.info(t.A_ESPERA, icon=":material/hourglass_top:")
+
     with st.spinner(t.A_PREPARAR):
         try:
-            resultado = gerar_plano_verificado(q, criar_provedor())
+            with vez_na_fila(ao_esperar=avisar), aviso_de_espera(avisar):
+                resultado = gerar_plano_verificado(q, criar_provedor())
         except Exception as e:  # a mensagem ao utilizador nunca tem detalhes técnicos
             registo.warning("geração falhou: %s", type(e).__name__)
             st.session_state[ERRO_GERACAO] = classificar_erro(e)

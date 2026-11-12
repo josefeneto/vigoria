@@ -1,4 +1,5 @@
-"""Escolha do fornecedor de LLM: VIGORIA_PROVEDOR_LLM e, opcional, VIGORIA_PROVEDOR_RESERVA.
+"""Escolha do fornecedor de LLM: VIGORIA_PROVEDOR_LLM e, opcional, VIGORIA_PROVEDOR_RESERVA
+(com VIGORIA_MODELO_RESERVA, se a reserva for o mesmo fornecedor com outro modelo).
 
 A reserva só é usada quando o principal falha de vez (ErroLLM.permite_reserva):
 503/504 depois das repetições, tempo máximo excedido, quota diária esgotada ou
@@ -17,25 +18,33 @@ from vigoria.llm.groq import ProvedorGroq
 from vigoria.llm.mistral import ProvedorMistral
 from vigoria.llm.simulado import ProvedorSimulado
 
-FORNECEDORES: dict[str, Callable[[Configuracao], ProvedorLLM]] = {
-    "gemini": lambda config: ProvedorGemini(config=config),
-    "groq": lambda config: ProvedorGroq(config=config),
-    "mistral": lambda config: ProvedorMistral(config=config),
-    "simulado": lambda config: ProvedorSimulado(),
+FORNECEDORES: dict[str, Callable[[Configuracao, str | None], ProvedorLLM]] = {
+    "gemini": lambda config, modelo: ProvedorGemini(modelo=modelo, config=config),
+    "groq": lambda config, modelo: ProvedorGroq(modelo=modelo, config=config),
+    "mistral": lambda config, modelo: ProvedorMistral(modelo=modelo, config=config),
+    "simulado": lambda config, modelo: ProvedorSimulado(),
 }
 
 
-def criar_fornecedor(nome: NomeProvedor, config: Configuracao | None = None) -> ProvedorLLM:
-    """Um fornecedor pelo nome, com a chave e o modelo da configuração."""
-    return FORNECEDORES[nome](obter_configuracao() if config is None else config)
+def criar_fornecedor(
+    nome: NomeProvedor, config: Configuracao | None = None, modelo: str | None = None
+) -> ProvedorLLM:
+    """Um fornecedor pelo nome, com a chave da configuração; o modelo, se não for indicado,
+    é o <NOME>_MODEL."""
+    return FORNECEDORES[nome](obter_configuracao() if config is None else config, modelo or None)
 
 
 def criar_provedor(config: Configuracao | None = None) -> ProvedorComReserva:
-    """O fornecedor principal e, se estiver configurada, a reserva."""
+    """O fornecedor principal e, se estiver configurada, a reserva (VIGORIA_MODELO_RESERVA
+    permite o mesmo fornecedor com outro modelo)."""
     config = obter_configuracao() if config is None else config
     principal = criar_fornecedor(config.vigoria_provedor_llm, config)
     reserva = None if principal.nome == "simulado" else config.vigoria_provedor_reserva
-    return ProvedorComReserva(principal, criar_fornecedor(reserva, config) if reserva else None)
+    if reserva is None:
+        return ProvedorComReserva(principal, None)
+    return ProvedorComReserva(
+        principal, criar_fornecedor(reserva, config, config.vigoria_modelo_reserva)
+    )
 
 
 class ProvedorComReserva:
@@ -65,7 +74,7 @@ class ProvedorComReserva:
             usado = self.reserva
             self._progresso(
                 f"{self.principal.nome} falhou de vez (código {erro.codigo or '-'}); "
-                f"a usar a reserva {usado.nome}"
+                f"a usar a reserva {usado.nome} (modelo {usado.modelo})"
             )
             try:
                 resultado = usado.gerar_json(sistema, pedido, schema)

@@ -10,8 +10,11 @@ chamar o serviço e como classificar os erros dele (`_falha`).
 
 import logging
 import sys
+import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from enum import StrEnum
 from typing import Any, Protocol
 
@@ -104,6 +107,32 @@ class ProvedorLLM(Protocol):
     def testar_ligacao(self) -> RespostaTeste:
         """Pergunta mínima (30 s no máximo, sem repetições) para confirmar chave, modelo e rede."""
         ...
+
+
+# ---------------------------------------------------------------- 429 e aviso de espera
+
+_contagem_429 = 0
+_tranca_429 = threading.Lock()
+# Função que a interface regista para avisar quem espera («pode demorar um minuto»).
+_aviso_espera: ContextVar[Callable[[], None] | None] = ContextVar("aviso_espera", default=None)
+
+
+def contar_429() -> int:
+    """Soma um 429 por minuto à contagem do processo e devolve o total desde o arranque."""
+    global _contagem_429
+    with _tranca_429:
+        _contagem_429 += 1
+        return _contagem_429
+
+
+@contextmanager
+def aviso_de_espera(avisar: Callable[[], None]) -> Iterator[None]:
+    """Durante o bloco, cada espera por um 429 por minuto chama `avisar` (nesta thread)."""
+    marca = _aviso_espera.set(avisar)
+    try:
+        yield
+    finally:
+        _aviso_espera.reset(marca)
 
 
 def registar_metricas(metricas: Metricas) -> None:
@@ -269,6 +298,16 @@ class ProvedorBase:
             f"{self.nome}: {motivo} na tentativa {estado.attempt_number}; "
             f"nova tentativa daqui a {espera:.1f} s"
         )
+        if falha is None or falha.tipo is TipoFalha.POR_MINUTO:
+            # Só metadados: quantos 429 desde o arranque, o fornecedor e o modelo.
+            registo.warning(
+                "429 por minuto: n.º %d desde o arranque (%s, %s)",
+                contar_429(),
+                self.nome,
+                self.modelo,
+            )
+            if (avisar := _aviso_espera.get()) is not None:
+                avisar()
 
     def _erro_api(self, falha: FalhaApi, tentativas: int, inicio: float) -> ErroLLM:
         """Erro claro, só com o código: a mensagem do serviço pode citar partes do pedido."""

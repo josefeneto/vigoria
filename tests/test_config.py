@@ -105,6 +105,7 @@ def test_database_url_errado_da_mensagem_clara_sem_o_valor(
 def test_utilizador_local_so_em_local(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "1")
     monkeypatch.setenv("AMBIENTE", "local")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "groq")  # o Gemini é recusado em produção
     assert Configuracao(_env_file=None).vigoria_utilizador_local  # type: ignore[call-arg]
     for ambiente in ("demo", "producao"):
         monkeypatch.setenv("AMBIENTE", ambiente)

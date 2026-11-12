@@ -76,7 +76,9 @@ def test_nunca_substitui_um_secrets_feito_a_mao(tmp_path: Path) -> None:
 
 
 def _config(url: str) -> Configuracao:
-    return Configuracao(_env_file=None, ambiente="producao", database_url=url)
+    return Configuracao(
+        _env_file=None, ambiente="producao", vigoria_provedor_llm="groq", database_url=url
+    )
 
 
 def test_principal_gera_e_migra(
@@ -107,3 +109,30 @@ def test_sem_ambiente_nao_arranca(tmp_path: Path, capsys: pytest.CaptureFixture[
     assert arranque.principal(sem, tmp_path / "secrets.toml") == 1
     assert "AMBIENTE" in capsys.readouterr().err
     assert not (tmp_path / "secrets.toml").exists()
+
+
+# ---------------------------------------------------------------- Endereços (Fase 10C)
+
+
+@pytest.mark.parametrize(
+    "metadados",
+    [
+        "t.eu.auth0.com/.well-known/openid-configuration",  # sem https://
+        "https://t.eu.auth0.com",  # sem o fim
+        "http://t.eu.auth0.com/.well-known/openid-configuration",
+    ],
+)
+def test_endereco_do_auth0_mal_copiado_para_o_arranque(metadados: str) -> None:
+    with pytest.raises(ErroArranque, match="AUTH0_SERVER_METADATA_URL") as erro:
+        secrets_toml(AMBIENTE | {"AUTH0_SERVER_METADATA_URL": metadados})
+    assert "t.eu.auth0.com" not in str(erro.value)  # o nome, nunca o valor
+
+
+@pytest.mark.parametrize("regresso", ["https://app.vigoria.pt", "app.vigoria.pt/oauth2callback"])
+def test_regresso_sem_oauth2callback_para_o_arranque(regresso: str) -> None:
+    with pytest.raises(ErroArranque, match="AUTH_REDIRECT_URI"):
+        secrets_toml(AMBIENTE | {"AUTH_REDIRECT_URI": regresso})
+
+
+def test_regresso_local_em_http_e_aceite() -> None:
+    secrets_toml(AMBIENTE | {"AUTH_REDIRECT_URI": "http://localhost:8080/oauth2callback"})

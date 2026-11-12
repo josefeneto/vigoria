@@ -44,7 +44,7 @@ def _config(**alteracoes: object) -> Configuracao:
     valores: dict[str, object] = {
         "_env_file": None,
         "ambiente": "local",
-        "vigoria_provedor_llm": "gemini",
+        "vigoria_provedor_llm": "groq",  # em produção o Gemini é recusado (Fase 10C)
         "vigoria_provedor_reserva": None,
         "vigoria_utilizador_local": False,
         "brevo_api_key": "xkeysib-teste",

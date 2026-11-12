@@ -199,3 +199,91 @@ def test_simulado_nunca_e_reserva() -> None:
 def test_simulado_sem_ficheiro_da_erro_claro(tmp_path: Path) -> None:
     with pytest.raises(ErroLLM, match="Falta a resposta simulada"):
         ProvedorSimulado(tmp_path / "nao_existe.json").gerar_json("", "", Questionario)
+
+
+# ---------------------------------------------------------------- Produção (Fase 10C)
+
+
+def test_reserva_com_o_mesmo_fornecedor_e_outro_modelo() -> None:
+    config = _config(
+        vigoria_provedor_llm="groq",
+        groq_model="openai/gpt-oss-120b",
+        vigoria_provedor_reserva="groq",
+        vigoria_modelo_reserva=" openai/gpt-oss-20b ",
+    )
+    provedor = criar_provedor(config)
+    assert isinstance(provedor.principal, ProvedorGroq)
+    assert isinstance(provedor.reserva, ProvedorGroq)
+    assert provedor.principal.modelo == "openai/gpt-oss-120b"
+    assert provedor.reserva.modelo == "openai/gpt-oss-20b"
+    assert config.modelo_reserva == "openai/gpt-oss-20b"
+
+
+def test_mesmo_fornecedor_e_mesmo_modelo_e_recusado() -> None:
+    with pytest.raises(ValidationError, match="diferente do principal"):
+        _config(
+            vigoria_provedor_llm="groq",
+            groq_model="m",
+            vigoria_provedor_reserva="groq",
+            vigoria_modelo_reserva="m",
+        )
+
+
+def test_modelo_da_reserva_sem_reserva_e_recusado() -> None:
+    with pytest.raises(ValidationError, match="VIGORIA_MODELO_RESERVA"):
+        _config(vigoria_modelo_reserva="m")
+
+
+def test_reserva_de_outro_fornecedor_usa_o_modelo_dele() -> None:
+    config = _config(vigoria_provedor_llm="groq", vigoria_provedor_reserva="gemini")
+    assert config.modelo_reserva == "modelo-gemini"
+    assert criar_provedor(config).reserva.modelo == "modelo-gemini"  # type: ignore[union-attr]
+
+
+@pytest.mark.parametrize(
+    "valores",
+    [
+        {"vigoria_provedor_llm": "gemini"},
+        {"vigoria_provedor_llm": "groq", "vigoria_provedor_reserva": "gemini"},
+    ],
+)
+def test_gemini_recusado_em_producao_salvo_pago(valores: dict[str, str]) -> None:
+    with pytest.raises(ValidationError, match="VIGORIA_GEMINI_PAGO"):
+        _config(ambiente="producao", **valores)
+    assert _config(ambiente="producao", vigoria_gemini_pago=True, **valores).ambiente == "producao"
+
+
+@pytest.mark.parametrize("ambiente", ["local", "demo"])
+def test_gemini_aceite_fora_de_producao(ambiente: str) -> None:
+    assert _config(ambiente=ambiente).vigoria_provedor_llm == "gemini"
+
+
+def test_producao_groq_com_reserva_groq() -> None:
+    config = _config(
+        ambiente="producao",
+        vigoria_provedor_llm="groq",
+        vigoria_provedor_reserva="groq",
+        vigoria_modelo_reserva="outro",
+    )
+    assert config.modelo_reserva == "outro"
+
+
+def test_testar_ligacao_mostra_o_modelo_da_reserva(capsys: pytest.CaptureFixture[str]) -> None:
+    from vigoria.motor import cli
+
+    criados: list[tuple[str, str | None]] = []
+
+    class _Ligacao:
+        def testar_ligacao(self) -> RespostaTeste:
+            return RespostaTeste(texto="ok")
+
+    def criar(nome: str, config: Configuracao, modelo: str | None = None) -> _Ligacao:
+        criados.append((nome, modelo))
+        return _Ligacao()
+
+    config = _config(
+        vigoria_provedor_llm="groq", vigoria_provedor_reserva="groq", vigoria_modelo_reserva="m20"
+    )
+    assert cli.testar_ligacao(config, criar) == 0  # type: ignore[arg-type]
+    assert criados == [("groq", None), ("groq", "m20")]
+    assert "Modelo (VIGORIA_MODELO_RESERVA): m20" in capsys.readouterr().out

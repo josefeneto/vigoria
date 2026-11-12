@@ -70,6 +70,12 @@ class Configuracao(BaseSettings):
 
     vigoria_provedor_llm: NomeProvedor = "gemini"
     vigoria_provedor_reserva: NomeProvedor | None = None
+    # Modelo da reserva, se for diferente do <NOME>_MODEL do fornecedor. Permite reserva com o
+    # mesmo fornecedor e outro modelo (produção: groq 120b principal, groq 20b reserva).
+    vigoria_modelo_reserva: str = ""
+    # O Gemini gratuito pode usar os pedidos para melhorar os produtos da Google e não pode
+    # servir utilizadores do EEE: em produção só é aceite com o nível pago (Fase 10C).
+    vigoria_gemini_pago: bool = False
     gemini_api_key: SecretStr | None = None
     gemini_model: str = ""
     groq_api_key: SecretStr | None = None
@@ -157,14 +163,37 @@ class Configuracao(BaseSettings):
                 return "postgresql+psycopg://" + valor.removeprefix(prefixo)
         return valor
 
+    def modelo_de(self, nome: NomeProvedor) -> str:
+        """O <NOME>_MODEL de um fornecedor («» para o simulado)."""
+        return str(getattr(self, f"{nome}_model", ""))
+
+    @property
+    def modelo_reserva(self) -> str:
+        """O modelo que a reserva usa: VIGORIA_MODELO_RESERVA ou o <NOME>_MODEL dela."""
+        if self.vigoria_provedor_reserva is None:
+            return ""
+        return self.vigoria_modelo_reserva or self.modelo_de(self.vigoria_provedor_reserva)
+
     @model_validator(mode="after")
     def _reserva_diferente(self) -> Configuracao:
-        if self.vigoria_provedor_reserva == self.vigoria_provedor_llm:
+        self.vigoria_modelo_reserva = self.vigoria_modelo_reserva.strip()
+        if self.vigoria_modelo_reserva and self.vigoria_provedor_reserva is None:
+            raise ValueError("VIGORIA_MODELO_RESERVA só serve com VIGORIA_PROVEDOR_RESERVA")
+        if self.vigoria_provedor_reserva == self.vigoria_provedor_llm and (
+            self.modelo_reserva == self.modelo_de(self.vigoria_provedor_llm)
+        ):
             raise ValueError(
-                "VIGORIA_PROVEDOR_RESERVA tem de ser diferente de VIGORIA_PROVEDOR_LLM"
+                "A reserva tem de ser diferente do principal: outro VIGORIA_PROVEDOR_RESERVA "
+                "ou, com o mesmo fornecedor, outro VIGORIA_MODELO_RESERVA"
             )
         if self.vigoria_provedor_reserva == "simulado":
             raise ValueError("O fornecedor simulado não pode ser a reserva")
+        usados = {self.vigoria_provedor_llm, self.vigoria_provedor_reserva}
+        if self.ambiente == "producao" and "gemini" in usados and not self.vigoria_gemini_pago:
+            raise ValueError(
+                "Com AMBIENTE=producao, o Gemini só é aceite com VIGORIA_GEMINI_PAGO=true "
+                "(o nível gratuito não pode servir utilizadores do EEE)"
+            )
         if self.vigoria_provedor_llm == "simulado" and self.ambiente != "local":
             raise ValueError("O fornecedor simulado só é aceite com AMBIENTE=local")
         if self.vigoria_utilizador_local and self.ambiente != "local":

@@ -205,35 +205,43 @@ def _consola_utf8() -> None:
 
 def testar_ligacao(
     config: Configuracao | None = None,
-    criar: Callable[[NomeProvedor, Configuracao], ProvedorLLM] = criar_fornecedor,
+    criar: Callable[..., ProvedorLLM] = criar_fornecedor,
 ) -> int:
     """Testa o fornecedor principal e, se houver, a reserva. Nunca mostra as chaves."""
     config = obter_configuracao() if config is None else config
-    fornecedores: list[tuple[str, NomeProvedor]] = [("principal", config.vigoria_provedor_llm)]
+    fornecedores: list[tuple[str, NomeProvedor, str]] = [
+        ("principal", config.vigoria_provedor_llm, "")
+    ]
     if config.vigoria_provedor_reserva:
-        fornecedores.append(("reserva", config.vigoria_provedor_reserva))
+        fornecedores.append(
+            ("reserva", config.vigoria_provedor_reserva, config.vigoria_modelo_reserva)
+        )
     falhas = 0
-    for n, (papel, nome) in enumerate(fornecedores):
+    for n, (papel, nome, modelo) in enumerate(fornecedores):
         print(f"{'\n' if n else ''}== {nome} ({papel}) ==")
-        falhas += _testar_fornecedor(nome, config, criar)
+        falhas += _testar_fornecedor(nome, config, criar, modelo)
     return 1 if falhas else 0
 
 
 def _testar_fornecedor(
     nome: NomeProvedor,
     config: Configuracao,
-    criar: Callable[[NomeProvedor, Configuracao], ProvedorLLM],
+    criar: Callable[..., ProvedorLLM],
+    modelo_reserva: str = "",
 ) -> int:
+    """modelo_reserva: VIGORIA_MODELO_RESERVA (a reserva com o mesmo fornecedor e outro modelo)."""
     variavel = nome.upper()
     chave = getattr(config, f"{nome}_api_key")
-    modelo = getattr(config, f"{nome}_model")
+    modelo = modelo_reserva or config.modelo_de(nome)
+    origem = "VIGORIA_MODELO_RESERVA" if modelo_reserva else f"{variavel}_MODEL"
     print(f"Chave ({variavel}_API_KEY): {'definida' if chave else 'em falta'}")
-    print(f"Modelo ({variavel}_MODEL): {modelo or 'em falta'}")
+    print(f"Modelo ({origem}): {modelo or 'em falta'}")
     if chave is None or not modelo:
         print("Falta configuração: veja o .env.example.")
         return 1
     try:
-        resposta = criar(nome, config).testar_ligacao()
+        fornecedor = criar(nome, config, modelo_reserva) if modelo_reserva else criar(nome, config)
+        resposta = fornecedor.testar_ligacao()
     except ErroLLM as erro:
         print(f"Falhou: {erro}")
         print(f"Diagnóstico: {_diagnostico(erro.codigo, modelo, variavel)}")

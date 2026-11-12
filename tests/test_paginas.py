@@ -320,3 +320,22 @@ def test_comecar_no_inicio_volta_ao_passo_1_e_mantem_as_respostas(chave_botao: s
     assert not at.exception
     assert at.session_state["passo"] == "0"
     assert at.session_state[chave("peso_kg")] == 80.0
+
+
+# ---------------------------------------------------------------- Consentimento (Fase 10C)
+
+
+def test_consentimento_de_producao_nomeia_o_fornecedor_de_ia() -> None:
+    from paginas import textos as t
+    from paginas.questionario import rotulos_consentimento
+    from vigoria.conteudo.carregar import carregar_avisos
+    from vigoria.motor.voz import encontrar_termos
+
+    producao = rotulos_consentimento("producao")
+    assert set(producao) == set(t.ROTULOS_CONSENTIMENTO)
+    saude = producao["consentimento_saude"]
+    assert "Estados Unidos" in saude and "não as usa para treinar" in saude
+    assert "A CONFIRMAR" not in saude  # a marca fica só no código e no guia
+    assert encontrar_termos(carregar_avisos().brasileirismos, saude) == ()
+    for ambiente in ("local", "demo"):
+        assert rotulos_consentimento(ambiente) == t.ROTULOS_CONSENTIMENTO

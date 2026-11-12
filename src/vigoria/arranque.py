@@ -11,6 +11,7 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from urllib.parse import urlparse
 
 from vigoria.config import obter_configuracao
 from vigoria.dados.bd import criar_motor, migrar
@@ -26,6 +27,7 @@ OBRIGATORIAS = (
     "AUTH0_SERVER_METADATA_URL",
 )
 GESTAO = ("AUTH0_GESTAO_CLIENT_ID", "AUTH0_GESTAO_CLIENT_SECRET")
+FIM_METADADOS = "/.well-known/openid-configuration"
 
 
 class ErroArranque(Exception):
@@ -39,12 +41,37 @@ def _texto_toml(valor: str) -> str:
     return '"' + valor.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def _formas_erradas(valores: Mapping[str, str]) -> list[str]:
+    """Endereços mal copiados: sem isto, a app arrancava sem login («falta a secção [auth]»)."""
+    erros = []
+    metadados = urlparse(valores["AUTH0_SERVER_METADATA_URL"])
+    if not (
+        metadados.scheme == "https"
+        and metadados.hostname
+        and metadados.path.endswith(FIM_METADADOS)
+    ):
+        erros.append(
+            f"AUTH0_SERVER_METADATA_URL tem de começar por https:// e acabar em {FIM_METADADOS}."
+        )
+    regresso = urlparse(valores["AUTH_REDIRECT_URI"])
+    if not (
+        regresso.scheme in ("http", "https")
+        and regresso.hostname
+        and regresso.path == "/oauth2callback"
+    ):
+        erros.append("AUTH_REDIRECT_URI tem de ser o endereço da app acabado em /oauth2callback.")
+    return erros
+
+
 def secrets_toml(ambiente: Mapping[str, str]) -> str:
     """O conteúdo do secrets.toml; ErroArranque com os nomes das variáveis em falta."""
     valores = {nome: ambiente.get(nome, "").strip() for nome in (*OBRIGATORIAS, *GESTAO)}
     em_falta = [nome for nome in OBRIGATORIAS if not valores[nome]]
     if em_falta:
         raise ErroArranque("Variáveis em falta: " + ", ".join(em_falta))
+    erros = _formas_erradas(valores)
+    if erros:
+        raise ErroArranque(" ".join(erros))
     gestao = [valores[nome] for nome in GESTAO]
     if any(gestao) and not all(gestao):
         raise ErroArranque(
