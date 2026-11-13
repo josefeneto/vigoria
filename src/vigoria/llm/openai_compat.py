@@ -6,6 +6,7 @@ A saída JSON segue o schema Pydantic em modo estrito (`schema_estrito`).
 """
 
 import json
+import logging
 import math
 import re
 import time
@@ -31,6 +32,15 @@ from vigoria.llm.base import (
 
 # A mensagem do 429 diz qual o limite atingido, por exemplo
 # «... on tokens per day (TPD): Limit 200000 ...» ou «... requests per day (RPD) ...».
+registo = logging.getLogger("vigoria.llm")
+
+# Códigos de erro cuja mensagem é genérica (não cita o pedido): só destes se regista o texto.
+# Dos outros, só o código e o tipo. O campo «failed_generation» (a resposta do modelo, que
+# pode repetir dados de saúde) nunca se regista.
+MENSAGENS_SEGURAS = frozenset(
+    {"json_validate_failed", "blocked_api_access", "rate_limit_exceeded", "model_not_found"}
+)
+
 _POR_DIA = re.compile(r"per day|\((?:TPD|RPD)\)", re.IGNORECASE)
 
 
@@ -49,6 +59,21 @@ class ErroHttp(Exception):
             return str(json.loads(self.corpo)["error"]["code"])
         except ValueError, KeyError, TypeError:
             return ""
+
+    def resumo_servico(self) -> str:
+        """Para o registo: código, tipo e, só nos códigos de MENSAGENS_SEGURAS, a mensagem
+        (até 200 caracteres). Nunca «failed_generation» nem o conteúdo do pedido."""
+        try:
+            erro = json.loads(self.corpo)["error"]
+        except ValueError, KeyError, TypeError:
+            return "corpo sem o formato habitual"
+        if not isinstance(erro, dict):
+            return "corpo sem o formato habitual"
+        codigo, tipo = str(erro.get("code") or "-"), str(erro.get("type") or "-")
+        texto = f"code={codigo}, type={tipo}"
+        if codigo in MENSAGENS_SEGURAS and erro.get("message"):
+            texto += f", message={str(erro['message'])[:200]!r}"
+        return texto
 
     def mensagem_servico(self) -> str:
         """error.message do corpo (só para classificar o erro; nunca se mostra)."""
@@ -107,8 +132,16 @@ class ProvedorCompativelOpenAI(ProvedorBase):
         dormir: Callable[[float], None] = time.sleep,
         progresso: Progresso = progresso_stderr,
         config: Configuracao | None = None,
+        reasoning_effort: str | None = None,
     ) -> None:
+        """`reasoning_effort`: «low», «medium» ou «high» nos modelos com raciocínio (Groq
+        gpt-oss); «» não o envia. Por omissão, o <NOME>_REASONING_EFFORT da configuração."""
         variavel = self.nome.upper()
+        if reasoning_effort is None:
+            sem_config = config is None and client is not None  # testes: não lê o .env
+            origem = None if sem_config else (config or obter_configuracao())
+            reasoning_effort = str(getattr(origem, f"{self.nome}_reasoning_effort", "") or "")
+        self.reasoning_effort = reasoning_effort
         if modelo is None:
             modelo = getattr(config or obter_configuracao(), f"{self.nome}_model")
         if not modelo:
@@ -141,6 +174,8 @@ class ProvedorCompativelOpenAI(ProvedorBase):
                 },
             },
         }
+        if self.reasoning_effort:
+            corpo["reasoning_effort"] = self.reasoning_effort
         resposta = self._executar(lambda: self._post(corpo, self.timeout_s), self.timeout_s)
         return self._validar(schema, self._texto(resposta))
 
@@ -165,7 +200,9 @@ class ProvedorCompativelOpenAI(ProvedorBase):
     def _post(self, corpo: dict[str, Any], timeout_s: float) -> httpx.Response:
         resposta = self._client.post("/chat/completions", json=corpo, timeout=timeout_s)
         if resposta.status_code >= 400:
-            raise ErroHttp(resposta.status_code, resposta.headers, resposta.text)
+            erro = ErroHttp(resposta.status_code, resposta.headers, resposta.text)
+            registo.warning("%s: HTTP %d (%s)", self.nome, erro.codigo, erro.resumo_servico())
+            raise erro
         return resposta
 
     def _texto(self, resposta: httpx.Response) -> str:
@@ -180,6 +217,10 @@ class ProvedorCompativelOpenAI(ProvedorBase):
         codigo = erro.codigo
         if erro.codigo_servico() == "blocked_api_access":
             tipo = TipoFalha.LIMITE_GASTO  # teto de gasto mensal da organização (Groq)
+        elif erro.codigo_servico() == "json_validate_failed":
+            # 400 do próprio Groq: o modelo gerou um JSON que não respeita o schema estrito.
+            # Acontece de vez em quando; outra tentativa costuma resultar.
+            tipo = TipoFalha.JSON_INVALIDO
         elif codigo == 429:
             tipo = (
                 TipoFalha.QUOTA_DIARIA

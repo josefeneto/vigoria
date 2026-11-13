@@ -32,8 +32,14 @@ def classificar_erro(erro: Exception) -> TipoErroUtilizador:
             return TipoErroUtilizador.QUOTA_DIARIA
         case TipoFalha.POR_MINUTO:
             return TipoErroUtilizador.MUITOS_PEDIDOS
-        # Teto de gasto: para quem usa, é o serviço temporariamente indisponível.
-        case TipoFalha.INDISPONIVEL | TipoFalha.DEMASIADO_GRANDE | TipoFalha.LIMITE_GASTO | None:
+        # Teto de gasto e JSON fora do schema: para quem usa, é o serviço indisponível.
+        case (
+            TipoFalha.INDISPONIVEL
+            | TipoFalha.DEMASIADO_GRANDE
+            | TipoFalha.LIMITE_GASTO
+            | TipoFalha.JSON_INVALIDO
+            | None
+        ):
             return TipoErroUtilizador.INDISPONIVEL
         case _:
             return TipoErroUtilizador.OUTRO

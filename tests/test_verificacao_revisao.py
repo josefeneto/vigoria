@@ -209,6 +209,9 @@ def test_estilo_nao_bloqueia(texto: str) -> None:
         ("A percepção da acção é óptima.", "A perceção da ação é ótima."),
         ("O objectivo actual.", "O objetivo atual."),
         ("Ajuda a estructurar o dia.", "Ajuda a estruturar o dia."),
+        ("Melhora o tônus muscular.", "Melhora o tónus muscular."),
+        ("Um snack a meio da tarde.", "Um lanche a meio da tarde."),
+        ("Snacks com fruta.", "Lanches com fruta."),
     ],
 )
 def test_estilo_corrigido_pelo_motor(texto: str, corrigido: str) -> None:

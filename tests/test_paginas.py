@@ -334,7 +334,8 @@ def test_consentimento_de_producao_nomeia_o_fornecedor_de_ia() -> None:
     producao = rotulos_consentimento("producao")
     assert set(producao) == set(t.ROTULOS_CONSENTIMENTO)
     saude = producao["consentimento_saude"]
-    assert "Estados Unidos" in saude and "não as usa para treinar" in saude
+    assert "Estados Unidos" in saude and "não as usam para treinar" in saude
+    assert "Google" in saude and "Groq" in saude
     assert "A CONFIRMAR" not in saude  # a marca fica só no código e no guia
     assert encontrar_termos(carregar_avisos().brasileirismos, saude) == ()
     for ambiente in ("local", "demo"):

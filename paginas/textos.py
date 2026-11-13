@@ -98,7 +98,7 @@ SO_POR_CONVITE = (
 )
 UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
 # Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.
-VERSAO_CONSENTIMENTO = "2026-11-12"
+VERSAO_CONSENTIMENTO = "2026-11-13"
 ERRO_GUARDAR = (
     "O plano foi preparado, mas não conseguimos guardá-lo na sua conta. Pode vê-lo agora; "
     "se fechar a janela, perde-se. Tente gerá-lo de novo mais tarde."
@@ -245,13 +245,14 @@ ROTULOS_CONSENTIMENTO = {
     "confirma_maior_idade": "Confirmo que tenho 18 anos ou mais.",
 }
 # Em produção (AMBIENTE=producao), o consentimento de saúde nomeia o tratamento pela IA.
-# A CONFIRMAR (revisão jurídica): transferência para os EUA e a garantia de não-treino,
-# com o fornecedor escolhido (Groq com Zero Data Retention; docs/GUIA_PRODUCAO.md).
+# Decisão do José (13/11/2026): principal Google (Gemini API, nível pago), reserva Groq.
+# A CONFIRMAR (revisão jurídica): a transferência para os EUA dos dois fornecedores, o
+# não-treino do Gemini pago e o Zero Data Retention do Groq (docs/GUIA_PRODUCAO.md).
 CONSENTIMENTO_SAUDE_PRODUCAO = (
     "Autorizo o tratamento dos meus dados de saúde para gerar e acompanhar o meu plano, "
-    "incluindo por um fornecedor de inteligência artificial que pode tratar os dados nos "
-    "Estados Unidos. Recebe só as respostas necessárias ao plano, sem o meu nome nem o meu "
-    "email, e não as usa para treinar os seus modelos."
+    "incluindo por fornecedores de inteligência artificial (a Google e, em reserva, a Groq) "
+    "que podem tratar os dados nos Estados Unidos. Recebem só as respostas necessárias ao "
+    "plano, sem o meu nome nem o meu email, e não as usam para treinar os seus modelos."
 )
 LER_PRIVACIDADE = "Ler a política de privacidade"
 AJUDA_TEXTO_LIVRE = "Não escreva o seu nome nem contactos."

@@ -20,6 +20,7 @@ def test_privacidade_de_producao_sem_github_nem_demonstracao() -> None:
     assert "GitHub" not in texto and "demonstração" not in texto
     assert "Railway" in texto and "Amesterdão" in texto and "Frankfurt" in texto
     assert "Estados Unidos" in texto and "treinar" in texto
+    assert "Google" in texto and "Gemini API" in texto and "Groq" in texto
     assert "A CONFIRMAR" not in texto  # a marca fica só no código e no guia
     avisos = carregar_avisos()
     assert encontrar_termos(avisos.brasileirismos, texto) == ()

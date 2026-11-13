@@ -47,19 +47,24 @@ e o local onde trata os pedidos (que pode ser fora da União Europeia) serão in
 antes do lançamento.
 """
 
-# A CONFIRMAR (revisão jurídica e escolha do fornecedor depois da comparação, Fase 10C):
-# o nome do fornecedor (Groq ou Gemini pago), a base da transferência para os EUA e a garantia
-# de não-treino (Groq: Zero Data Retention). Coerente com CONSENTIMENTO_SAUDE_PRODUCAO.
+# Decisão do José (13/11/2026): principal Google (Gemini API, nível pago), reserva Groq.
+# A CONFIRMAR (revisão jurídica): a base da transferência para os EUA dos dois fornecedores,
+# o prazo de conservação da Google para prevenir abusos e o Zero Data Retention do Groq.
+# Coerente com CONSENTIMENTO_SAUDE_PRODUCAO.
 IA_PRODUCAO = """
 ### Inteligência artificial
 
-Parte do texto do plano é escrita por um fornecedor de inteligência artificial, que pode
-tratar os pedidos nos **Estados Unidos**. Esse fornecedor recebe apenas as respostas
-necessárias ao plano, **sem** o seu nome, email ou qualquer identificador, não as guarda
-depois de responder e não as usa para treinar os seus modelos. Este tratamento faz parte do
-consentimento que dá no início do questionário. Os números do plano (peso, proteína,
-hidratação) e os avisos de segurança são calculados pela própria Vigoria, não pela
-inteligência artificial.
+Parte do texto do plano é escrita por inteligência artificial:
+
+- **Google** (Gemini API, no nível pago): o fornecedor principal.
+- **Groq**: a reserva, usada só quando o serviço da Google falha.
+
+Os dois podem tratar os pedidos nos **Estados Unidos**. Recebem apenas as respostas
+necessárias ao plano, **sem** o seu nome, email ou qualquer identificador, e não as usam
+para treinar os seus modelos; só as guardam o tempo que os seus termos preveem para
+prevenir abusos. Este tratamento faz parte do consentimento que dá no início do
+questionário. Os números do plano (peso, proteína, hidratação) e os avisos de segurança são
+calculados pela própria Vigoria, não pela inteligência artificial.
 """
 
 ONDE_DEMO = """

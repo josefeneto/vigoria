@@ -32,7 +32,7 @@ Railway (EU West, Amesterdão), serviço web, uma réplica:
     ├── /cancelar → Starlette/uvicorn (127.0.0.1:8001): cancelamento num clique (RFC 8058)
     └── resto     → Streamlit (127.0.0.1:8501)
 Railway, serviço cron: python -m vigoria.tarefas.lembretes (7 9 * * * UTC) → Brevo
-Neon (Frankfurt): PostgreSQL · Auth0 (UE): contas · IA: Groq (a confirmar depois da comparação)
+Neon (Frankfurt): PostgreSQL · Auth0 (UE): contas · IA: Gemini pago (principal), Groq (reserva)
 ```
 
 O arranque (`python -m vigoria.arranque`) gera o `secrets.toml` a partir das variáveis do

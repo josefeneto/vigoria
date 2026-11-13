@@ -151,12 +151,19 @@ class TipoFalha(StrEnum):
     # Teto de gasto mensal da conta atingido (Groq blocked_api_access, Gemini «spending cap»):
     # não repete nem usa a reserva (a reserva Groq partilha o teto da organização).
     LIMITE_GASTO = "limite_gasto"
+    # 400 «json_validate_failed» (Groq): o modelo não respeitou o schema. Repete; no fim, reserva.
+    JSON_INVALIDO = "json_invalido"
     OUTRA = "outra"
 
 
-REPETIVEIS = frozenset({TipoFalha.POR_MINUTO, TipoFalha.INDISPONIVEL})
+REPETIVEIS = frozenset({TipoFalha.POR_MINUTO, TipoFalha.INDISPONIVEL, TipoFalha.JSON_INVALIDO})
 PARA_RESERVA = frozenset(
-    {TipoFalha.QUOTA_DIARIA, TipoFalha.INDISPONIVEL, TipoFalha.DEMASIADO_GRANDE}
+    {
+        TipoFalha.QUOTA_DIARIA,
+        TipoFalha.INDISPONIVEL,
+        TipoFalha.DEMASIADO_GRANDE,
+        TipoFalha.JSON_INVALIDO,
+    }
 )
 
 
@@ -292,11 +299,12 @@ class ProvedorBase:
         espera = estado.next_action.sleep if estado.next_action else 0.0
         erro = estado.outcome.exception() if estado.outcome else None
         falha = self._falha(erro) if erro is not None else None
-        motivo = (
-            "limite de pedidos por minuto (429)"
-            if falha is None or falha.tipo is TipoFalha.POR_MINUTO
-            else f"serviço indisponível ({falha.codigo})"
-        )
+        if falha is None or falha.tipo is TipoFalha.POR_MINUTO:
+            motivo = "limite de pedidos por minuto (429)"
+        elif falha.tipo is TipoFalha.JSON_INVALIDO:
+            motivo = f"resposta fora do formato ({falha.codigo}, json_validate_failed)"
+        else:
+            motivo = f"serviço indisponível ({falha.codigo})"
         self._progresso(
             f"{self.nome}: {motivo} na tentativa {estado.attempt_number}; "
             f"nova tentativa daqui a {espera:.1f} s"
@@ -340,6 +348,11 @@ class ProvedorBase:
                 mensagem = (
                     f"O {self.rotulo} está indisponível (código {falha.codigo}) depois de "
                     f"{tentativas} tentativa(s). Tente mais tarde."
+                )
+            case TipoFalha.JSON_INVALIDO:
+                mensagem = (
+                    f"O {self.rotulo} devolveu {tentativas} resposta(s) fora do formato do "
+                    f"plano (código {falha.codigo}). Tente de novo."
                 )
             case TipoFalha.DEMASIADO_GRANDE:
                 mensagem = (

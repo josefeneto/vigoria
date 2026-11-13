@@ -334,3 +334,91 @@ def test_blocked_api_access_nao_repete_nem_usa_reserva(
     assert len(registo.pedidos) == 1 and registo.esperas == []
     assert "limite de gasto mensal atingido (groq, openai/gpt-oss-120b)" in caplog.text
     assert "hipertensão" not in str(erro.value) + caplog.text
+
+
+# ---------------------------------------------------------------- 400 json_validate_failed
+
+
+def _json_invalido() -> httpx.Response:
+    """O 400 do Groq quando o modelo não respeita o schema estrito (com a resposta falhada)."""
+    corpo = {
+        "error": {
+            "message": "Failed to generate JSON. Please adjust your prompt. See "
+            "'failed_generation' for more details.",
+            "type": "invalid_request_error",
+            "code": "json_validate_failed",
+            "failed_generation": f'{{"resumo": "{PEDIDO}"',
+        }
+    }
+    return httpx.Response(400, json=corpo)
+
+
+def test_json_invalido_repete_e_recupera() -> None:
+    provedor, registo = _provedor(_json_invalido(), _ok())
+    assert isinstance(provedor.gerar_json("s", PEDIDO, PlanoGerado), PlanoGerado)
+    assert len(registo.pedidos) == 2
+    assert any("json_validate_failed" in linha for linha in registo.progresso)
+
+
+def test_json_invalido_sempre_da_reserva_e_mensagem_de_indisponivel() -> None:
+    from paginas import textos as t
+    from vigoria.interface.erros import TipoErroUtilizador, classificar_erro
+
+    provedor, registo = _provedor(*[_json_invalido()] * MAX_TENTATIVAS)
+    with pytest.raises(ErroLLM) as erro:
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert len(registo.pedidos) == MAX_TENTATIVAS
+    assert erro.value.tipo is TipoFalha.JSON_INVALIDO and erro.value.permite_reserva
+    tipo = classificar_erro(erro.value)
+    assert tipo is TipoErroUtilizador.INDISPONIVEL and t.ERROS_GERACAO[tipo]
+
+
+def test_registo_do_corpo_sem_resposta_falhada_nem_pedido(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    provedor, _ = _provedor(_json_invalido(), _ok())
+    with caplog.at_level("WARNING", logger="vigoria.llm"):
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    linha = next(r.getMessage() for r in caplog.records if "HTTP 400" in r.getMessage())
+    assert "code=json_validate_failed" in linha and "type=invalid_request_error" in linha
+    assert "Failed to generate JSON" in linha  # mensagem genérica: regista-se
+    assert "hipertensão" not in caplog.text and 'failed_generation":' not in caplog.text
+
+
+def test_mensagem_de_outros_codigos_nao_se_regista(caplog: pytest.LogCaptureFixture) -> None:
+    """Uma mensagem desconhecida pode citar o pedido: só o código e o tipo."""
+    provedor, _ = _provedor(_erro(400, "Valor inválido"))
+    with caplog.at_level("WARNING", logger="vigoria.llm"), pytest.raises(ErroLLM):
+        provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert "code=x, type=x" in caplog.text
+    assert "hipertensão" not in caplog.text and "Valor inválido" not in caplog.text
+
+
+# ---------------------------------------------------------------- reasoning_effort
+
+
+def test_sem_reasoning_effort_nao_se_envia() -> None:
+    provedor, registo = _provedor(_ok())
+    provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert "reasoning_effort" not in _corpo(registo.pedidos[0])
+
+
+def test_reasoning_effort_da_configuracao() -> None:
+    config = Configuracao(
+        _env_file=None,  # type: ignore[call-arg]
+        groq_api_key=SecretStr("q"),
+        groq_model="openai/gpt-oss-120b",
+        groq_reasoning_effort="low",
+    )
+    assert ProvedorGroq(config=config).reasoning_effort == "low"
+    provedor, registo = _provedor(_ok())
+    provedor.reasoning_effort = "low"
+    provedor.gerar_json("s", PEDIDO, PlanoGerado)
+    assert _corpo(registo.pedidos[0])["reasoning_effort"] == "low"
+
+
+def test_reasoning_effort_invalido_e_recusado() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Configuracao(_env_file=None, groq_reasoning_effort="minimo")  # type: ignore[call-arg]

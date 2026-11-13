@@ -82,6 +82,9 @@ class Configuracao(BaseSettings):
     gemini_model: str = ""
     groq_api_key: SecretStr | None = None
     groq_model: str = ""
+    # Esforço de raciocínio dos modelos gpt-oss na Groq: menos tokens de saída com «low».
+    # Vazio: não se envia (o Groq usa «medium»). Fase 10C, a medir antes de mudar.
+    groq_reasoning_effort: Literal["", "low", "medium", "high"] = ""
     mistral_api_key: SecretStr | None = None
     mistral_model: str = ""
     database_url: str = "sqlite:///vigoria_local.db"

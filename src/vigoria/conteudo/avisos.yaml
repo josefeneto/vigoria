@@ -479,6 +479,10 @@ estilo:
     estructuradas: estruturadas
     estructurando: estruturando
     estructure: estruture
+    # Comparação de fornecedores (12/11/2026): grafia do Brasil e anglicismo.
+    tônus: tónus
+    snack: lanche
+    snacks: lanches
   sem_correcao:
     - total
     - totais
@@ -510,6 +514,8 @@ ortografia_aceites:
   - anaeróbio
   - anaeróbia
   - tónus
+  # O dicionário conhece «oleaginoso», «oleaginosa» e «oleaginosas», mas não este plural.
+  - oleaginosos
   # Tai Chi (REGRAS §3): o dicionário conhece «chi», mas não «tai».
   - tai
   - tai-chi
