@@ -122,11 +122,14 @@ O plano gratuito do Auth0 só permite **um tenant** (o segundo custa 35 $/mês).
 
    Carrega em *Save*.
 2. Em *Settings → Advanced → Login and Logout*, confirma que **RP-Initiated Logout End Session Endpoint Discovery** está ligado (já devia estar, desde a Fase 6).
-3. A aplicação M2M fica como está: só com a permissão `delete:users` na *Auth0 Management API*.
+3. **Aplicação M2M** (apaga a conta de entrada quando a pessoa apaga a conta na Vigoria). Em *Applications → Applications*, procura uma aplicação do tipo *Machine to Machine* (por exemplo `Vigoria gestão`).
+   - **Se não existir** (no teu `secrets.toml` local, `[auth0_gestao]` está vazio): *+ Create Application* → nome `Vigoria gestão`, tipo **Machine to Machine Applications** → *Create*. Em *Select an API*, escolhe **Auth0 Management API**; em *Permissions*, filtra por `delete:users`, marca só essa e carrega em *Authorize*.
+   - **Se existir:** no separador *APIs*, a *Auth0 Management API* tem de estar *Authorized* só com `delete:users`.
+   - **Só no Railway, nunca em local:** deixa `[auth0_gestao]` vazio no teu `secrets.toml`. Como o tenant é um só, as contas do Auth0 são as mesmas em local e em produção: com a M2M em local, apagar a conta num teste apagava também a tua conta de entrada real, a de app.vigoria.pt. Sem ela, em local, «Apagar a conta» apaga só os dados do SQLite, sem erro, e o terminal regista «conta Auth0 por apagar».
 4. Os valores vão para o Railway (passo 4). Copia-os do painel do Auth0 diretamente para o Railway:
    - *Client ID* e *Client Secret* da aplicação `Vigoria` → `AUTH0_CLIENT_ID` e `AUTH0_CLIENT_SECRET`;
    - o endereço `https://<tenant>.eu.auth0.com/.well-known/openid-configuration` (o mesmo de hoje) → `AUTH0_SERVER_METADATA_URL`. O arranque recusa o endereço sem `https://` ou sem o fim `/.well-known/openid-configuration`;
-   - *Client ID* e *Client Secret* da aplicação M2M → `AUTH0_GESTAO_CLIENT_ID` e `AUTH0_GESTAO_CLIENT_SECRET`.
+   - *Client ID* e *Client Secret* da aplicação M2M (separador *Settings*) → `AUTH0_GESTAO_CLIENT_ID` e `AUTH0_GESTAO_CLIENT_SECRET`, só no Railway. Definem-se as duas ou nenhuma: só uma faz falhar o arranque.
 
 ### 3.2 Google — cliente OAuth próprio (obrigatório)
 
