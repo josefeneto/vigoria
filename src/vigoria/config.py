@@ -98,8 +98,10 @@ class Configuracao(BaseSettings):
     ambiente: Literal["local", "demo", "producao"] = "local"
     # Só para testes e desenvolvimento sem Auth0: entra como um utilizador fictício fixo.
     vigoria_utilizador_local: bool = False
-    # Fase de testes só por convite: emails separados por vírgulas (ou lista TOML nos secrets).
-    # Vazia ou ausente: todos podem entrar.
+    # Quem entra (contas/entrada.py): «convidados», só a lista abaixo (vazia: ninguém), ou
+    # «aberto», todos com conta. O utilizador fictício local entra sempre.
+    vigoria_acesso: Literal["convidados", "aberto"] = "convidados"
+    # Lista de convidados: emails separados por vírgulas (ou lista TOML nos secrets).
     vigoria_emails_permitidos: Annotated[frozenset[str], NoDecode] = frozenset()
 
     @classmethod

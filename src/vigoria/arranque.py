@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from vigoria.config import obter_configuracao
+from vigoria.contas.entrada import AVISO_LISTA_VAZIA, ninguem_entra
 from vigoria.dados.bd import criar_motor, migrar
 
 DESTINO = Path(".streamlit") / "secrets.toml"
@@ -144,6 +145,9 @@ def principal(ambiente: Mapping[str, str] | None = None, destino: Path = DESTINO
             raise ErroArranque(f"Configuração inválida: {erro}") from None
         escrever_secrets(destino, ambiente)
         print(f"arranque: {destino} gerado (AMBIENTE={config.ambiente})", flush=True)
+        if ninguem_entra(config.vigoria_emails_permitidos, config.vigoria_acesso):
+            # Aviso, não erro: a app arranca, mas mostra «apenas por convite» a toda a gente.
+            print(f"arranque: AVISO: {AVISO_LISTA_VAZIA}", file=sys.stderr, flush=True)
         migrar_base()
         print("arranque: base de dados atualizada (alembic upgrade head)", flush=True)
     except ErroArranque as erro:

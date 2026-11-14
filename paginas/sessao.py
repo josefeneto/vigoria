@@ -14,7 +14,13 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from paginas import textos as t
 from vigoria.config import obter_configuracao
-from vigoria.contas.entrada import Identidade, convidado, identidade_de
+from vigoria.contas.entrada import (
+    AVISO_LISTA_VAZIA,
+    Identidade,
+    convidado,
+    identidade_de,
+    ninguem_entra,
+)
 from vigoria.dados import repositorios
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.repositorios import Recusa
@@ -56,13 +62,15 @@ def entrar() -> int | Recusa | None:
         st.session_state.pop(UTILIZADOR, None)
         return None
     config = obter_configuracao()
-    permitidos = config.vigoria_emails_permitidos
-    # Na demonstração (app pública no Cloud), sem lista ninguém entra: falha fechada.
-    obrigatoria = config.ambiente == "demo"
-    if obrigatoria and not permitidos:
-        registo.warning("VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo")
-    if (obrigatoria and not permitidos) or (
-        quem.email_verificado and not convidado(quem, permitidos, lista_obrigatoria=obrigatoria)
+    permitidos, acesso = config.vigoria_emails_permitidos, config.vigoria_acesso
+    # O utilizador fictício (só local, sem Auth0) não é uma conta real: entra sempre.
+    fechado = not config.vigoria_utilizador_local and ninguem_entra(permitidos, acesso)
+    if fechado:
+        registo.warning(AVISO_LISTA_VAZIA)
+    if fechado or (
+        not config.vigoria_utilizador_local
+        and quem.email_verificado
+        and not convidado(quem, permitidos, acesso)
     ):
         # Antes da base de dados: quem não está na lista não fica com registo nenhum.
         # Email por verificar segue para repositorios.entrar, que pede a confirmação.

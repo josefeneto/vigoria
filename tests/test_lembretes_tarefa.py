@@ -51,6 +51,7 @@ def _config(**alteracoes: object) -> Configuracao:
         "email_remetente": "geral@vigoria.pt",
         "app_url": "https://vigoria.exemplo",
         "vigoria_segredo_lembretes": SEGREDO,
+        "vigoria_acesso": "aberto",
         "vigoria_emails_permitidos": "",
     }
     return Configuracao(**(valores | alteracoes))  # type: ignore[arg-type]
@@ -192,28 +193,41 @@ def test_so_o_plano_mais_recente(fabrica: sessionmaker[Session]) -> None:
     assert resumo.sem_lembrete == 1 and envio.emails == []
 
 
-def test_na_demonstracao_so_os_convidados(fabrica: sessionmaker[Session]) -> None:
+@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+def test_com_acesso_por_convite_so_os_convidados(
+    fabrica: sessionmaker[Session], ambiente: str
+) -> None:
     with fabrica.begin() as s:
         _pessoa(s, 1)
         _pessoa(s, 2)
-    config = _config(ambiente="demo", vigoria_emails_permitidos=" Pessoa2@Exemplo.pt ")
+    config = _config(
+        ambiente=ambiente,
+        vigoria_acesso="convidados",
+        vigoria_emails_permitidos=" Pessoa2@Exemplo.pt ",
+    )
     resumo, envio, _ = _correr(fabrica, DIA_DO_PRIMEIRO, config=config)
     assert [e.para for e in envio.emails] == ["pessoa2@exemplo.pt"]
     assert resumo.nao_convidados == 1
 
 
-def test_na_demonstracao_sem_lista_ninguem_recebe(fabrica: sessionmaker[Session]) -> None:
+@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+def test_por_convite_sem_lista_ninguem_recebe(
+    fabrica: sessionmaker[Session], ambiente: str
+) -> None:
     with fabrica.begin() as s:
         _pessoa(s, 1)
-    resumo, envio, linhas = _correr(fabrica, DIA_DO_PRIMEIRO, config=_config(ambiente="demo"))
+    config = _config(ambiente=ambiente, vigoria_acesso="convidados")
+    resumo, envio, linhas = _correr(fabrica, DIA_DO_PRIMEIRO, config=config)
     assert envio.emails == [] and resumo.nao_convidados == 1
+    assert any("VIGORIA_ACESSO=convidados" in linha for linha in linhas)
     assert any("ninguém recebe" in linha for linha in linhas)
 
 
-def test_em_producao_sem_lista_todos_recebem(fabrica: sessionmaker[Session]) -> None:
+def test_acesso_aberto_todos_recebem_mesmo_com_lista(fabrica: sessionmaker[Session]) -> None:
     with fabrica.begin() as s:
         _pessoa(s, 1)
-    resumo, _, _ = _correr(fabrica, DIA_DO_PRIMEIRO, config=_config(ambiente="producao"))
+    config = _config(ambiente="producao", vigoria_emails_permitidos="outra@exemplo.pt")
+    resumo, _, _ = _correr(fabrica, DIA_DO_PRIMEIRO, config=config)
     assert resumo.enviados == 1
 
 
@@ -287,6 +301,7 @@ def ambiente(monkeypatch: pytest.MonkeyPatch, tmp_path: object) -> Iterator[None
         "BREVO_API_KEY": "",
         "EMAIL_REMETENTE": "",
         "VIGORIA_SEGREDO_LEMBRETES": "",
+        "VIGORIA_ACESSO": "aberto",
         "VIGORIA_EMAILS_PERMITIDOS": "",
     }.items():
         monkeypatch.setenv(nome, valor)
@@ -388,7 +403,9 @@ def test_teste_so_para_convidados_com_lembretes_ligados(fabrica: sessionmaker[Se
     with fabrica.begin() as s:
         _pessoa(s, 1, lembretes_email=False)
         _pessoa(s, 2)
-    demo = _config(ambiente="demo", vigoria_emails_permitidos="outra@exemplo.pt")
+    demo = _config(
+        ambiente="demo", vigoria_acesso="convidados", vigoria_emails_permitidos="outra@exemplo.pt"
+    )
     codigo, envio, linhas = _testar(fabrica, config=demo)
     assert codigo == 1 and envio.emails == []
     assert "ninguém" in linhas[0]

@@ -14,6 +14,7 @@ from streamlit.testing.v1 import AppTest
 from paginas import comum, sessao
 from vigoria import config
 from vigoria.config import obter_configuracao
+from vigoria.contas.entrada import AVISO_LISTA_VAZIA
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.tabelas import (
     PlanoGuardado,
@@ -112,14 +113,35 @@ def test_base_de_dados_indisponivel_mostra_mensagem_em_vez_de_rodar(
     assert "base de dados indisponível: ConnectionError" in caplog.text
 
 
+CONVIDADA = sessao.Identidade(sub="auth0|ana", email="ana@exemplo.pt", email_verificado=True)
+
+
+def _com_conta(
+    monkeypatch: pytest.MonkeyPatch, lista: str, acesso: str, ambiente: str = "local"
+) -> None:
+    """Uma pessoa já entrada no Auth0 (não o utilizador fictício), com este modo de acesso."""
+    monkeypatch.setenv("AMBIENTE", ambiente)
+    if ambiente != "local":
+        monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")  # o simulado só é aceite em local
+    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
+    monkeypatch.setenv("VIGORIA_ACESSO", acesso)
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", lista)
+    monkeypatch.setattr(sessao, "identidade", lambda: CONVIDADA)
+    obter_configuracao.cache_clear()
+
+
+def _so_ve_o_convite(at: AppTest) -> bool:
+    return any("apenas por convite" in i.value for i in at.info) and [
+        b.label for b in at.button
+    ] == ["Terminar sessão"]
+
+
 def test_fora_da_lista_de_convidados_so_ve_a_mensagem(
     bd: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "ana@exemplo.pt, rui@exemplo.pt")
-    obter_configuracao.cache_clear()
+    _com_conta(monkeypatch, "rui@exemplo.pt, ze@exemplo.pt", "convidados")
     at = _nova_sessao()
-    assert any("apenas por convite" in i.value for i in at.info)
-    assert [b.label for b in at.button] == ["Terminar sessão"]
+    assert _so_ve_o_convite(at)
     # Nem o Início por baixo: o único html é o dos estilos.
     html = "\n".join(h.proto.body for h in at.get("html"))
     assert "Como funciona" not in html and 'class="v-promessa"' not in html
@@ -130,59 +152,70 @@ def test_fora_da_lista_de_convidados_so_ve_a_mensagem(
     assert _contar(bd, Utilizador) == 0
 
 
+@pytest.mark.parametrize("ambiente", ["local", "demo"])
 def test_na_lista_de_convidados_entra_sem_ligar_a_maiusculas(
-    bd: str, monkeypatch: pytest.MonkeyPatch
+    bd: str, monkeypatch: pytest.MonkeyPatch, ambiente: str
 ) -> None:
-    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "ana@exemplo.pt; LOCAL@Vigoria.invalid ")
-    obter_configuracao.cache_clear()
+    _com_conta(monkeypatch, "rui@exemplo.pt; ANA@Exemplo.pt ", "convidados", ambiente)
     at = _nova_sessao()
     assert not any("apenas por convite" in i.value for i in at.info)
     assert "Começar o questionário" in [b.label for b in at.button]
     assert _contar(bd, Utilizador) == 1
-
-
-def _demo(monkeypatch: pytest.MonkeyPatch, lista: str) -> None:
-    """Demonstração (app pública no Cloud) com uma pessoa já entrada no Auth0."""
-    monkeypatch.setenv("AMBIENTE", "demo")
-    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")  # o simulado só é aceite em local
-    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
-    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", lista)
-    monkeypatch.setattr(sessao, "identidade", lambda: CONVIDADA)
-    obter_configuracao.cache_clear()
-
-
-CONVIDADA = sessao.Identidade(sub="auth0|demo", email="ana@exemplo.pt", email_verificado=True)
 
 
 # «Em falta» lê-se como vazia (test_config); aqui não se depende do .env local.
+@pytest.mark.parametrize("ambiente", ["local", "demo"])
 @pytest.mark.parametrize("lista", ["", " , "])
-def test_demo_sem_lista_de_convidados_ninguem_entra(
-    bd: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, lista: str
+def test_por_convite_sem_lista_ninguem_entra_e_avisa(
+    bd: str,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    lista: str,
+    ambiente: str,
 ) -> None:
-    _demo(monkeypatch, lista)
+    _com_conta(monkeypatch, lista, "convidados", ambiente)
     with caplog.at_level(logging.WARNING):
         at = _nova_sessao()
-    assert any("apenas por convite" in i.value for i in at.info)
-    assert [b.label for b in at.button] == ["Terminar sessão"]
+    assert _so_ve_o_convite(at)
     assert _contar(bd, Utilizador) == 0
-    assert "VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo" in caplog.text
+    assert AVISO_LISTA_VAZIA in caplog.text
     assert CONVIDADA.email not in caplog.text
 
 
-def test_demo_com_lista_entra_quem_esta_nela(bd: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    _demo(monkeypatch, "Ana@exemplo.pt")
+@pytest.mark.parametrize("lista", ["", "rui@exemplo.pt"])
+def test_acesso_aberto_entra_quem_tem_conta(
+    bd: str, monkeypatch: pytest.MonkeyPatch, lista: str
+) -> None:
+    _com_conta(monkeypatch, lista, "aberto")
     at = _nova_sessao()
     assert not any("apenas por convite" in i.value for i in at.info)
     assert "Começar o questionário" in [b.label for b in at.button]
     assert _contar(bd, Utilizador) == 1
 
 
-def test_local_sem_lista_todos_entram(bd: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", "")
-    obter_configuracao.cache_clear()
+def test_acesso_aberto_com_email_por_verificar_nao_entra(
+    bd: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _com_conta(monkeypatch, "", "aberto")
+    por_verificar = CONVIDADA.model_copy(update={"email_verificado": False})
+    monkeypatch.setattr(sessao, "identidade", lambda: por_verificar)
     at = _nova_sessao()
+    assert "Começar o questionário" not in [b.label for b in at.button]
+    assert _contar(bd, Utilizador) == 0
+
+
+@pytest.mark.parametrize("lista", ["", "rui@exemplo.pt"])
+def test_utilizador_ficticio_entra_sempre(
+    bd: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, lista: str
+) -> None:
+    monkeypatch.setenv("VIGORIA_ACESSO", "convidados")
+    monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", lista)
+    obter_configuracao.cache_clear()
+    with caplog.at_level(logging.WARNING):
+        at = _nova_sessao()
     assert "Começar o questionário" in [b.label for b in at.button]
     assert _contar(bd, Utilizador) == 1
+    assert AVISO_LISTA_VAZIA not in caplog.text
 
 
 # ---------------------------------------------------------------- Guardar e voltar

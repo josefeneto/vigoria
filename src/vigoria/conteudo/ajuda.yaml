@@ -3,6 +3,7 @@
 # constantes do código (src/vigoria/interface/ajuda.py, VALORES). Um teste falha se houver
 # algarismos no texto ou um marcador desconhecido.
 # `ambientes`: só se mostra nesses ambientes (AMBIENTE); sem a chave, em todos.
+# `acesso`: só se mostra nesses modos (VIGORIA_ACESSO); sem a chave, em todos.
 # Cada resposta tem de 1 a 3 frases.
 
 temas:
@@ -147,7 +148,7 @@ temas:
     titulo: Conta e dados
     perguntas:
       - id: so_convite
-        ambientes: [demo]
+        acesso: [convidados]
         pergunta: Porque é que não consigo usar a Vigoria?
         resposta: >-
           A Vigoria está em fase de testes, apenas por convite. Se quiser participar,

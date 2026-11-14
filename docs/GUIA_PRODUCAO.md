@@ -1,6 +1,8 @@
 # Guia de produção — app.vigoria.pt (Fase 10)
 
-Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU West, Amesterdão), Neon (Frankfurt), Auth0 de produção, Google, Brevo e Groq. O código já está preparado; aqui só há configuração.
+Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU West, Amesterdão), Neon (Frankfurt), Auth0, Google, Brevo e Groq. O código já está preparado; aqui só há configuração.
+
+**Dois ambientes:** local (o teu PC, para desenvolver) e produção (Railway, app.vigoria.pt). A demo no Streamlit Cloud é desligada no passo 6, logo que a produção responde.
 
 **Regras deste guia**
 - Os valores secretos (chaves, palavras-passe, segredos) vão **só** para as variáveis do Railway. Nunca para o chat, o GitHub, ficheiros do projeto ou capturas de ecrã.
@@ -11,12 +13,14 @@ Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU We
 
 1. Neon (base de dados de produção)
 2. Fornecedor de IA: Gemini pago (principal, com teto de gasto) e Groq (reserva)
-3. Auth0 de produção, Google e Brevo
+3. Auth0 (a aplicação atual, mais app.vigoria.pt), Google e Brevo
 4. Railway: serviço web
 5. Domínio app.vigoria.pt (CNAME no cPanel)
-6. Railway: serviço cron dos lembretes
-7. Logótipo no Auth0
-8. Abrir o beta fechado
+6. Desligar a demo (Streamlit Cloud)
+7. Railway: serviço cron dos lembretes
+8. Logótipo no Auth0
+9. Abrir o beta fechado (e, mais tarde, passar a beta aberto)
+10. Testes manuais antes de convidar pessoas
 
 ---
 
@@ -46,7 +50,7 @@ A reserva só entra quando o Gemini falha de vez: indisponível depois das repet
 2. **Faturação:** liga a esse projeto uma conta de faturação (*Billing → Set up billing*). Só com faturação ativa o projeto passa ao nível pago, em que a Google **não usa os pedidos para treinar** os seus modelos.
 3. **Teto de gasto: 5 $ por mês.** No projeto, em *Billing → Monthly spend cap*, define **5 $**. No Google Cloud Console, em *Billing → Budgets & alerts*, cria um orçamento de 5 $ com alertas aos **50 %, 75 % e 90 %**. O teto bloqueia o serviço; o orçamento só avisa. A Google aplica o teto com cerca de **10 a 15 minutos de atraso**, por isso o gasto pode passar ligeiramente dos 5 $.
 4. **Chave própria:** em *API Keys → Create API key*, no projeto `vigoria-producao`, cria a chave `vigoria-producao`. Copia-a **só para o Railway** (`GEMINI_API_KEY`), nunca para o teu `.env`.
-5. **A chave gratuita fica para desenvolvimento e demo:** o teu `.env` local e os Secrets do Streamlit Cloud continuam com a chave do projeto gratuito, só com dados fictícios.
+5. **A chave gratuita fica para desenvolvimento:** o teu `.env` local continua com a chave do projeto gratuito, só com dados fictícios.
 6. **A CONFIRMAR (revisão jurídica):** os termos do Gemini API pago para dados de utilizadores do EEE, a transferência para os EUA e o prazo em que a Google guarda os pedidos para prevenir abusos.
 
 ### 2.2 Groq: a reserva
@@ -95,38 +99,38 @@ Se tiveres `GROQ_REASONING_EFFORT` no `.env`, deixa-o vazio durante a medição:
 
 A tabela aparece no ecrã e fica em `saidas/comparacao/`. Mostra-me o resumo e eu dou-te a minha recomendação.
 
-## 3. Auth0 de produção, Google e Brevo
+## 3. Auth0, Google e Brevo
 
-Ficam **dois tenants**:
+O plano gratuito do Auth0 só permite **um tenant** (o segundo custa 35 $/mês). Fica o tenant atual, na região UE, com a aplicação `Vigoria` e a aplicação M2M que já existem. Acrescentam-se os endereços de app.vigoria.pt e o Railway usa **as mesmas credenciais**.
 
-| Tenant | Para quê | Endereços permitidos |
+| Aplicação | Para quê | Endereços, depois do passo 6 |
 |---|---|---|
-| o atual (desenvolvimento) | local e demo | `http://localhost:8501`, `http://localhost:8080`, `https://<demo>.streamlit.app` |
-| novo (produção) | só app.vigoria.pt | `https://app.vigoria.pt` |
+| `Vigoria` (*Regular Web Application*) | entrar na app | `http://localhost:8501`, `http://localhost:8080` e `https://app.vigoria.pt` |
+| a M2M atual (secção 8 do `GUIA_AUTH0.md`) | apagar a conta de entrada quando a pessoa apaga a conta | — |
 
-Assim, uma conta de teste nunca se mistura com contas reais, e uma chave da demo não abre a produção.
+**O que fica partilhado e o que não fica:** as contas do Auth0 (quem se registou) são as mesmas em local e em produção. Os dados da Vigoria não: em local ficam no SQLite do teu PC, em produção no Neon (passo 1). Além disso, a produção só deixa entrar os convidados (`VIGORIA_ACESSO=convidados` e `VIGORIA_EMAILS_PERMITIDOS`, passo 9).
 
-### 3.1 Tenant de produção
+### 3.1 Acrescentar app.vigoria.pt à aplicação atual
 
-1. No painel do Auth0, no canto superior esquerdo, clica no nome do tenant e depois em *Create tenant*. Usa o nome `vigoria-pt` (ou outro livre), região **EU**, ambiente **Production**.
-2. Repete os passos 2 a 5 do `docs/GUIA_AUTH0.md`, com estes valores na aplicação `Vigoria` (*Regular Web Application*):
+1. No Auth0, em *Applications → Applications → Vigoria → Settings*, acrescenta aos valores que já lá estão, separados por vírgulas (não apagues nenhum agora; os da demo saem no passo 6):
 
-| Campo | Valor |
+| Campo | Acrescentar |
 |---|---|
 | Allowed Callback URLs | `https://app.vigoria.pt/oauth2callback` |
 | Allowed Logout URLs | `https://app.vigoria.pt/oauth2callback` |
 | Allowed Web Origins | `https://app.vigoria.pt` |
 
-3. Em *Settings → Advanced → Login and Logout*, confirma que **RP-Initiated Logout End Session Endpoint Discovery** está ligado.
-4. Na aplicação Machine to Machine para apagar contas (secção 8 do `GUIA_AUTH0.md`), dá só a permissão `delete:users` na *Auth0 Management API* deste tenant.
-5. Os valores vão para o Railway (passo 4):
-   - *Client ID* e *Client Secret* da aplicação `Vigoria` → `AUTH0_CLIENT_ID` e `AUTH0_CLIENT_SECRET`.
-   - O endereço `https://<tenant>.eu.auth0.com/.well-known/openid-configuration` → `AUTH0_SERVER_METADATA_URL`. O arranque recusa o endereço sem `https://` ou sem o fim `/.well-known/openid-configuration`.
+   Carrega em *Save*.
+2. Em *Settings → Advanced → Login and Logout*, confirma que **RP-Initiated Logout End Session Endpoint Discovery** está ligado (já devia estar, desde a Fase 6).
+3. A aplicação M2M fica como está: só com a permissão `delete:users` na *Auth0 Management API*.
+4. Os valores vão para o Railway (passo 4). Copia-os do painel do Auth0 diretamente para o Railway:
+   - *Client ID* e *Client Secret* da aplicação `Vigoria` → `AUTH0_CLIENT_ID` e `AUTH0_CLIENT_SECRET`;
+   - o endereço `https://<tenant>.eu.auth0.com/.well-known/openid-configuration` (o mesmo de hoje) → `AUTH0_SERVER_METADATA_URL`. O arranque recusa o endereço sem `https://` ou sem o fim `/.well-known/openid-configuration`;
    - *Client ID* e *Client Secret* da aplicação M2M → `AUTH0_GESTAO_CLIENT_ID` e `AUTH0_GESTAO_CLIENT_SECRET`.
 
-### 3.2 Google — cliente OAuth próprio
+### 3.2 Google — cliente OAuth próprio (obrigatório)
 
-No tenant de produção, as chaves de desenvolvimento do Auth0 não servem: mostram um aviso e têm limites.
+As chaves de desenvolvimento do Auth0 (as que a ligação Google usa por omissão) **não servem para utilizadores reais**: mostram um aviso no login e têm limites. Este passo é obrigatório antes do beta.
 
 1. Em console.cloud.google.com, cria o projeto `Vigoria`.
 2. Em *Google Auth Platform → Branding* (antigo *OAuth consent screen*), preenche:
@@ -137,14 +141,14 @@ No tenant de produção, as chaves de desenvolvimento do Auth0 não servem: most
    - ligações para a página inicial e para a política de privacidade de `https://app.vigoria.pt`.
 3. Em *Audience*, escolhe **External** e publica a app (*Publish app*). Os âmbitos `openid`, `email` e `profile` não precisam de verificação.
 4. Em *Clients → Create client → Web application*, em *Authorized redirect URIs*, põe `https://<tenant>.eu.auth0.com/login/callback`. O Auth0 mostra o endereço exato na página da ligação Google.
-5. No Auth0 de produção, em *Authentication → Social → Google*, cola o *Client ID* e o *Client Secret* do Google. Liga a ligação à aplicação `Vigoria`.
+5. No Auth0, em *Authentication → Social → google-oauth2*, troca as chaves de desenvolvimento pelo *Client ID* e pelo *Client Secret* do Google. Confirma, no separador *Applications* da ligação, que está ligada à aplicação `Vigoria`. Como há um só tenant, a mudança vale para local e para produção.
 
 ### 3.3 Brevo como SMTP do Auth0
 
-Os emails de verificação e de recuperação da palavra-passe saem de `geral@vigoria.pt`.
+Os emails de verificação e de recuperação da palavra-passe saem de `geral@vigoria.pt`. Como o Google (3.2) e o branding (passo 8), configura-se uma vez no tenant e serve local e produção.
 
-1. No Brevo, em *SMTP & API → SMTP*, copia o **SMTP login** e gera uma **SMTP key** com o nome `auth0-producao`. Não uses a chave API dos lembretes.
-2. No Auth0 de produção, em *Branding → Email Provider → SMTP*, preenche:
+1. No Brevo, em *SMTP & API → SMTP*, copia o **SMTP login** e gera uma **SMTP key** com o nome `auth0`. Não uses a chave API dos lembretes.
+2. No Auth0, em *Branding → Email Provider → SMTP*, preenche:
    - host `smtp-relay.brevo.com`, porta `587`;
    - utilizador = SMTP login, palavra-passe = SMTP key;
    - remetente `geral@vigoria.pt`.
@@ -176,18 +180,19 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 | `VIGORIA_PROVEDOR_RESERVA` | `groq` |
 | `GROQ_API_KEY` | secreto (passo 2.2) |
 | `GROQ_MODEL` | `openai/gpt-oss-120b` |
+| `VIGORIA_ACESSO` | `convidados` (só entram os emails da linha seguinte; ver o passo 9) |
 | `VIGORIA_EMAILS_PERMITIDOS` | os emails do beta, separados por vírgulas |
 | `VIGORIA_PLANOS_POR_DIA` | `3` (opcional: é o valor por omissão; `0` = sem limite) |
 | `VIGORIA_SEGREDO_LEMBRETES` | secreto **novo** (ver abaixo) |
 | `AUTH_REDIRECT_URI` | `https://app.vigoria.pt/oauth2callback` |
 | `AUTH_COOKIE_SECRET` | secreto **novo** (ver abaixo) |
 | `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET` | secretos (passo 3.1) |
-| `AUTH0_SERVER_METADATA_URL` | `https://<tenant>.eu.auth0.com/.well-known/openid-configuration` |
+| `AUTH0_SERVER_METADATA_URL` | `https://<tenant>.eu.auth0.com/.well-known/openid-configuration` (o tenant atual) |
 | `AUTH0_GESTAO_CLIENT_ID`, `AUTH0_GESTAO_CLIENT_SECRET` | secretos (passo 3.1) |
 
    `PORT` não se define: é o Railway que a dá.
 
-   **Segredos novos, nunca copiados da demo nem do teu `.env`:** gera cada um no PowerShell e cola-o diretamente no Railway.
+   **Segredos novos, nunca copiados da demo nem do teu `.env`** (as credenciais do Auth0 são as mesmas; estes dois não): gera cada um no PowerShell e cola-o diretamente no Railway.
    ```powershell
    python -c "import secrets; print(secrets.token_hex(32))"        # AUTH_COOKIE_SECRET
    python -c "import secrets; print(secrets.token_urlsafe(48))"    # VIGORIA_SEGREDO_LEMBRETES
@@ -197,14 +202,14 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
    - `arranque: .streamlit/secrets.toml gerado (AMBIENTE=producao)`
    - `arranque: base de dados atualizada (alembic upgrade head)`
 
-   Se aparecer `arranque: ERRO: …`, a mensagem diz o nome da variável em falta ou mal escrita, nunca o valor.
+   Se aparecer `arranque: ERRO: …`, a mensagem diz o nome da variável em falta ou mal escrita, nunca o valor. Se aparecer `arranque: AVISO: VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia: ninguém entra`, a app arranca, mas ninguém consegue entrar até preencheres a lista.
 5. Em *Settings → Networking → Generate Domain*, crias um endereço `…up.railway.app`. No PowerShell:
    ```powershell
    python scripts/fumo.py https://<endereco>.up.railway.app
    ```
-   O login ainda não funciona neste endereço: o Auth0 de produção só aceita app.vigoria.pt.
+   O login ainda não funciona neste endereço: a aplicação `Vigoria` do Auth0 não tem o endereço `…up.railway.app`, só app.vigoria.pt e os de local (passo 3.1).
 
-**Cada `git push` para o `main` volta a publicar** o serviço web e o cron, e também a demo no Streamlit Cloud.
+**Cada `git push` para o `main` volta a publicar** o serviço web e o cron (e a demo no Streamlit Cloud, até a desligares no passo 6).
 
 ## 5. Domínio app.vigoria.pt
 
@@ -220,7 +225,18 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 
 **HSTS:** o site responde com `Strict-Transport-Security: max-age=31536000`, sem `includeSubDomains` nem `preload`. Os navegadores passam a usar só HTTPS em app.vigoria.pt durante um ano. Os outros subdomínios de vigoria.pt não são afetados.
 
-## 6. Railway — serviço cron dos lembretes
+## 6. Desligar a demo (Streamlit Cloud)
+
+Faz-se logo que app.vigoria.pt responde e o login funciona (passo 5.4), antes do cron e dos testes manuais. A partir daqui ficam só dois ambientes: local e produção.
+
+1. **Streamlit Cloud:** em share.streamlit.io, na app da Vigoria, ⋮ → *Settings → Secrets*: apaga todo o conteúdo e carrega em *Save changes*. Assim, as credenciais do Auth0 e da M2M deixam de lá estar, mesmo que a app demore a ser apagada. Depois, ⋮ → *Delete* e confirma.
+2. **Auth0:** em *Applications → Applications → Vigoria → Settings*, retira os endereços `https://<demo>.streamlit.app` (e `…/oauth2callback`) de *Allowed Callback URLs*, *Allowed Logout URLs* e *Allowed Web Origins*. Ficam só `http://localhost:8501`, `http://localhost:8080` e `https://app.vigoria.pt`. Carrega em *Save*.
+3. **GitHub (recomendado):** em github.com → repositório `josefeneto/vigoria` → *Settings → Secrets and variables → Actions → Repository secrets*, apaga os da demo: `DATABASE_URL`, `BREVO_API_KEY`, `VIGORIA_SEGREDO_LEMBRETES` e `VIGORIA_EMAILS_PERMITIDOS`. O workflow `lembretes.yml` já só corre à mão; sem estes segredos, deixa de conseguir correr.
+4. **Neon da demo:** não tem dados reais. Podes apagá-lo mais tarde, quando quiseres; não é preciso para nada.
+
+O código da demo (`AMBIENTE=demo`, a faixa de demonstração e o workflow do GitHub) fica no repositório por agora. Está registado em `docs/ESTADO.md` como limpeza para uma fase futura.
+
+## 7. Railway — serviço cron dos lembretes
 
 Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem Caddy, Streamlit, migrações nem `secrets.toml`. Só corre a tarefa e termina.
 
@@ -240,7 +256,7 @@ Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem C
 | `DATABASE_URL` | referência ao serviço web |
 | `VIGORIA_PROVEDOR_LLM` e `VIGORIA_GEMINI_PAGO` | referências ao serviço web (a tarefa não chama a LLM, mas a configuração é validada e recusa o Gemini sem `VIGORIA_GEMINI_PAGO=true`) |
 | `VIGORIA_SEGREDO_LEMBRETES` | referência ao serviço web (tem de ser **o mesmo**) |
-| `VIGORIA_EMAILS_PERMITIDOS` | referência ao serviço web |
+| `VIGORIA_ACESSO` e `VIGORIA_EMAILS_PERMITIDOS` | referências ao serviço web (só os convidados recebem lembretes) |
 | `BREVO_API_KEY` | secreto (chave API do Brevo; pode ser uma nova, `lembretes-producao`) |
 | `EMAIL_REMETENTE` | `geral@vigoria.pt` |
 | `EMAIL_NOME_REMETENTE` | `Vigoria` |
@@ -251,22 +267,40 @@ Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem C
 
 Os emails de produção levam o cabeçalho de cancelamento num clique (RFC 8058). O Gmail mostra «Anular subscrição», e o botão desliga os lembretes sem abrir a app.
 
-## 7. Logótipo no Auth0
+## 8. Logótipo no Auth0
 
-Este passo só funciona depois do passo 5, quando o endereço já responde.
+Este passo só funciona depois do passo 5, quando o endereço já responde. Vale também para o login em local (um só tenant).
 
-No Auth0 de produção, em *Branding → Universal Login → Customization Options*:
+No Auth0, em *Branding → Universal Login → Customization Options*:
 - **Logo URL:** `https://app.vigoria.pt/icones/icone-512.png`
 - **Primary color:** `#1F5C63`
 - **Page background:** `#F7F3EC`
 
-## 8. Abrir o beta fechado
+## 9. Abrir o beta fechado
 
-1. Confirma que `VIGORIA_EMAILS_PERMITIDOS` tem só os emails convidados.
-2. Confirma a lista «A CONFIRMAR», abaixo.
-3. Faz os testes manuais (secção seguinte).
+1. No serviço web, confirma `VIGORIA_ACESSO=convidados` e que `VIGORIA_EMAILS_PERMITIDOS` tem só os emails convidados. Com a lista vazia, ninguém entra.
+2. Para acrescentar ou retirar um convidado, edita `VIGORIA_EMAILS_PERMITIDOS` e carrega em *Deploy* para aplicar. O email tem de ser o da conta com que a pessoa entra (o do Google, se entrar com Google).
+3. Quem não está na lista vê «A Vigoria está em fase de testes, apenas por convite. Se quiser participar, escreva para geral@vigoria.pt.» e não fica com nenhum registo na base de dados.
+4. Confirma a lista «A CONFIRMAR», abaixo.
+5. Faz os testes manuais (passo 10).
 
-## 9. Testes manuais antes de convidar pessoas
+### Passar a beta aberto
+
+Só quando **tudo** isto estiver fechado:
+
+- **Revisão jurídica:** todas as linhas «por confirmar» da tabela «A CONFIRMAR» (consentimento, política de privacidade, «Onde ficam os meus dados?», termos do Gemini pago, DPA da Groq).
+- **Política de privacidade completa:** o responsável pelo tratamento, o contacto de privacidade e o prazo de conservação. Hoje dizem «será indicado aqui antes do lançamento».
+- **Tetos de gasto:** 5 $/mês e alertas aos 50/75/90 % no Gemini (passo 2.1) e, se tiveres passado ao Developer, também na Groq (passo 2.2).
+- **Zero Data Retention** ativo na Groq.
+- **Limite diário de planos** (`VIGORIA_PLANOS_POR_DIA`) adequado ao gasto que aceitas.
+- **Testes manuais** (passo 10) sem falhas por resolver.
+- **Auth0:** confirma o número de utilizadores ativos por mês que o plano gratuito permite.
+
+A mudança: no serviço web, muda `VIGORIA_ACESSO` para `aberto` e carrega em *Deploy*. O cron acompanha, porque a variável é uma referência. A lista `VIGORIA_EMAILS_PERMITIDOS` deixa de contar e pode ficar como está. Na Ajuda, a pergunta «Porque é que não consigo usar a Vigoria?» desaparece sozinha.
+
+Para voltar atrás, põe de novo `convidados`. Quem não estiver na lista deixa de conseguir entrar, mas as contas e os dados ficam guardados.
+
+## 10. Testes manuais antes de convidar pessoas
 
 Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falhar (o quê, em que aparelho) e mostra-me.
 
@@ -290,7 +324,7 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 
 ### 9.3 Lembretes no Gmail
 
-1. Em «A minha conta», confirma que os lembretes estão ligados. Faz o envio de teste do serviço cron (passo 6.4, com `--testar-envio`) ou espera pelo envio das 9h07.
+1. Em «A minha conta», confirma que os lembretes estão ligados. Faz o envio de teste do serviço cron (passo 7.4, com `--testar-envio`) ou espera pelo envio das 9h07.
 2. No **Gmail no telemóvel**, abre o email e toca na ligação para a app. Abre no navegador interno do Gmail: confirma que a página carrega e que consegues entrar. Se o login falhar aí, anota-o; o Google bloqueia por vezes o login com Google dentro de navegadores internos.
 3. Confirma que o email **não** tem dados de saúde: nem peso, nem cintura, nem condições.
 
@@ -316,6 +350,9 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 | Consentimento de saúde em produção (Google e Groq, EUA, sem uso para treino) | `paginas/textos.py`, `CONSENTIMENTO_SAUDE_PRODUCAO` | por confirmar (revisão jurídica) |
 | Política de privacidade e «Onde ficam os meus dados?» (Google principal, Groq reserva) | `paginas/textos_privacidade.py` e `conteudo/ajuda.yaml` | por confirmar (revisão jurídica) |
 | Segredos novos em produção (`AUTH_COOKIE_SECRET`, `VIGORIA_SEGREDO_LEMBRETES`) | Railway | por fazer |
+| Endereços de app.vigoria.pt na aplicação `Vigoria` do Auth0 | passo 3.1 | por fazer |
+| `VIGORIA_ACESSO=convidados` e lista de convidados preenchida | Railway, passo 9 | por fazer |
+| Demo desligada: app e Secrets do Streamlit Cloud apagados, endereços streamlit.app retirados do Auth0 | passo 6 | por fazer |
 | Bloqueio de IPs do Brevo desligado | Brevo | por fazer |
 
 ## Problemas comuns
@@ -326,7 +363,10 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 | Registos: `Configuração inválida: … VIGORIA_GEMINI_PAGO` | Falta `VIGORIA_GEMINI_PAGO=true` no serviço (web ou cron). Só se põe depois de a faturação do projeto `vigoria-producao` estar ativa. |
 | Registos: `groq: HTTP 400 (code=json_validate_failed, …)` | O modelo do Groq gerou um JSON fora do schema. A app repete sozinha; só é preocupante se acontecer muitas vezes seguidas. |
 | «A entrada com conta ainda não está configurada» | Não devia acontecer em produção, porque o arranque falha antes. Se acontecer, envia-me os registos do arranque. |
-| Login volta com erro «Callback URL mismatch» | `AUTH_REDIRECT_URI` diferente das *Allowed Callback URLs* do tenant de produção. |
+| Login volta com erro «Callback URL mismatch» | `AUTH_REDIRECT_URI` diferente das *Allowed Callback URLs* da aplicação `Vigoria` no Auth0, ou app.vigoria.pt ainda não foi acrescentado (passo 3.1). |
+| Toda a gente vê «apenas por convite» e, nos registos, `VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia` | Lista de convidados vazia ou por definir no serviço web (passo 9). |
+| Uma pessoa convidada vê «apenas por convite» | O email na lista é diferente do da conta com que entrou (por exemplo, entrou com outro Gmail). |
+| O login com Google mostra um aviso de chaves de desenvolvimento | Falta o cliente OAuth próprio (passo 3.2). |
 | «Há muitas pessoas a preparar o plano» | Mais de 3 minutos na fila: várias gerações seguidas. Nos registos, procura `fila:` e `429 por minuto`. |
 | Planos falham sempre com «muitos pedidos» | Groq no plano gratuito (limite de tokens por minuto). Ver o passo 2. |
 | «O serviço que prepara os planos não está disponível» e, nos registos, `limite de gasto mensal atingido` | Teto de 5 $ atingido. Ver «Quando o teto de gasto é atingido», no passo 2. |

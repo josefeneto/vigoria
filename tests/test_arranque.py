@@ -9,6 +9,7 @@ import pytest
 from vigoria import arranque
 from vigoria.arranque import CABECALHO, ErroArranque, escrever_secrets, secrets_toml
 from vigoria.config import Configuracao
+from vigoria.contas.entrada import AVISO_LISTA_VAZIA
 
 AMBIENTE = {
     "AMBIENTE": "producao",
@@ -75,10 +76,40 @@ def test_nunca_substitui_um_secrets_feito_a_mao(tmp_path: Path) -> None:
     assert destino.read_text(encoding="utf-8") == '[auth]\nredirect_uri = "local"\n'
 
 
-def _config(url: str) -> Configuracao:
-    return Configuracao(
-        _env_file=None, ambiente="producao", vigoria_provedor_llm="groq", database_url=url
+def _config(url: str, **alteracoes: object) -> Configuracao:
+    valores: dict[str, object] = {
+        "_env_file": None,
+        "ambiente": "producao",
+        "vigoria_provedor_llm": "groq",
+        "database_url": url,
+    }
+    return Configuracao(**(valores | alteracoes))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("acesso", "lista", "avisa"),
+    [
+        ("convidados", "", True),
+        ("convidados", "ana@exemplo.pt", False),
+        ("aberto", "", False),
+    ],
+)
+def test_aviso_de_lista_vazia_com_acesso_por_convite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    acesso: str,
+    lista: str,
+    avisa: bool,
+) -> None:
+    config = _config(
+        f"sqlite:///{tmp_path / 'v.db'}", vigoria_acesso=acesso, vigoria_emails_permitidos=lista
     )
+    monkeypatch.setattr(arranque, "obter_configuracao", lambda: config)
+    assert arranque.principal(AMBIENTE, tmp_path / "secrets.toml") == 0  # avisa, não falha
+    erro = capsys.readouterr().err
+    assert (f"arranque: AVISO: {AVISO_LISTA_VAZIA}" in erro) is avisa
+    assert "ana@exemplo.pt" not in erro
 
 
 def test_principal_gera_e_migra(

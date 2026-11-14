@@ -2,7 +2,14 @@
 
 import pytest
 
-from vigoria.contas.entrada import Identidade, convidado, identidade_de, normalizar_email
+from vigoria.contas.entrada import (
+    Identidade,
+    convidado,
+    email_convidado,
+    identidade_de,
+    ninguem_entra,
+    normalizar_email,
+)
 
 
 def test_email_e_palavra_passe_verificado() -> None:
@@ -39,9 +46,23 @@ ANA = Identidade(sub="auth0|1", email="ana@exemplo.pt", email_verificado=True)
 LISTA = frozenset({"ana@exemplo.pt", "rui@exemplo.pt"})
 
 
-def test_sem_lista_todos_entram() -> None:
-    assert convidado(ANA, frozenset())
-    assert convidado(ANA.model_copy(update={"email": "outro@exemplo.pt"}), frozenset())
+def test_por_omissao_so_convidados_e_lista_vazia_ninguem_entra() -> None:
+    assert not convidado(ANA, frozenset())
+    assert not email_convidado(ANA.email, frozenset())
+    assert ninguem_entra(frozenset(), "convidados")
+    assert not ninguem_entra(LISTA, "convidados")
+
+
+def test_acesso_aberto_todos_entram_com_ou_sem_lista() -> None:
+    outro = ANA.model_copy(update={"email": "outro@exemplo.pt"})
+    assert convidado(ANA, frozenset(), "aberto")
+    assert convidado(outro, LISTA, "aberto")
+    assert email_convidado("outro@exemplo.pt", frozenset(), "aberto")
+    assert not ninguem_entra(frozenset(), "aberto")
+
+
+def test_acesso_aberto_exige_email_verificado() -> None:
+    assert not convidado(ANA.model_copy(update={"email_verificado": False}), frozenset(), "aberto")
 
 
 def test_so_entra_quem_esta_na_lista() -> None:
@@ -58,6 +79,7 @@ def test_comparacao_sem_maiusculas_nem_espacos() -> None:
     assert convidado(ANA.model_copy(update={"email": "ANA@exemplo.pt "}), LISTA)
 
 
-def test_lista_obrigatoria_vazia_ninguem_entra() -> None:
-    assert not convidado(ANA, frozenset(), lista_obrigatoria=True)
-    assert convidado(ANA, LISTA, lista_obrigatoria=True)
+def test_convidados_com_lista_entra_quem_esta_nela() -> None:
+    assert convidado(ANA, LISTA, "convidados")
+    assert email_convidado(" ANA@exemplo.pt", LISTA, "convidados")
+    assert not email_convidado("outro@exemplo.pt", LISTA, "convidados")

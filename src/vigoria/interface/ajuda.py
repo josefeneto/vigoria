@@ -57,19 +57,23 @@ def _preenchida(p: PerguntaAjuda) -> PerguntaAjuda:
     )
 
 
-def ajuda(ambiente: str | None, primeiro: str | None = None) -> tuple[TemaAjuda, ...]:
-    """Os temas a mostrar neste ambiente, já preenchidos.
+def ajuda(
+    ambiente: str | None, primeiro: str | None = None, acesso: str | None = None
+) -> tuple[TemaAjuda, ...]:
+    """Os temas a mostrar neste ambiente e modo de acesso (VIGORIA_ACESSO), já preenchidos.
 
-    Só ficam as perguntas sem `ambientes` ou com este ambiente (com None, todas: para os
-    testes); um tema sem perguntas sai. Com `primeiro` (id de um tema), esse tema passa para
-    o início e os outros mantêm a ordem; um id desconhecido não muda nada.
+    Só ficam as perguntas sem `ambientes` ou com este ambiente, e sem `acesso` ou com este
+    modo (com None, sem filtro: para os testes); um tema sem perguntas sai. Com `primeiro`
+    (id de um tema), esse tema passa para o início e os outros mantêm a ordem; um id
+    desconhecido não muda nada.
     """
     temas: list[TemaAjuda] = []
     for tema in carregar_ajuda().temas:
         perguntas = tuple(
             _preenchida(p)
             for p in tema.perguntas
-            if ambiente is None or not p.ambientes or ambiente in p.ambientes
+            if (ambiente is None or not p.ambientes or ambiente in p.ambientes)
+            and (acesso is None or not p.acesso or acesso in p.acesso)
         )
         if perguntas:
             temas.append(

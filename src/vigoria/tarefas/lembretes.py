@@ -25,7 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.config import Configuracao, obter_configuracao
-from vigoria.contas.entrada import email_convidado
+from vigoria.contas.entrada import AVISO_LISTA_VAZIA, email_convidado, ninguem_entra
 from vigoria.dados import repositorios as r
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.notificacoes import brevo
@@ -81,15 +81,14 @@ def executar(
     """Uma execução; `agora` (com fuso) dá o dia em Lisboa e a hora gravada nos envios."""
     resumo = Resumo()
     hoje = dia_em_lisboa(agora)
-    demo = config.ambiente == "demo"
-    permitidos = config.vigoria_emails_permitidos
-    if demo and not permitidos:
-        escrever("AMBIENTE=demo sem VIGORIA_EMAILS_PERMITIDOS: ninguém recebe lembretes.")
+    permitidos, acesso = config.vigoria_emails_permitidos, config.vigoria_acesso
+    if ninguem_entra(permitidos, acesso):
+        escrever(f"{AVISO_LISTA_VAZIA}: ninguém recebe lembretes.")
     with fabrica.begin() as s:
         destinatarios = r.destinatarios_de_lembretes(s)
     for d in destinatarios:
         resumo.candidatos += 1
-        if not email_convidado(d.email, permitidos, lista_obrigatoria=demo):
+        if not email_convidado(d.email, permitidos, acesso):
             resumo.nao_convidados += 1
             continue
         with fabrica.begin() as s:
@@ -159,13 +158,12 @@ def testar_envio(
     escrever: Callable[[str], None] = print,
 ) -> int:
     """Envia um lembrete de exemplo, sem regras nem gravação. Devolve o código de saída."""
-    demo = config.ambiente == "demo"
-    permitidos = config.vigoria_emails_permitidos
+    permitidos, acesso = config.vigoria_emails_permitidos, config.vigoria_acesso
     with fabrica.begin() as s:
         destinatarios = [
             d
             for d in r.destinatarios_de_lembretes(s)
-            if email_convidado(d.email, permitidos, lista_obrigatoria=demo)
+            if email_convidado(d.email, permitidos, acesso)
         ]
     if utilizador_id is not None:
         destinatarios = [d for d in destinatarios if d.utilizador_id == utilizador_id]

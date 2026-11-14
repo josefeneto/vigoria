@@ -5,11 +5,15 @@ mesma pessoa com outro método de entrada.
 """
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
 GOOGLE = "google-oauth2"
+
+# VIGORIA_ACESSO: «convidados» (beta fechado, por omissão) ou «aberto».
+type Acesso = Literal["convidados", "aberto"]
+AVISO_LISTA_VAZIA = "VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia: ninguém entra"
 
 
 class Identidade(BaseModel):
@@ -31,25 +35,26 @@ def normalizar_email(email: str) -> str:
 
 
 def convidado(
-    identidade: Identidade, permitidos: frozenset[str], *, lista_obrigatoria: bool = False
+    identidade: Identidade, permitidos: frozenset[str], acesso: Acesso = "convidados"
 ) -> bool:
-    """Lista de convidados (fase de testes): só emails verificados da lista.
+    """Quem pode entrar (VIGORIA_ACESSO): sempre só com o email verificado.
 
-    Lista vazia: todos entram, exceto com `lista_obrigatoria` (demonstração pública), em que
-    ninguém entra. `permitidos` já vem normalizado (config.py).
+    «convidados»: só os emails da lista; lista vazia, ninguém entra (falha fechada).
+    «aberto»: todos. `permitidos` já vem normalizado (config.py).
     """
-    return identidade.email_verificado and email_convidado(
-        identidade.email, permitidos, lista_obrigatoria=lista_obrigatoria
-    )
+    return identidade.email_verificado and email_convidado(identidade.email, permitidos, acesso)
 
 
-def email_convidado(
-    email: str, permitidos: frozenset[str], *, lista_obrigatoria: bool = False
-) -> bool:
+def email_convidado(email: str, permitidos: frozenset[str], acesso: Acesso = "convidados") -> bool:
     """A mesma regra para um email já verificado (por exemplo, na tarefa dos lembretes)."""
-    if not permitidos:
-        return not lista_obrigatoria
+    if acesso == "aberto":
+        return True
     return normalizar_email(email) in permitidos
+
+
+def ninguem_entra(permitidos: frozenset[str], acesso: Acesso) -> bool:
+    """Só convidados e a lista vazia: configuração quase de certeza esquecida (avisar)."""
+    return acesso == "convidados" and not permitidos
 
 
 def identidade_de(claims: Mapping[str, Any]) -> Identidade:

@@ -320,6 +320,7 @@ class PerguntaAjuda(_Conteudo):
     pergunta: str = Field(min_length=1)
     resposta: str = Field(min_length=1)
     ambientes: tuple[Literal["local", "demo", "producao"], ...] = ()  # vazio: todos
+    acesso: tuple[Literal["convidados", "aberto"], ...] = ()  # VIGORIA_ACESSO; vazio: todos
 
 
 class TemaAjuda(_Conteudo):

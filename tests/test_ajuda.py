@@ -111,9 +111,9 @@ def test_sem_promessas_termos_proibidos_nem_brasileirismos() -> None:
 # ---------------------------------------------------------------- Variantes por ambiente
 
 
-def test_demo_tem_convite_e_servidores_fora_da_ue() -> None:
+def test_demo_tem_servidores_fora_da_ue() -> None:
     ids = _ids("demo")
-    assert {"so_convite", "dados_onde_demo"} <= ids
+    assert "dados_onde_demo" in ids
     assert "dados_onde" not in ids
     assert "fora da UE" in _resposta("dados_onde_demo", "demo")
 
@@ -122,7 +122,16 @@ def test_demo_tem_convite_e_servidores_fora_da_ue() -> None:
 def test_local_e_producao_sem_as_perguntas_da_demo(ambiente: str) -> None:
     ids = _ids(ambiente)
     assert "dados_onde" in ids
-    assert not {"so_convite", "dados_onde_demo"} & ids
+    assert "dados_onde_demo" not in ids
+
+
+@pytest.mark.parametrize("ambiente", ["local", "demo", "producao"])
+def test_pergunta_do_convite_so_com_acesso_por_convite(ambiente: str) -> None:
+    def ids(acesso: str) -> set[str]:
+        return {p.id for tema in ajuda(ambiente, acesso=acesso) for p in tema.perguntas}
+
+    assert "so_convite" in ids("convidados")
+    assert "so_convite" not in ids("aberto")
 
 
 @pytest.mark.parametrize("ambiente", ["local", "demo", "producao"])
@@ -172,16 +181,20 @@ def test_pagina_com_tema_pedido_abre_esse_tema_primeiro() -> None:
     assert sum(aberto for _, aberto in expanders) == 3
 
 
-def test_pagina_em_demo_mostra_a_variante_da_demo(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("acesso", ["convidados", "aberto"])
+def test_pagina_em_demo_mostra_a_variante_da_demo(
+    monkeypatch: pytest.MonkeyPatch, acesso: str
+) -> None:
     monkeypatch.setenv("AMBIENTE", "demo")
     monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
     monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
+    monkeypatch.setenv("VIGORIA_ACESSO", acesso)
     obter_configuracao.cache_clear()
     at = AppTest.from_file(APP, default_timeout=30).run()
     at.switch_page(AJUDA).run()
     assert not at.exception
     rotulos = [r for r, _ in _titulos_expanders(at)]
-    assert "Porque é que não consigo usar a Vigoria?" in rotulos
+    assert ("Porque é que não consigo usar a Vigoria?" in rotulos) is (acesso == "convidados")
     texto = "\n".join(m.value for m in at.markdown)
     assert "fora da UE" in texto
     obter_configuracao.cache_clear()

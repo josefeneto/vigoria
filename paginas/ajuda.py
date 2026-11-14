@@ -15,7 +15,8 @@ pedido = st.query_params.get("tema")
 
 st.title(t.AJUDA_TITULO)
 st.write(t.AJUDA_INTRO)
-for tema in ajuda(obter_configuracao().ambiente, primeiro=pedido):
+config = obter_configuracao()
+for tema in ajuda(config.ambiente, primeiro=pedido, acesso=config.vigoria_acesso):
     st.subheader(tema.titulo, anchor=tema.id)
     for p in tema.perguntas:
         # Sem key: com key, o estado aberto/fechado guardava-se e ignorava um ?tema novo.

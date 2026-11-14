@@ -97,7 +97,7 @@ GROQ_API_KEY = ""
 GROQ_MODEL = ""
 ```
 
-Lista de convidados (obrigatória no Cloud, porque a app é pública): juntar às chaves de topo, **acima** de `[auth]`, os emails das pessoas que podem entrar, separados por vírgulas (a comparação ignora maiúsculas e espaços). Com `AMBIENTE=demo`, se a chave faltar ou estiver vazia, **ninguém entra** (todos veem «apenas por convite») e os registos da app mostram o aviso «VIGORIA_EMAILS_PERMITIDOS em falta ou vazia com AMBIENTE=demo». Em local, sem a chave, todos entram:
+Lista de convidados (obrigatória no Cloud, porque a app é pública): juntar às chaves de topo, **acima** de `[auth]`, os emails das pessoas que podem entrar, separados por vírgulas (a comparação ignora maiúsculas e espaços). Quem entra depende de `VIGORIA_ACESSO` (desde 14/11/2026): com `convidados`, o valor por omissão, só os emails da lista; se a lista faltar ou estiver vazia, **ninguém entra** (todos veem «apenas por convite») e os registos mostram o aviso «VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia: ninguém entra». Com `aberto` (o do `.env.example` para local), entra quem tiver conta. O utilizador fictício (`VIGORIA_UTILIZADOR_LOCAL=1`) entra sempre. A demo deixa de ser usada quando a produção estiver no ar (`docs/GUIA_PRODUCAO.md`, passo 6):
 
 ```toml
 VIGORIA_EMAILS_PERMITIDOS = "jose@exemplo.pt, convidado@exemplo.pt"
