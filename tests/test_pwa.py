@@ -90,6 +90,13 @@ def test_caddy_serve_a_pwa_e_encaminha_o_resto_para_o_streamlit() -> None:
     assert 'Content-Type "application/manifest+json"' in CADDYFILE
 
 
+def test_http_reencaminha_para_https_antes_das_rotas() -> None:
+    regra = "redir @http https://{host}{uri} 308"
+    assert "@http header X-Forwarded-Proto http" in CADDYFILE
+    assert regra in CADDYFILE
+    assert CADDYFILE.index(regra) < CADDYFILE.index("handle @pwa")
+
+
 def test_cabecalhos_de_seguranca_hsts_so_deste_dominio() -> None:
     hsts = [linha.strip() for linha in CADDYFILE.splitlines() if "Strict-Transport" in linha]
     assert hsts == ['Strict-Transport-Security "max-age=31536000"']  # sem subdomínios nem preload

@@ -8,6 +8,11 @@
 }
 
 :{$PORT:8080} {
+	# O Railway indica em X-Forwarded-Proto como o pedido chegou; HTTP passa a HTTPS.
+	# O teste de saúde do Railway e o Docker local não trazem o cabeçalho: ficam em HTTP.
+	@http header X-Forwarded-Proto http
+	redir @http https://{host}{uri} 308
+
 	header {
 		# Só este domínio: sem includeSubDomains nem preload (decisão do José, 11/11/2026).
 		Strict-Transport-Security "max-age=31536000"
