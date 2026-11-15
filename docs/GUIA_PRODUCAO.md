@@ -250,21 +250,23 @@ Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem C
    - **Cron Schedule:** `7 9 * * *`. O Railway lê o cron em UTC, sem fuso horário: o envio sai às 9h07 em Lisboa no inverno e às 10h07 no verão, nunca antes das 9h.
    - **Restart Policy:** Never.
    - Sem domínio e sem healthcheck.
-3. *Variables*. Para não duplicar segredos, usa referências ao serviço web, por exemplo `${{vigoria.DATABASE_URL}}`; o nome antes do ponto é o do serviço web.
+3. *Variables*. Escreve os valores **diretamente**, iguais aos do serviço web. As referências `${{serviço.VAR}}` chegaram vazias na primeira instalação (15/11/2026), sem aviso, e a tarefa recusou-se a correr com `DATABASE_URL está vazio`.
 
 | Variável | Valor |
 |---|---|
 | `AMBIENTE` | `producao` |
 | `APP_URL` | `https://app.vigoria.pt` |
-| `DATABASE_URL` | referência ao serviço web |
-| `VIGORIA_PROVEDOR_LLM` e `VIGORIA_GEMINI_PAGO` | referências ao serviço web (a tarefa não chama a LLM, mas a configuração é validada e recusa o Gemini sem `VIGORIA_GEMINI_PAGO=true`) |
-| `VIGORIA_SEGREDO_LEMBRETES` | referência ao serviço web (tem de ser **o mesmo**) |
-| `VIGORIA_ACESSO` e `VIGORIA_EMAILS_PERMITIDOS` | referências ao serviço web (só os convidados recebem lembretes) |
+| `DATABASE_URL` | secreto, igual ao do serviço web |
+| `VIGORIA_PROVEDOR_LLM` e `VIGORIA_GEMINI_PAGO` | `gemini` e `true`, iguais aos do serviço web (a tarefa não chama a LLM, mas a configuração é validada e recusa o Gemini sem `VIGORIA_GEMINI_PAGO=true`) |
+| `VIGORIA_SEGREDO_LEMBRETES` | secreto, **igual** ao do serviço web; se for diferente, as ligações de cancelamento dos emails são recusadas |
+| `VIGORIA_ACESSO` e `VIGORIA_EMAILS_PERMITIDOS` | iguais aos do serviço web (só os convidados recebem lembretes) |
 | `BREVO_API_KEY` | secreto (chave API do Brevo; pode ser uma nova, `lembretes-producao`) |
 | `EMAIL_REMETENTE` | `geral@vigoria.pt` |
 | `EMAIL_NOME_REMETENTE` | `Vigoria` |
 
-4. Para testar sem esperar pelo dia seguinte, muda **temporariamente** o *Custom Start Command* e carrega em *Deploy*. Depois de cada teste, volta ao comando normal.
+   **Valores duplicados:** quando mudares um destes valores no serviço web (por exemplo, um convidado novo em `VIGORIA_EMAILS_PERMITIDOS`), muda-o também aqui e carrega em *Deploy* nos dois serviços.
+
+4. Para testar sem esperar pelo dia seguinte, muda **temporariamente** o *Custom Start Command* e carrega em *Deploy*. Com o *Cron Schedule* preenchido, o deploy não corre a tarefa: usa *Run now* ou deixa o cron vazio durante o teste. Os resultados aparecem em *Deploy Logs*, não em *Build Logs*. Depois de cada teste, volta ao comando normal e ao cron `7 9 * * *`.
    - `python -m vigoria.tarefas.lembretes --simular`: mostra nos registos quem receberia que lembrete, sem enviar nada.
    - `python -m vigoria.tarefas.lembretes --testar-envio`: envia já um lembrete de exemplo. Se houver mais de uma conta, junta `--utilizador <id>`.
 
@@ -282,7 +284,7 @@ No Auth0, em *Branding → Universal Login → Customization Options*:
 ## 9. Abrir o beta fechado
 
 1. No serviço web, confirma `VIGORIA_ACESSO=convidados` e que `VIGORIA_EMAILS_PERMITIDOS` tem só os emails convidados. Com a lista vazia, ninguém entra.
-2. Para acrescentar ou retirar um convidado, edita `VIGORIA_EMAILS_PERMITIDOS` e carrega em *Deploy* para aplicar. O email tem de ser o da conta com que a pessoa entra (o do Google, se entrar com Google).
+2. Para acrescentar ou retirar um convidado, edita `VIGORIA_EMAILS_PERMITIDOS` **nos dois serviços** (web e `lembretes`) e carrega em *Deploy* em cada um para aplicar. O email tem de ser o da conta com que a pessoa entra (o do Google, se entrar com Google).
 3. Quem não está na lista vê «A Vigoria está em fase de testes, apenas por convite. Se quiser participar, escreva para geral@vigoria.pt.» e não fica com nenhum registo na base de dados.
 4. Confirma a lista «A CONFIRMAR», abaixo.
 5. Faz os testes manuais (passo 10).
@@ -299,7 +301,7 @@ Só quando **tudo** isto estiver fechado:
 - **Testes manuais** (passo 10) sem falhas por resolver.
 - **Auth0:** confirma o número de utilizadores ativos por mês que o plano gratuito permite.
 
-A mudança: no serviço web, muda `VIGORIA_ACESSO` para `aberto` e carrega em *Deploy*. O cron acompanha, porque a variável é uma referência. A lista `VIGORIA_EMAILS_PERMITIDOS` deixa de contar e pode ficar como está. Na Ajuda, a pergunta «Porque é que não consigo usar a Vigoria?» desaparece sozinha.
+A mudança: muda `VIGORIA_ACESSO` para `aberto` nos dois serviços (web e `lembretes`) e carrega em *Deploy* em cada um. A lista `VIGORIA_EMAILS_PERMITIDOS` deixa de contar e pode ficar como está. Na Ajuda, a pergunta «Porque é que não consigo usar a Vigoria?» desaparece sozinha.
 
 Para voltar atrás, põe de novo `convidados`. Quem não estiver na lista deixa de conseguir entrar, mas as contas e os dados ficam guardados.
 
