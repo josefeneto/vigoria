@@ -211,7 +211,9 @@ ALT_FOTO_FIM = (
     "Pessoa ao ar livre, à sombra de uma árvore, a beber água com um tapete debaixo do braço."
 )
 INICIO_SELO = "Para quem tem 45 anos ou mais"
-INICIO_DURACAO = f"Cerca de {MINUTOS_QUESTIONARIO} minutos · sem compromisso"
+INICIO_DURACAO = (
+    f"Responder ao questionário demora cerca de {MINUTOS_QUESTIONARIO} minutos, sem compromisso."
+)
 INICIO_AVISO = "A Vigoria orienta; não substitui o seu médico."
 INICIO_SESSAO = (
     "Para guardar o seu plano, entre com a conta Google ou com email e palavra-passe. "
