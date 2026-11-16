@@ -1,4 +1,4 @@
-"""Textos de produção (Fase 10D): privacidade por ambiente, ajuda e faixa da demonstração."""
+"""Textos de produção (Fase 10D): a política de privacidade única e a faixa da demonstração."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -15,8 +15,8 @@ from vigoria.motor.voz import encontrar_termos
 RAIZ = Path(__file__).resolve().parents[1]
 
 
-def test_privacidade_de_producao_sem_github_nem_demonstracao() -> None:
-    texto = privacidade("producao")
+def test_privacidade_sem_github_nem_demonstracao() -> None:
+    texto = privacidade()
     assert "GitHub" not in texto and "demonstração" not in texto
     assert "Railway" in texto and "Amesterdão" in texto and "Frankfurt" in texto
     assert "Estados Unidos" in texto and "treinar" in texto
@@ -26,8 +26,8 @@ def test_privacidade_de_producao_sem_github_nem_demonstracao() -> None:
     assert encontrar_termos(avisos.brasileirismos, texto) == ()
 
 
-def test_privacidade_de_producao_completa_e_em_vigor() -> None:
-    texto = privacidade("producao")
+def test_privacidade_completa_e_em_vigor() -> None:
+    texto = privacidade()
     assert not em_rascunho(texto)  # sem «[PREENCHER»: a faixa RASCUNHO desaparece
     assert "privacidade@vigoria.pt" in texto
     assert "a Groq **não as guarda**" in texto
@@ -47,15 +47,6 @@ def test_caixa_de_aceitacao_liga_a_privacidade() -> None:
     assert rotulo == "Li e aceito a [política de privacidade](/privacidade)."
     assert "termos" not in rotulo  # os termos de utilização ainda não existem
     assert t.ACEITA_AO_CRIAR_CONTA[1] == "política de privacidade"
-
-
-def test_privacidade_da_demo_mantem_github_e_aviso() -> None:
-    texto = privacidade("demo")
-    assert "GitHub" in texto and "não introduza dados reais de saúde" in texto
-
-
-def test_local_usa_o_texto_de_producao() -> None:
-    assert privacidade("local") == privacidade("producao")
 
 
 @pytest.fixture(params=["producao", "demo"])
@@ -78,8 +69,7 @@ def test_faixa_da_demonstracao_so_na_demo(ambiente: str) -> None:
     assert (t.DEMO_AVISO in [w.value for w in at.warning]) is (ambiente == "demo")
     at.switch_page("paginas/privacidade.py").run()
     texto = "\n".join(m.value for m in at.markdown)
-    assert ("GitHub" in texto) is (ambiente == "demo")
-    assert ("Railway" in texto) is (ambiente == "producao")
+    assert "GitHub" not in texto and "Railway" in texto  # a mesma política em todo o lado
     assert not [w for w in at.warning if "rascunho" in w.value]  # sem «[PREENCHER»
     at.switch_page("paginas/inicio.py").run()  # sem sessão: a frase da privacidade aparece
     html = "\n".join(h.proto.body for h in at.get("html"))
