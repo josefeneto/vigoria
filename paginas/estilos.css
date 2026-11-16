@@ -303,6 +303,7 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .v-selo { display: inline-block; margin: 0 0 .9rem; padding: .35rem .75rem; border-radius: 14px;
   background: var(--v-principal); color: var(--v-nevoa); font-size: .75rem; font-weight: 700; }
 .v-topo-duracao { margin: 0; text-align: center; color: var(--v-nevoa); font-size: .8rem; }
+.v-aceita-privacidade a { color: inherit; text-decoration: underline; }
 .st-key-faixa_topo .v-faixa-texto { color: var(--v-nevoa); margin: 0; }
 .v-aviso-final { text-align: center; color: var(--v-texto-secundario); font-size: .8rem;
   margin: 1.5rem 1rem 0; }

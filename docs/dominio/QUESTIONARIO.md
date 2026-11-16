@@ -13,7 +13,7 @@ Página de entrada com o botão «Entrar ou criar conta», que abre a página do
 
 | Campo | Tipo | Obrigatório | Notas |
 |---|---|---|---|
-| `aceita_termos` | caixa | sim | Termos de utilização + política de privacidade (ligações) |
+| `aceita_termos` | caixa | sim | Política de privacidade (ligação na própria caixa); os termos de utilização entram quando existirem |
 | `consentimento_saude` | caixa | sim | Consentimento explícito para tratar dados de saúde com a finalidade de gerar e acompanhar o plano (RGPD art. 9.º, n.º 2, al. a) |
 | `confirma_maior_idade` | caixa | sim | Bloqueia se não marcada |
 

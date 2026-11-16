@@ -185,7 +185,6 @@ def passo_0() -> None:
         st.checkbox(rotulo, width="stretch", **W(campo))
         comum.erro(campo)
     st.page_link(comum.PAGINA_PRIVACIDADE, label=t.LER_PRIVACIDADE, icon=":material/policy:")
-    st.caption(t.TERMOS_EM_PREPARACAO)
 
 
 def passo_1() -> None:

@@ -294,7 +294,8 @@ No Auth0, em *Branding → Universal Login → Customization Options*:
 Só quando **tudo** isto estiver fechado:
 
 - **Revisão jurídica:** todas as linhas «por confirmar» da tabela «A CONFIRMAR» (consentimento, política de privacidade, «Onde ficam os meus dados?», termos do Gemini pago, DPA da Groq).
-- **Política de privacidade completa:** o responsável pelo tratamento, o contacto de privacidade e o prazo de conservação. Hoje dizem «será indicado aqui antes do lançamento».
+- **Responsável pelo tratamento identificado:** a política (versão de 20/11/2026) diz só «a Vigoria», que é uma marca. O RGPD (art. 13.º) pede a identidade: nome da pessoa ou firma da empresa.
+- **Termos de utilização:** quando existirem, voltar a juntá-los à caixa do passo 0 e subir `VERSAO_CONSENTIMENTO`.
 - **Tetos de gasto:** 5 $/mês e alertas aos 50/75/90 % no Gemini (passo 2.1) e, se tiveres passado ao Developer, também na Groq (passo 2.2).
 - **Zero Data Retention** ativo na Groq.
 - **Limite diário de planos** (`VIGORIA_PLANOS_POR_DIA`) adequado ao gasto que aceitas.

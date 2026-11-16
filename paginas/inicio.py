@@ -40,6 +40,12 @@ with st.container(key="faixa_topo"):
             componentes.fotografia("inicio_topo", t.ALT_FOTO_INICIO)
     with st.container(key="topo_acao"):
         _comecar("comecar")
+        if sessao.UTILIZADOR not in st.session_state:
+            antes, ligacao, depois = (escape(p) for p in t.ACEITA_AO_CRIAR_CONTA)
+            st.html(
+                f'<p class="v-topo-duracao v-aceita-privacidade">{antes}'
+                f'<a href="/privacidade" target="_self">{ligacao}</a>{depois}</p>'
+            )
         st.html(f'<p class="v-topo-duracao">{escape(t.INICIO_DURACAO)}</p>')
         if comum.RESULTADO in st.session_state:
             st.page_link(

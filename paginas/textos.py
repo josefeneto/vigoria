@@ -71,6 +71,10 @@ ENTRAR_CURTO = "Entrar"
 # ---------------------------------------------------------------- Conta e sessão
 
 ENTRAR = "Entrar ou criar conta"
+# Por baixo do botão «Entrar ou criar conta», só sem sessão iniciada (decisão do José,
+# 16/11/2026). A aceitação explícita e registada é a caixa do passo 0.
+# (antes, ligação, depois): a ligação abre /privacidade no mesmo separador.
+ACEITA_AO_CRIAR_CONTA = ("Ao criar conta, aceita a ", "política de privacidade", " da Vigoria.")
 BD_INDISPONIVEL = (
     "Não foi possível ligar à base de dados. Tente de novo dentro de momentos: "
     f"os seus dados estão guardados. Se o problema continuar, escreva para {CONTACTO}."
@@ -98,7 +102,7 @@ SO_POR_CONVITE = (
 )
 UTILIZADOR_LOCAL = "Sessão de desenvolvimento (utilizador fictício, sem Auth0)."
 # Muda sempre que o texto do passo 0 (ROTULOS_CONSENTIMENTO) ou a privacidade mudarem.
-VERSAO_CONSENTIMENTO = "2026-11-13"
+VERSAO_CONSENTIMENTO = "2026-11-20"
 ERRO_GUARDAR = (
     "O plano foi preparado, mas não conseguimos guardá-lo na sua conta. Pode vê-lo agora; "
     "se fechar a janela, perde-se. Tente gerá-lo de novo mais tarde."
@@ -238,7 +242,8 @@ BOAS_VINDAS = (
     "de saúde, que só usamos para preparar e acompanhar o seu plano."
 )
 ROTULOS_CONSENTIMENTO = {
-    "aceita_termos": "Li e aceito os termos de utilização e a política de privacidade.",
+    # Os termos de utilização ainda não existem: a caixa refere só a política (16/11/2026).
+    "aceita_termos": "Li e aceito a [política de privacidade](/privacidade).",
     "consentimento_saude": (
         "Autorizo o tratamento dos meus dados de saúde para gerar e acompanhar o meu plano."
     ),
@@ -256,7 +261,6 @@ CONSENTIMENTO_SAUDE_PRODUCAO = (
 )
 LER_PRIVACIDADE = "Ler a política de privacidade"
 AJUDA_TEXTO_LIVRE = "Não escreva o seu nome nem contactos."
-TERMOS_EM_PREPARACAO = "Os termos de utilização estão em preparação (versão de teste)."
 
 # ---------------------------------------------------------------- Passo 1
 
