@@ -37,7 +37,7 @@ Neon (Frankfurt): PostgreSQL · Auth0 (UE): contas · IA: Gemini pago (principal
 
 O arranque (`python -m vigoria.arranque`) gera o `secrets.toml` a partir das variáveis do
 Railway e aplica as migrações. Todos os passos manuais estão em `docs/GUIA_PRODUCAO.md`.
-A demonstração no Streamlit Community Cloud continua com o mesmo código (`AMBIENTE=demo`).
+Há dois ambientes: `local` (o PC) e `producao` (Railway, https://app.vigoria.pt).
 
 Prova local da imagem (PowerShell, com o Docker Desktop):
 

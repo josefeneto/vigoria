@@ -193,7 +193,7 @@ def test_so_o_plano_mais_recente(fabrica: sessionmaker[Session]) -> None:
     assert resumo.sem_lembrete == 1 and envio.emails == []
 
 
-@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
 def test_com_acesso_por_convite_so_os_convidados(
     fabrica: sessionmaker[Session], ambiente: str
 ) -> None:
@@ -210,7 +210,7 @@ def test_com_acesso_por_convite_so_os_convidados(
     assert resumo.nao_convidados == 1
 
 
-@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
 def test_por_convite_sem_lista_ninguem_recebe(
     fabrica: sessionmaker[Session], ambiente: str
 ) -> None:
@@ -345,8 +345,8 @@ def test_segredo_curto_e_recusado() -> None:
 
 
 def test_fora_do_local_exige_o_endereco_publico() -> None:
-    assert lembretes._faltas(_config(ambiente="demo")) == []
-    assert lembretes._faltas(_config(ambiente="demo", app_url="")) == [
+    assert lembretes._faltas(_config(ambiente="producao")) == []
+    assert lembretes._faltas(_config(ambiente="producao", app_url="")) == [
         "APP_URL (endereço público https da app)"
     ]
     assert lembretes._faltas(_config(app_url="http://localhost:8501")) == []
@@ -403,10 +403,12 @@ def test_teste_so_para_convidados_com_lembretes_ligados(fabrica: sessionmaker[Se
     with fabrica.begin() as s:
         _pessoa(s, 1, lembretes_email=False)
         _pessoa(s, 2)
-    demo = _config(
-        ambiente="demo", vigoria_acesso="convidados", vigoria_emails_permitidos="outra@exemplo.pt"
+    config = _config(
+        ambiente="producao",
+        vigoria_acesso="convidados",
+        vigoria_emails_permitidos="outra@exemplo.pt",
     )
-    codigo, envio, linhas = _testar(fabrica, config=demo)
+    codigo, envio, linhas = _testar(fabrica, config=config)
     assert codigo == 1 and envio.emails == []
     assert "ninguém" in linhas[0]
 

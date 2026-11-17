@@ -185,7 +185,7 @@ def test_simulado_em_local_sem_reserva() -> None:
     assert _plano(provedor) == "simulado"
 
 
-@pytest.mark.parametrize("ambiente", ["demo", "producao"])
+@pytest.mark.parametrize("ambiente", ["producao"])
 def test_simulado_recusado_fora_de_local(ambiente: str) -> None:
     with pytest.raises(ValidationError, match="AMBIENTE=local"):
         _config(vigoria_provedor_llm="simulado", ambiente=ambiente)
@@ -253,7 +253,7 @@ def test_gemini_recusado_em_producao_salvo_pago(valores: dict[str, str]) -> None
     assert _config(ambiente="producao", vigoria_gemini_pago=True, **valores).ambiente == "producao"
 
 
-@pytest.mark.parametrize("ambiente", ["local", "demo"])
+@pytest.mark.parametrize("ambiente", ["local"])
 def test_gemini_aceite_fora_de_producao(ambiente: str) -> None:
     assert _config(ambiente=ambiente).vigoria_provedor_llm == "gemini"
 

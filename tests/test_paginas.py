@@ -246,20 +246,6 @@ def test_textos_novos_sem_promessas_termos_proibidos_nem_brasileirismos() -> Non
         assert encontrar_termos(termos, texto) == ()
 
 
-def test_faixa_de_demonstracao_so_em_demo(monkeypatch: pytest.MonkeyPatch) -> None:
-    aviso = "Versão de demonstração — não introduza dados reais de saúde."
-    at = AppTest.from_file(APP, default_timeout=30).run()
-    assert not any(aviso in w.value for w in at.warning)
-    monkeypatch.setenv("AMBIENTE", "demo")
-    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
-    monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")  # sem sessão: só as páginas públicas
-    obter_configuracao.cache_clear()
-    for pagina in ("paginas/inicio.py", "paginas/privacidade.py"):
-        at.switch_page(pagina).run()
-        assert not at.exception
-        assert any(aviso in w.value for w in at.warning), pagina
-
-
 def test_plano_sem_resultado_convida_ao_questionario() -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     at.switch_page("paginas/plano.py").run()
@@ -378,5 +364,5 @@ def test_consentimento_de_producao_nomeia_o_fornecedor_de_ia() -> None:
     assert "Google" in saude and "Groq" in saude
     assert "A CONFIRMAR" not in saude  # a marca fica só no código e no guia
     assert encontrar_termos(carregar_avisos().brasileirismos, saude) == ()
-    for ambiente in ("local", "demo"):
+    for ambiente in ("local",):
         assert rotulos_consentimento(ambiente) == t.ROTULOS_CONSENTIMENTO

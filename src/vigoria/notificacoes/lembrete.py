@@ -17,7 +17,7 @@ from vigoria.notificacoes.brevo import Email
 from vigoria.notificacoes.token import VALIDADE
 
 CAMINHO_PROGRESSO = "progresso"  # paginas/progresso.py
-CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py): demo e local
+CAMINHO_CANCELAR = "cancelar-lembretes"  # paginas/cancelar_lembretes.py (app.py): em local
 # Produção (Fase 10): o serviço Starlette por trás do Caddy (vigoria/web/cancelar.py), que
 # aceita o POST do cancelamento num clique (RFC 8058).
 CAMINHO_CANCELAR_UM_CLIQUE = "cancelar"

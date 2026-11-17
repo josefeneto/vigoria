@@ -111,21 +111,13 @@ def test_sem_promessas_termos_proibidos_nem_brasileirismos() -> None:
 # ---------------------------------------------------------------- Variantes por ambiente
 
 
-def test_demo_tem_servidores_fora_da_ue() -> None:
-    ids = _ids("demo")
-    assert "dados_onde_demo" in ids
-    assert "dados_onde" not in ids
-    assert "fora da UE" in _resposta("dados_onde_demo", "demo")
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
+def test_onde_ficam_os_dados_em_local_e_producao(ambiente: str) -> None:
+    assert "dados_onde" in _ids(ambiente)
+    assert "Amesterdão" in _resposta("dados_onde", ambiente)
 
 
 @pytest.mark.parametrize("ambiente", ["local", "producao"])
-def test_local_e_producao_sem_as_perguntas_da_demo(ambiente: str) -> None:
-    ids = _ids(ambiente)
-    assert "dados_onde" in ids
-    assert "dados_onde_demo" not in ids
-
-
-@pytest.mark.parametrize("ambiente", ["local", "demo", "producao"])
 def test_pergunta_do_convite_so_com_acesso_por_convite(ambiente: str) -> None:
     def ids(acesso: str) -> set[str]:
         return {p.id for tema in ajuda(ambiente, acesso=acesso) for p in tema.perguntas}
@@ -134,7 +126,7 @@ def test_pergunta_do_convite_so_com_acesso_por_convite(ambiente: str) -> None:
     assert "so_convite" not in ids("aberto")
 
 
-@pytest.mark.parametrize("ambiente", ["local", "demo", "producao"])
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
 def test_uma_so_pergunta_sobre_onde_ficam_os_dados(ambiente: str) -> None:
     perguntas = [p.pergunta for tema in ajuda(ambiente) for p in tema.perguntas]
     assert perguntas.count("Onde ficam os meus dados?") == 1
@@ -182,11 +174,10 @@ def test_pagina_com_tema_pedido_abre_esse_tema_primeiro() -> None:
 
 
 @pytest.mark.parametrize("acesso", ["convidados", "aberto"])
-def test_pagina_em_demo_mostra_a_variante_da_demo(
-    monkeypatch: pytest.MonkeyPatch, acesso: str
-) -> None:
-    monkeypatch.setenv("AMBIENTE", "demo")
-    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
+def test_pagina_em_producao_conforme_o_acesso(monkeypatch: pytest.MonkeyPatch, acesso: str) -> None:
+    monkeypatch.setenv("AMBIENTE", "producao")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "groq")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_RESERVA", "")
     monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
     monkeypatch.setenv("VIGORIA_ACESSO", acesso)
     obter_configuracao.cache_clear()
@@ -196,7 +187,7 @@ def test_pagina_em_demo_mostra_a_variante_da_demo(
     rotulos = [r for r, _ in _titulos_expanders(at)]
     assert ("Porque é que não consigo usar a Vigoria?" in rotulos) is (acesso == "convidados")
     texto = "\n".join(m.value for m in at.markdown)
-    assert "fora da UE" in texto
+    assert "Amesterdão" in texto
     obter_configuracao.cache_clear()
 
 

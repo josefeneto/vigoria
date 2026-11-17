@@ -1,6 +1,6 @@
 """Deixar de receber lembretes: a ligação dos emails, sem sessão iniciada (Fase 8).
 
-Na demo e em local. Em produção, a ligação dos emails vai para o serviço de cancelamento num
+Em local. Em produção, a ligação dos emails vai para o serviço de cancelamento num
 clique (vigoria/web/cancelar.py, Fase 10B); esta página continua a funcionar lá também.
 Abrir a ligação não desliga nada (os antivírus do email abrem ligações sozinhos): só o botão
 o faz. A verificação do token está em vigoria.notificacoes.cancelamento.

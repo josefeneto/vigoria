@@ -173,16 +173,7 @@ temas:
         resposta: >-
           Em «A minha conta», em «Apagar a conta», confirme e escreva APAGAR. A conta e todos
           os dados são apagados de forma definitiva.
-      - id: dados_onde_demo
-        ambientes: [demo]
-        pergunta: Onde ficam os meus dados?
-        resposta: >-
-          Os seus dados ficam guardados numa base de dados na União Europeia. Nesta fase de
-          testes, a app corre em servidores fora da UE; a política de privacidade explica
-          quem trata os dados e para quê. Ao preparar o plano, não enviamos o seu nome nem o
-          seu email à inteligência artificial.
       - id: dados_onde
-        ambientes: [local, producao]
         # Fase 10D; fornecedores decididos a 13/11/2026 (Google principal, Groq reserva).
         # A CONFIRMAR: revisão jurídica da transferência para os EUA (docs/GUIA_PRODUCAO.md).
         pergunta: Onde ficam os meus dados?

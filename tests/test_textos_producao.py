@@ -1,4 +1,4 @@
-"""Textos de produção (Fase 10D): a política de privacidade única e a faixa da demonstração."""
+"""Textos de produção (Fase 10D): a política de privacidade única, sem faixa de demonstração."""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -49,7 +49,7 @@ def test_caixa_de_aceitacao_liga_a_privacidade() -> None:
     assert t.ACEITA_AO_CRIAR_CONTA[1] == "política de privacidade"
 
 
-@pytest.fixture(params=["producao", "demo"])
+@pytest.fixture(params=["producao", "local"])
 def ambiente(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> Iterator[str]:
@@ -63,10 +63,10 @@ def ambiente(
     obter_configuracao.cache_clear()
 
 
-def test_faixa_da_demonstracao_so_na_demo(ambiente: str) -> None:
+def test_sem_faixa_de_demonstracao(ambiente: str) -> None:
     at = AppTest.from_file(str(RAIZ / "app.py"), default_timeout=30).run()
     assert not at.exception
-    assert (t.DEMO_AVISO in [w.value for w in at.warning]) is (ambiente == "demo")
+    assert not [w for w in at.warning if "demonstração" in w.value]
     at.switch_page("paginas/privacidade.py").run()
     texto = "\n".join(m.value for m in at.markdown)
     assert "GitHub" not in texto and "Railway" in texto  # a mesma política em todo o lado

@@ -76,5 +76,6 @@ def mostra_mais_aulas(intensidade: Intensidade, so_ligeira: bool) -> bool:
 
 
 def sugere_subir(intensidade: Intensidade, so_ligeira: bool) -> bool:
-    """D6: «experimente o nível acima» só sem a regressão e se houver nível acima."""
-    return not so_ligeira and intensidade is not In.ALTA
+    """D6: «experimente o nível acima» só na media sem a regressão (decisão de 17/11/2026):
+    na ligeira, os links do nível acima não aparecem; na alta, não há nível acima."""
+    return not so_ligeira and intensidade is In.MEDIA

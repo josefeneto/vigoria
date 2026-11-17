@@ -20,11 +20,7 @@ st.set_page_config(page_title=t.MARCA, page_icon=estilos.favicon(), layout="cent
 estilos.aplicar()
 # O logotipo está no topo desenhado por paginas/navegacao.py (Fase 8D), não no st.logo.
 
-# Na demonstração (Streamlit Community Cloud), em todas as páginas.
 config = obter_configuracao()
-if config.ambiente == "demo":
-    with st.container(key="aviso_demo"):  # o CSS usa-a para afastar a barra do selo do Cloud
-        st.warning(t.DEMO_AVISO, icon=":material/science:")
 
 
 def _sair() -> None:

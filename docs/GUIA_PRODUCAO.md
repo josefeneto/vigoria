@@ -2,7 +2,7 @@
 
 Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU West, Amesterdão), Neon (Frankfurt), Auth0, Google, Brevo e Groq. O código já está preparado; aqui só há configuração.
 
-**Dois ambientes:** local (o teu PC, para desenvolver) e produção (Railway, app.vigoria.pt). A demo no Streamlit Cloud é desligada no passo 6, logo que a produção responde.
+**Dois ambientes:** local (o teu PC, para desenvolver) e produção (Railway, app.vigoria.pt).
 
 **Regras deste guia**
 - Os valores secretos (chaves, palavras-passe, segredos) vão **só** para as variáveis do Railway. Nunca para o chat, o GitHub, ficheiros do projeto ou capturas de ecrã.
@@ -16,7 +16,7 @@ Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU We
 3. Auth0 (a aplicação atual, mais app.vigoria.pt), Google e Brevo
 4. Railway: serviço web
 5. Domínio app.vigoria.pt (CNAME no cPanel)
-6. Desligar a demo (Streamlit Cloud)
+6. Só dois ambientes (nada a fazer)
 7. Railway: serviço cron dos lembretes
 8. Logótipo no Auth0
 9. Abrir o beta fechado (e, mais tarde, passar a beta aberto)
@@ -26,10 +26,10 @@ Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU We
 
 ## 1. Neon — base de dados de produção
 
-Os dados reais não se misturam com os fictícios da demo.
+Os dados de produção ficam num projeto Neon próprio, separado da base local.
 
 1. Em console.neon.tech, cria um projeto **novo**: `vigoria-producao`, região **AWS Europe Central 1 (Frankfurt)**, PostgreSQL na versão mais recente.
-   - Porquê um projeto novo, e não um ramo (*branch*): o ramo copia os dados do projeto da demo e partilha a conta de acesso. Um projeto separado tem credenciais próprias.
+   - Porquê um projeto novo, e não um ramo (*branch*): um projeto separado tem credenciais próprias.
 2. Em *Dashboard → Connect*, escolhe a base `neondb` (ou cria uma `vigoria`). **Desliga** a opção *Connection pooling*, porque as migrações correm melhor com a ligação direta. Copia o endereço `postgresql://…` diretamente para o Railway no passo 4 (`DATABASE_URL`).
 3. As tabelas criam-se sozinhas no primeiro arranque do serviço web (migrações Alembic).
 
@@ -112,7 +112,7 @@ O plano gratuito do Auth0 só permite **um tenant** (o segundo custa 35 $/mês).
 
 ### 3.1 Acrescentar app.vigoria.pt à aplicação atual
 
-1. No Auth0, em *Applications → Applications → Vigoria → Settings*, acrescenta aos valores que já lá estão, separados por vírgulas (não apagues nenhum agora; os da demo saem no passo 6):
+1. No Auth0, em *Applications → Applications → Vigoria → Settings*, acrescenta aos valores que já lá estão, separados por vírgulas (não apagues nenhum):
 
 | Campo | Acrescentar |
 |---|---|
@@ -195,7 +195,7 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 
    `PORT` não se define: é o Railway que a dá.
 
-   **Segredos novos, nunca copiados da demo nem do teu `.env`** (as credenciais do Auth0 são as mesmas; estes dois não): gera cada um no PowerShell e cola-o diretamente no Railway.
+   **Segredos novos, nunca copiados do teu `.env`** (as credenciais do Auth0 são as mesmas; estes dois não): gera cada um no PowerShell e cola-o diretamente no Railway.
    ```powershell
    python -c "import secrets; print(secrets.token_hex(32))"        # AUTH_COOKIE_SECRET
    python -c "import secrets; print(secrets.token_urlsafe(48))"    # VIGORIA_SEGREDO_LEMBRETES
@@ -212,7 +212,7 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
    ```
    O login ainda não funciona neste endereço: a aplicação `Vigoria` do Auth0 não tem o endereço `…up.railway.app`, só app.vigoria.pt e os de local (passo 3.1).
 
-**Cada `git push` para o `main` volta a publicar** o serviço web e o cron (e a demo no Streamlit Cloud, até a desligares no passo 6).
+**Cada `git push` para o `main` volta a publicar** o serviço web e o cron.
 
 ## 5. Domínio app.vigoria.pt
 
@@ -228,16 +228,9 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 
 **HSTS:** o site responde com `Strict-Transport-Security: max-age=31536000`, sem `includeSubDomains` nem `preload`. Os navegadores passam a usar só HTTPS em app.vigoria.pt durante um ano. Os outros subdomínios de vigoria.pt não são afetados.
 
-## 6. Desligar a demo (Streamlit Cloud)
+## 6. Só dois ambientes
 
-Faz-se logo que app.vigoria.pt responde e o login funciona (passo 5.4), antes do cron e dos testes manuais. A partir daqui ficam só dois ambientes: local e produção.
-
-1. **Streamlit Cloud:** em share.streamlit.io, na app da Vigoria, ⋮ → *Settings → Secrets*: apaga todo o conteúdo e carrega em *Save changes*. Assim, as credenciais do Auth0 e da M2M deixam de lá estar, mesmo que a app demore a ser apagada. Depois, ⋮ → *Delete* e confirma.
-2. **Auth0:** em *Applications → Applications → Vigoria → Settings*, retira os endereços `https://<demo>.streamlit.app` (e `…/oauth2callback`) de *Allowed Callback URLs*, *Allowed Logout URLs* e *Allowed Web Origins*. Ficam só `http://localhost:8501`, `http://localhost:8080` e `https://app.vigoria.pt`. Carrega em *Save*.
-3. **GitHub (recomendado):** em github.com → repositório `josefeneto/vigoria` → *Settings → Secrets and variables → Actions → Repository secrets*, apaga os da demo: `DATABASE_URL`, `BREVO_API_KEY`, `VIGORIA_SEGREDO_LEMBRETES` e `VIGORIA_EMAILS_PERMITIDOS`. O workflow `lembretes.yml` já só corre à mão; sem estes segredos, deixa de conseguir correr.
-4. **Neon da demo:** não tem dados reais. Podes apagá-lo mais tarde, quando quiseres; não é preciso para nada.
-
-O código da demo (`AMBIENTE=demo`, a faixa de demonstração e o workflow do GitHub) fica no repositório por agora. Está registado em `docs/ESTADO.md` como limpeza para uma fase futura.
+Nada a fazer: a app corre só em local e em produção (`AMBIENTE=local` ou `AMBIENTE=producao`). A numeração dos passos seguintes mantém-se.
 
 ## 7. Railway — serviço cron dos lembretes
 
@@ -358,7 +351,6 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 | Segredos novos em produção (`AUTH_COOKIE_SECRET`, `VIGORIA_SEGREDO_LEMBRETES`) | Railway | por fazer |
 | Endereços de app.vigoria.pt na aplicação `Vigoria` do Auth0 | passo 3.1 | por fazer |
 | `VIGORIA_ACESSO=convidados` e lista de convidados preenchida | Railway, passo 9 | por fazer |
-| Demo desligada: app e Secrets do Streamlit Cloud apagados, endereços streamlit.app retirados do Auth0 | passo 6 | por fazer |
 | Bloqueio de IPs do Brevo desligado | Brevo | por fazer |
 
 ## Problemas comuns

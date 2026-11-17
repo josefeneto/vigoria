@@ -122,7 +122,9 @@ def _com_conta(
     """Uma pessoa já entrada no Auth0 (não o utilizador fictício), com este modo de acesso."""
     monkeypatch.setenv("AMBIENTE", ambiente)
     if ambiente != "local":
-        monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")  # o simulado só é aceite em local
+        # O simulado só é aceite em local; o Gemini, em produção, só pago (config.py).
+        monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "groq")
+        monkeypatch.setenv("VIGORIA_PROVEDOR_RESERVA", "")
     monkeypatch.setenv("VIGORIA_UTILIZADOR_LOCAL", "0")
     monkeypatch.setenv("VIGORIA_ACESSO", acesso)
     monkeypatch.setenv("VIGORIA_EMAILS_PERMITIDOS", lista)
@@ -152,7 +154,7 @@ def test_fora_da_lista_de_convidados_so_ve_a_mensagem(
     assert _contar(bd, Utilizador) == 0
 
 
-@pytest.mark.parametrize("ambiente", ["local", "demo"])
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
 def test_na_lista_de_convidados_entra_sem_ligar_a_maiusculas(
     bd: str, monkeypatch: pytest.MonkeyPatch, ambiente: str
 ) -> None:
@@ -164,7 +166,7 @@ def test_na_lista_de_convidados_entra_sem_ligar_a_maiusculas(
 
 
 # «Em falta» lê-se como vazia (test_config); aqui não se depende do .env local.
-@pytest.mark.parametrize("ambiente", ["local", "demo"])
+@pytest.mark.parametrize("ambiente", ["local", "producao"])
 @pytest.mark.parametrize("lista", ["", " , "])
 def test_por_convite_sem_lista_ninguem_entra_e_avisa(
     bd: str,

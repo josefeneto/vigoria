@@ -83,7 +83,7 @@ def test_o_script_usa_o_utilizador_local_das_paginas() -> None:
 @pytest.mark.parametrize(
     ("ambiente", "url"),
     [
-        ("demo", "sqlite:///x.db"),
+        ("producao", "sqlite:///x.db"),
         ("local", "postgresql+psycopg://u:p@exemplo.invalid/bd"),
     ],
 )
@@ -91,7 +91,8 @@ def test_o_script_recusa_fora_do_sqlite_local(
     monkeypatch: pytest.MonkeyPatch, ambiente: str, url: str
 ) -> None:
     monkeypatch.setenv("AMBIENTE", ambiente)
-    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "gemini")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "groq")
+    monkeypatch.setenv("VIGORIA_PROVEDOR_RESERVA", "")
     monkeypatch.setenv("DATABASE_URL", url)
     obter_configuracao.cache_clear()
     try:

@@ -29,8 +29,8 @@ Vários valores no mesmo campo separam-se por vírgulas. Guardar (*Save*) no fun
 4. Copiar **Domain**, **Client ID** e **Client Secret** para o `.streamlit/secrets.toml` (modelo em `.streamlit/secrets.toml.example`). O *Client Secret* nunca vai para o chat nem para o GitHub.
 5. No `secrets.toml`:
    - `server_metadata_url`: `https://{tenant}.eu.auth0.com/.well-known/openid-configuration`, com `{tenant}` trocado pelo nome do tenant (o mesmo do *Domain*).
-   - `cookie_secret`: um texto aleatório longo, que assina o cookie da sessão. Gerar no PowerShell com `python -c "import secrets; print(secrets.token_hex(32))"` e colar o resultado. Usar um diferente em cada ambiente (local, Cloud, Railway).
-   - `redirect_uri`: **é diferente em cada ambiente** — `http://localhost:8501/oauth2callback` em local e `https://<nome>.streamlit.app/oauth2callback` no Cloud. Tem de constar das *Allowed Callback URLs* e das *Allowed Logout URLs*.
+   - `cookie_secret`: um texto aleatório longo, que assina o cookie da sessão. Gerar no PowerShell com `python -c "import secrets; print(secrets.token_hex(32))"` e colar o resultado. Usar um diferente em cada ambiente (local e Railway).
+   - `redirect_uri`: **é diferente em cada ambiente** — `http://localhost:8501/oauth2callback` em local e `https://app.vigoria.pt/oauth2callback` em produção (gerado pelo arranque, `docs/GUIA_PRODUCAO.md`). Tem de constar das *Allowed Callback URLs* e das *Allowed Logout URLs*.
 
 **Terminar sessão.** O `st.logout()` do Streamlit (1.66) termina também a sessão no Auth0 e volta ao endereço `/oauth2callback` (por isso é esse que entra nas *Allowed Logout URLs*). Para isso, o Auth0 tem de anunciar o seu endpoint de logout: em *Settings → Advanced → Login and Logout*, confirmar que **RP-Initiated Logout End Session Endpoint Discovery** está ligado (nos tenants recentes já vem ligado).
 
@@ -64,66 +64,9 @@ Na aplicação `Vigoria`, separador *Connections*, desligar tudo o que não seja
 3. Terminar sessão e entrar com Google.
 4. No painel do Auth0, *User Management → Users*: devem aparecer os dois utilizadores.
 
-## 7. Testar online no Streamlit Community Cloud (opcional, só com dados fictícios)
+## 7. Ambientes
 
-Serve para mostrar a app a algumas pessoas convidadas durante as Fases 5 a 7, antes do Railway. A app usa o Gemini real (com a Groq de reserva) e mostra em todas as páginas a faixa «Versão de demonstração — não introduza dados reais de saúde. Os dados são processados em servidores fora da UE.» Depois de criada, **atualiza-se sozinha a cada `git push` para o `main`**.
-
-### 7.1 Criar a app (uma vez)
-
-1. Em share.streamlit.io, entrar com a conta do GitHub. Aceitar a permissão extra para repositórios privados que o Streamlit pede ao GitHub.
-2. *Create app* e escolher a opção de publicar a partir de um repositório do GitHub (os nomes dos menus podem mudar; com repositório privado, a app fica privada).
-3. Preencher:
-   - Repository: `josefeneto/vigoria`
-   - Branch: `main`
-   - Main file path: `app.py`
-   - App URL: um nome curto; o endereço fica `https://<nome>.streamlit.app`.
-4. *Advanced settings*:
-   - Python version: **3.14** (o projeto exige 3.14; se não aparecer na lista, parar e avisar o Claude Code).
-   - Secrets: colar o modelo da secção 7.2 com os valores preenchidos.
-5. *Deploy*. A primeira instalação demora alguns minutos (o Cloud instala o `requirements.txt`, que inclui o próprio projeto com `-e .`).
-6. Na app, *Settings → Sharing*: pôr a app **pública** («This app is public and searchable» ou equivalente). **Decisão de 04/11/2026:** a camada privada do Community Cloud por cima do Auth0 causava lentidão e o ecrã «Huh. This isn't supposed to happen» ao entrar e ao sair; com a app pública o problema desapareceu (testado). Quem entra passa a ser controlado pela própria app, com a lista de convidados (`VIGORIA_EMAILS_PERMITIDOS`, secção 7.2): quem não está na lista entra no Auth0, mas só vê «A Vigoria está em fase de testes, apenas por convite…» e o botão «Terminar sessão», sem registo na base de dados. Cada plano gerado gasta a quota do Gemini, por isso a lista deve ter só quem vai testar.
-
-### 7.2 Modelo dos Secrets (TOML)
-
-Copiar os valores do `.env` local (nunca para o chat nem para o git). Só as chaves de topo: as variáveis do ambiente e do `.env` têm prioridade, por isso este modelo só é usado no Cloud.
-
-```toml
-AMBIENTE = "demo"
-VIGORIA_PROVEDOR_LLM = "gemini"
-VIGORIA_PROVEDOR_RESERVA = "groq"
-GEMINI_API_KEY = ""
-GEMINI_MODEL = ""
-GROQ_API_KEY = ""
-GROQ_MODEL = ""
-```
-
-Lista de convidados (obrigatória no Cloud, porque a app é pública): juntar às chaves de topo, **acima** de `[auth]`, os emails das pessoas que podem entrar, separados por vírgulas (a comparação ignora maiúsculas e espaços). Quem entra depende de `VIGORIA_ACESSO` (desde 14/11/2026): com `convidados`, o valor por omissão, só os emails da lista; se a lista faltar ou estiver vazia, **ninguém entra** (todos veem «apenas por convite») e os registos mostram o aviso «VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia: ninguém entra». Com `aberto` (o do `.env.example` para local), entra quem tiver conta. O utilizador fictício (`VIGORIA_UTILIZADOR_LOCAL=1`) entra sempre. A demo deixa de ser usada quando a produção estiver no ar (`docs/GUIA_PRODUCAO.md`, passo 6):
-
-```toml
-VIGORIA_EMAILS_PERMITIDOS = "jose@exemplo.pt, convidado@exemplo.pt"
-```
-
-Para acrescentar ou retirar alguém: editar os *Secrets* e guardar (sem *Reboot*; se a mudança não se notar, fazer *Reboot app*).
-
-A partir da Fase 6 (login), juntar por baixo as secções `[auth]`, `[auth.auth0]` e `[auth0_gestao]` do `secrets.toml` local, com o `redirect_uri` trocado para `https://<nome>.streamlit.app/oauth2callback` e um `cookie_secret` novo. Para os dados não se perderem a cada reinício, juntar também às chaves de topo o `DATABASE_URL` do Neon (secção 9). No Auth0 (*Applications → Vigoria → Settings*) juntar aos valores locais, separados por vírgulas:
-- Allowed Callback URLs e Allowed Logout URLs: `https://<nome>.streamlit.app/oauth2callback`
-- Allowed Web Origins: `https://<nome>.streamlit.app`
-
-Depois, repetir a verificação rápida da secção 6.
-
-### 7.3 Verificação rápida
-
-1. Abrir `https://<nome>.streamlit.app`: aparece a faixa de demonstração no topo de todas as páginas.
-2. Preencher o questionário com dados fictícios e gerar o plano.
-3. Se der erro, *Manage app* (canto inferior direito) mostra os registos: copiar para o Claude Code só a mensagem de erro, sem chaves.
-
-**Limitações (por isso só dados fictícios):**
-- Os servidores ficam nos Estados Unidos e não é configurável. Dados de saúde reais exigiriam uma transferência internacional que não queremos no beta.
-- O disco é temporário: a base SQLite perde-se em cada reinício ou nova publicação. Para guardar dados entre sessões, usar a base PostgreSQL do Neon via `DATABASE_URL` (secção 9).
-- A app adormece após algum tempo sem uso; o primeiro acesso a seguir é lento.
-- Não há tarefas agendadas: os lembretes por email não correm lá.
-
-Quando a app passar para o Railway (Fase 10), retirar do Auth0 os endereços `streamlit.app`.
+Há dois: local (`http://localhost:8501`, e `http://localhost:8080` com o Docker) e produção (`https://app.vigoria.pt`, no Railway; `docs/GUIA_PRODUCAO.md`). Só estes endereços constam da aplicação `Vigoria` do Auth0.
 
 ## 8. Apagar contas no Auth0 (aplicação Machine to Machine)
 

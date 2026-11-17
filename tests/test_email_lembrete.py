@@ -61,7 +61,7 @@ def test_ligacoes_no_html_e_no_texto(numero: int) -> None:
     assert _visivel(e.html).ligacoes == [registo, cancelar]
     assert registo in e.texto and cancelar in e.texto
     assert e.cabecalhos == {"List-Unsubscribe": f"<{cancelar}>"}
-    assert "<img" not in e.html  # sem imagens: o Streamlit Cloud não as serve a clientes de email
+    assert "<img" not in e.html  # sem imagens: só texto e ligações
 
 
 def test_um_clique_em_producao(numero: int) -> None:

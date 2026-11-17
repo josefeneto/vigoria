@@ -23,10 +23,6 @@ CONTACTO = "geral@vigoria.pt"  # rodapé e mensagens sem menu (convite, base de 
 PROMESSA = (
     "O seu plano, à sua medida\u00a0— para ganhar e manter força e energia, sem sair de casa."
 )
-DEMO_AVISO = (
-    "Versão de demonstração — não introduza dados reais de saúde. "
-    "Os dados são processados em servidores fora da UE."
-)
 ANTERIOR = "Anterior"
 SEGUINTE = "Seguinte"
 ALTERAR = "Alterar"
@@ -185,7 +181,7 @@ VIDEO_DESCRICOES = (  # pela ordem de componentes.VIDEOS_TOPO
 )
 VIDEO_PAUSAR = "Pausar o vídeo"
 VIDEO_REPRODUZIR = "Ver o vídeo"
-DANCA_VIDEO_DESCRICAO = "Um grupo de pessoas a dançar ao ar livre."
+DANCA_VIDEO_DESCRICAO = "Um grupo de mulheres a dançar numa sala, a sorrir."
 INICIO_COMO_TITULO = "Como funciona"
 BENEFICIOS = (
     (

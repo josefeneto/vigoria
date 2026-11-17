@@ -1,4 +1,4 @@
-"""Configuração: st.secrets como alternativa ao ambiente e ao .env (Community Cloud)."""
+"""Configuração: ambiente e .env; o .streamlit/secrets.toml só serve o login (Auth0)."""
 
 from typing import Any
 
@@ -9,12 +9,9 @@ from pydantic import ValidationError
 from vigoria.config import Configuracao, obter_auth0
 
 SEGREDOS = {
-    "AMBIENTE": "demo",
+    "AMBIENTE": "producao",
     "GEMINI_MODEL": "modelo-dos-secrets",
-    "GROQ_MODEL": "reserva-dos-secrets",
-    "VIGORIA_PROVEDOR_RESERVA": "groq",
-    "auth": {"redirect_uri": "https://exemplo.streamlit.app/oauth2callback"},
-    "DESCONHECIDA": "ignorada",
+    "auth": {"redirect_uri": "https://app.vigoria.pt/oauth2callback"},
 }
 
 
@@ -25,23 +22,20 @@ def _secrets(monkeypatch: pytest.MonkeyPatch, segredos: dict[str, Any] | None) -
     monkeypatch.setattr(classe, "to_dict", lambda self: dict(segredos or {}))
 
 
-def test_le_chaves_de_topo_do_st_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_chaves_de_topo_do_secrets_toml_sao_ignoradas(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sem o Streamlit Community Cloud, a configuração vem só do ambiente e do .env."""
     _secrets(monkeypatch, SEGREDOS)
-    for nome in ("AMBIENTE", "GEMINI_MODEL", "GROQ_MODEL", "VIGORIA_PROVEDOR_RESERVA"):
+    for nome in ("AMBIENTE", "GEMINI_MODEL"):
         monkeypatch.delenv(nome, raising=False)
     config = Configuracao(_env_file=None)  # type: ignore[call-arg]
-    assert config.ambiente == "demo"
-    assert (config.gemini_model, config.groq_model) == ("modelo-dos-secrets", "reserva-dos-secrets")
-    assert config.vigoria_provedor_reserva == "groq"
+    assert config.ambiente == "local"
+    assert config.gemini_model != "modelo-dos-secrets"
 
 
-def test_ambiente_ganha_ao_st_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
-    _secrets(monkeypatch, SEGREDOS)
-    monkeypatch.setenv("GEMINI_MODEL", "modelo-do-ambiente")
-    monkeypatch.delenv("AMBIENTE", raising=False)
-    config = Configuracao(_env_file=None)  # type: ignore[call-arg]
-    assert config.gemini_model == "modelo-do-ambiente"
-    assert config.ambiente == "demo"
+def test_demo_deixou_de_ser_um_ambiente(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AMBIENTE", "demo")
+    with pytest.raises(ValidationError, match="ambiente"):
+        Configuracao(_env_file=None)  # type: ignore[call-arg]
 
 
 def test_sem_secrets_toml_usa_os_valores_por_omissao(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -107,7 +101,7 @@ def test_utilizador_local_so_em_local(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AMBIENTE", "local")
     monkeypatch.setenv("VIGORIA_PROVEDOR_LLM", "groq")  # o Gemini é recusado em produção
     assert Configuracao(_env_file=None).vigoria_utilizador_local  # type: ignore[call-arg]
-    for ambiente in ("demo", "producao"):
+    for ambiente in ("producao",):
         monkeypatch.setenv("AMBIENTE", ambiente)
         with pytest.raises(ValueError, match="VIGORIA_UTILIZADOR_LOCAL"):
             Configuracao(_env_file=None)  # type: ignore[call-arg]
@@ -164,11 +158,10 @@ def test_emails_permitidos_do_ambiente(
     assert config.vigoria_emails_permitidos == frozenset(esperado)
 
 
-def test_emails_permitidos_dos_secrets_em_lista_ou_texto(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_emails_permitidos_em_lista_ou_texto(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("VIGORIA_EMAILS_PERMITIDOS", raising=False)
     for valor in (["Ana@exemplo.pt", " rui@exemplo.pt "], "ana@exemplo.pt,\nrui@exemplo.pt"):
-        _secrets(monkeypatch, {"VIGORIA_EMAILS_PERMITIDOS": valor})
-        config = Configuracao(_env_file=None)  # type: ignore[call-arg]
+        config = Configuracao(_env_file=None, vigoria_emails_permitidos=valor)  # type: ignore[call-arg]
         assert config.vigoria_emails_permitidos == {"ana@exemplo.pt", "rui@exemplo.pt"}
 
 

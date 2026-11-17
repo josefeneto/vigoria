@@ -384,7 +384,7 @@ class PerguntaAjuda(_Conteudo):
     id: str = Field(pattern=_ID_AJUDA)
     pergunta: str = Field(min_length=1)
     resposta: str = Field(min_length=1)
-    ambientes: tuple[Literal["local", "demo", "producao"], ...] = ()  # vazio: todos
+    ambientes: tuple[Literal["local", "producao"], ...] = ()  # vazio: todos
     acesso: tuple[Literal["convidados", "aberto"], ...] = ()  # VIGORIA_ACESSO; vazio: todos
 
 

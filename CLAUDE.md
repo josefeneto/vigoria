@@ -117,7 +117,7 @@ O detalhe e os valores estão em `docs/dominio/REGRAS_DOMINIO.md`. Em resumo:
 - Nomes de módulos, classes e funções de domínio em português sem acentos (`calcular_imc`, `Questionario`); termos técnicos genéricos podem ficar em inglês (`client`, `retry`).
 - Docstrings e comentários em PT-EU, curtos. Textos visíveis ao utilizador em `paginas/` ou `src/vigoria/prompts/`, nunca espalhados pelo código.
 - Testes: cada regra em `regras/` tem testes com casos-limite. Chamadas à LLM marcadas com `@pytest.mark.llm` e simuladas por omissão. Os testes `llm` só correm de verdade com a variável `VIGORIA_TESTES_LLM_REAIS=1`, lida apenas de `os.environ` (nunca do `.env`); sem ela, o `conftest.py` salta-os. O mesmo vale para a CLI: gerar um plano completo chama o Gemini, por isso só `--so-estrategia` corre sem me perguntar. Nunca definas essa variável nem corras esses testes: pede-me para o fazer.
-- Configuração por variáveis de ambiente lidas num único sítio (`src/vigoria/config.py`); em alternativa, de `st.secrets` (Streamlit Community Cloud, `AMBIENTE=demo`, só dados fictícios).
+- Configuração por variáveis de ambiente lidas num único sítio (`src/vigoria/config.py`); o `.streamlit/secrets.toml` só serve o login (secções `[auth]` e `[auth0_gestao]`). Só há dois ambientes: `local` e `producao` (Railway).
 - Modelo da LLM configurável (`GEMINI_MODEL`); não fixar nomes de modelos no código.
 
 ## Git

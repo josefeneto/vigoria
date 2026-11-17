@@ -72,7 +72,7 @@ style = "normal"
 
 [server]
 # Sem headless: o Streamlit decide sozinho. No Windows abre o browser; em Linux sem ecrã
-# (Community Cloud, Docker) fica headless. Nunca pôr headless = false: o Cloud não arranca.
+# (Docker) fica headless.
 # Sem port nem address: ficam os valores por omissão (8501, todas as interfaces).
 showEmailPrompt = false             # nunca pedir o email de boas-vindas no arranque
 enableStaticServing = true          # pasta static/ (letras e vídeo) em app/static/

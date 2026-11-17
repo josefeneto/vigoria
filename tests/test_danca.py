@@ -245,7 +245,7 @@ def test_d6_com_condicoes_so_ligeira_sem_subir_nem_mais_aulas(intensidade: Inten
     assert "nível acima" not in lig.ajuste
 
 
-@pytest.mark.parametrize(("intensidade", "sobe"), [(L, True), (M, True), (A, False)])
+@pytest.mark.parametrize(("intensidade", "sobe"), [(L, False), (M, True), (A, False)])
 def test_d6_sugere_subir_so_se_houver_nivel_acima(intensidade: Intensidade, sobe: bool) -> None:
     lig = ligacoes_danca(_danca(intensidade))
     assert lig.ajuste.startswith(carregar_danca().textos.ajuste)
@@ -364,7 +364,7 @@ def test_video_da_danca_sem_ficheiros(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
 def test_credito_do_video() -> None:
     creditos = (RAIZ / "docs" / "CREDITOS_IMAGENS.md").read_text("utf-8")
-    assert "danca_web.mp4" in creditos and "pexels.com/video/14691541" in creditos
+    assert "danca_web.mp4" in creditos and "Kampus Production" in creditos
 
 
 def test_textos_sem_promessas_termos_proibidos_nem_brasileirismos() -> None:

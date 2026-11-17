@@ -1,18 +1,17 @@
-"""Configuração da aplicação, lida de variáveis de ambiente, do ficheiro .env e, em
-alternativa, de st.secrets (Streamlit Community Cloud, AMBIENTE=demo, sem .env).
+"""Configuração da aplicação, lida de variáveis de ambiente e do ficheiro .env.
+
+O .streamlit/secrets.toml só serve o login: as secções [auth] e [auth0_gestao] (obter_auth0).
 
 É o único sítio do código que lê configuração. As chaves ficam em SecretStr
 para nunca aparecerem em logs ou mensagens de erro.
 """
 
 import re
-from collections.abc import Mapping
 from functools import lru_cache
 from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
-from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
     NoDecode,
@@ -40,30 +39,11 @@ def _segredos() -> dict[str, Any]:
         return {}
 
 
-class _FonteSecretsStreamlit(PydanticBaseSettingsSource):
-    """Chaves de topo do .streamlit/secrets.toml (as secções, como [auth], ficam de fora).
-
-    Prioridade mais baixa: o ambiente e o .env ganham sempre. Sem o ficheiro, não faz nada.
-    """
-
-    def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
-        return None, field_name, False
-
-    def __call__(self) -> dict[str, Any]:
-        segredos = _segredos()
-        campos = self.settings_cls.model_fields
-        return {
-            k.lower(): v
-            for k, v in segredos.items()
-            if k.lower() in campos and not isinstance(v, Mapping)
-        }
-
-
 class Configuracao(BaseSettings):
     """Variáveis definidas em .env.example."""
 
     # hide_input_in_errors: um valor recusado (por exemplo, o DATABASE_URL com a palavra-passe)
-    # nunca aparece na mensagem de erro nem nos registos do GitHub Actions.
+    # nunca aparece na mensagem de erro nem nos registos do Railway.
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore", hide_input_in_errors=True
     )
@@ -95,13 +75,13 @@ class Configuracao(BaseSettings):
     # Assina as ligações «Deixar de receber lembretes» (notificacoes/token.py). Igual na app e
     # na tarefa dos lembretes; mudá-lo invalida as ligações dos emails já enviados.
     vigoria_segredo_lembretes: SecretStr | None = None
-    ambiente: Literal["local", "demo", "producao"] = "local"
+    ambiente: Literal["local", "producao"] = "local"
     # Só para testes e desenvolvimento sem Auth0: entra como um utilizador fictício fixo.
     vigoria_utilizador_local: bool = False
     # Quem entra (contas/entrada.py): «convidados», só a lista abaixo (vazia: ninguém), ou
     # «aberto», todos com conta. O utilizador fictício local entra sempre.
     vigoria_acesso: Literal["convidados", "aberto"] = "convidados"
-    # Lista de convidados: emails separados por vírgulas (ou lista TOML nos secrets).
+    # Lista de convidados: emails separados por vírgulas.
     vigoria_emails_permitidos: Annotated[frozenset[str], NoDecode] = frozenset()
 
     @classmethod
@@ -117,7 +97,6 @@ class Configuracao(BaseSettings):
             init_settings,
             env_settings,
             dotenv_settings,
-            _FonteSecretsStreamlit(settings_cls),
             file_secret_settings,
         )
 

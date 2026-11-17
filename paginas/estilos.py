@@ -127,9 +127,9 @@ def favicon() -> str:
     """O favicon (static/icones/icone-32.png) como data URI, para o st.set_page_config.
 
     Com o caminho do ficheiro, o Streamlit serve-o em /media/…, um endereço guardado na
-    memória do servidor: quando o servidor reinicia (no Cloud, a cada push ou quando a app
-    adormece), o endereço passa a dar 404 e o separador fica sem ícone. Embutido no endereço,
-    não depende do servidor nem do caminho do Cloud (Fase 8D).
+    memória do servidor: quando o servidor reinicia (por exemplo, a cada novo
+    deploy), o endereço passa a dar 404 e o separador fica sem ícone. Embutido no endereço,
+    não depende do servidor (Fase 8D).
     """
     dados = base64.b64encode(FAVICON_PNG.read_bytes()).decode("ascii")
     return f"data:image/png;base64,{dados}"

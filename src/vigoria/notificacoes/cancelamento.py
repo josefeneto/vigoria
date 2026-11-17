@@ -1,6 +1,6 @@
 """Deixar de receber lembretes pela ligação do email, sem sessão iniciada.
 
-Usado pela página Streamlit (demo, paginas/cancelar_lembretes.py) e pelo serviço de
+Usado pela página Streamlit (local, paginas/cancelar_lembretes.py) e pelo serviço de
 cancelamento num clique (produção, vigoria/web/cancelar.py).
 """
 

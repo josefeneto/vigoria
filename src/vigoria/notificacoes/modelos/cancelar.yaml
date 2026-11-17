@@ -1,6 +1,6 @@
 # Deixar de receber lembretes (Fase 8; prazo da ligação na Fase 10). Textos aprovados pelo
-# José a 07/11/2026, exceto «expirada» (Fase 10, 12/11/2026). Usados pela página Streamlit da
-# demo (paginas/textos.py, CANCELAR_*) e pelo serviço de produção (vigoria/web/cancelar.py).
+# José a 07/11/2026, exceto «expirada» (Fase 10, 12/11/2026). Usados pela página Streamlit em
+# local (paginas/textos.py, CANCELAR_*) e pelo serviço de produção (vigoria/web/cancelar.py).
 # {dias}: a validade da ligação (notificacoes/token.py, VALIDADE).
 titulo: Lembretes por email
 pergunta: >-

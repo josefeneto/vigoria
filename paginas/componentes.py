@@ -20,7 +20,7 @@ PASTA_VIDEO = RAIZ / "static" / "video"  # servida em app/static/video/
 # Vídeos do topo do início, que alternam (um homem e uma mulher): scripts/converter_video.py.
 VIDEOS_TOPO = ("inicio", "inicio_mulher")
 CAPA_VIDEO = PASTA_VIDEO / "inicio_capa.webp"
-# Vídeo do cartão «Dança (opcional)» (provisório; Pexels, docs/CREDITOS_IMAGENS.md).
+# Vídeo do cartão «Dança (opcional)» (Pexels, docs/CREDITOS_IMAGENS.md).
 VIDEO_DANCA = "danca_web"
 CAPA_DANCA = PASTA_VIDEO / "danca_poster.jpg"
 
@@ -28,7 +28,7 @@ CAPA_DANCA = PASTA_VIDEO / "danca_poster.jpg"
 # (WCAG 2.2.2). Só arrancam por código e só se o sistema não pedir menos movimento; sem
 # código, fica a capa. O segundo só começa a descarregar quando o primeiro já está a passar.
 # A capa do primeiro vai embutida como fundo da caixa: vê-se mesmo que o servidor demore ou
-# os vídeos falhem (no Community Cloud, logo a seguir a entrar ou sair); um vídeo com erro
+# os vídeos falhem (logo a seguir a entrar ou sair); um vídeo com erro
 # sai do ciclo e, sem nenhum, saem também o botão e os vídeos.
 _UM_VIDEO = """<video muted playsinline preload="%(preload)s" poster="%(poster)s"
  aria-label="%(descricao)s"><source src="app/static/video/%(nome)s.mp4" type="video/mp4"></video>"""
@@ -158,7 +158,7 @@ def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> boo
 
 
 def video_danca(descricao: str, pausar: str, reproduzir: str) -> str:
-    """Vídeo do cartão «Dança (opcional)» (provisório): sem som, em ciclo, com botão de pausa;
+    """Vídeo do cartão «Dança (opcional)»: sem som, em ciclo, com botão de pausa;
     com «menos movimento», só a capa (o mesmo código do topo do início). Vazio sem ficheiros."""
     if not (PASTA_VIDEO / f"{VIDEO_DANCA}.mp4").exists() or not CAPA_DANCA.exists():
         return ""

@@ -13,7 +13,7 @@ WORKDIR /construcao
 RUN python -m venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 COPY requirements.txt pyproject.toml ./
-# O requirements.txt acaba em «-e .» (para o Community Cloud); aqui instala-se o pacote à parte.
+# O requirements.txt acaba em «-e .» (instalação editável em local); aqui instala-se o pacote à parte.
 RUN grep -v '^-e ' requirements.txt > requisitos.txt \
     && python -m pip install -r requisitos.txt
 COPY src ./src

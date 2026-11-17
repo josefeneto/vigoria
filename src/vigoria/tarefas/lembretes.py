@@ -1,7 +1,7 @@
 """Tarefa diária dos lembretes por email (Fase 8): python -m vigoria.tarefas.lembretes.
 
-Corre uma vez por dia como serviço cron do Railway (produção, Fase 10B; docs/GUIA_PRODUCAO.md)
-e, só à mão, no GitHub Actions (.github/workflows/lembretes.yml, demo). Para cada pessoa
+Corre uma vez por dia como serviço cron do Railway (produção, Fase 10B; docs/GUIA_PRODUCAO.md);
+em local, só à mão. Para cada pessoa
 com acompanhamento e lembretes ligados, e na lista de convidados, decide pelas regras L1 a L5
 (regras/lembretes.py) se lhe cabe um lembrete hoje. Grava o envio e só confirma a gravação
 se o Brevo aceitar o email; se falhar, tenta de novo no dia seguinte.
@@ -51,7 +51,7 @@ class Resumo(BaseModel):
 
 def _um_clique(config: Configuracao) -> bool:
     """Cancelamento num clique (RFC 8058) só em produção, onde o Caddy encaminha /cancelar
-    para o serviço que aceita o POST; na demo, a ligação abre a página Streamlit."""
+    para o serviço que aceita o POST; em local, a ligação abre a página Streamlit."""
     return config.ambiente == "producao"
 
 

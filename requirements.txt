@@ -17,6 +17,5 @@ fpdf2==2.9.0  # plano em PDF (exportacao/pdf.py), só Python; traz a fonttools
 # Streamlit; fixados para o serviço não mudar com uma atualização dele.
 starlette==1.10.0
 uvicorn==0.54.0
-# O próprio projeto, em modo editável (o código em src/ fica importável; também no
-# Streamlit Community Cloud, que só instala este ficheiro)
+# O próprio projeto, em modo editável (o código em src/ fica importável)
 -e .

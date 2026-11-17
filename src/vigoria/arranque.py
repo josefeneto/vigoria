@@ -138,7 +138,7 @@ def principal(ambiente: Mapping[str, str] | None = None, destino: Path = DESTINO
     ambiente = os.environ if ambiente is None else ambiente
     try:
         if not ambiente.get("AMBIENTE", "").strip():
-            raise ErroArranque("Variável em falta: AMBIENTE (demo ou producao).")
+            raise ErroArranque("Variável em falta: AMBIENTE (producao).")
         try:
             config = obter_configuracao()  # falha já se a configuração for inválida
         except Exception as erro:
