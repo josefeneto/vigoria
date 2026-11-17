@@ -4,6 +4,8 @@ Os YAML são copiados dos volumes 1 a 3; aqui só se valida a estrutura.
 Só depende de modelos/zonas.py: regras/textos.py importa este módulo.
 """
 
+import re
+from datetime import date
 from enum import StrEnum
 from functools import cache
 from importlib.resources import files
@@ -308,6 +310,69 @@ class Manutencao(_Conteudo):
     recomecar: ParteManutencao
 
 
+# ---------------------------------------------------------------- danca.yaml (Fase 10E)
+
+
+class NivelDanca(StrEnum):
+    """Nível das ligações (D6): os três da intensidade e as «Mais aulas» (media e alta)."""
+
+    LIGEIRA = "ligeira"
+    MEDIA = "media"
+    ALTA = "alta"
+    MAIS_AULAS = "mais_aulas"
+
+
+class LigacaoDanca(_Conteudo):
+    titulo: str = Field(min_length=1, max_length=60)
+    # Só YouTube, sem a lista automática «&list=RD…» (fica só o vídeo).
+    url: str = Field(pattern=r"^https://www\.youtube\.com/")
+    canal: str = Field(min_length=1)
+    nivel: NivelDanca
+    verificado_em: date
+
+    @model_validator(mode="after")
+    def _sem_lista_automatica(self) -> Self:
+        if re.search(r"[?&]list=RD", self.url):
+            raise ValueError(f"{self.url}: tirar a lista automática «&list=RD…»")
+        return self
+
+
+class TextosDanca(_Conteudo):
+    titulo: str
+    dias_cardio: str
+    dias_sem_cardio: str
+    minutos: str  # com {n}
+    estrutura: str
+    danca: str
+    sem_saltos: str  # D5
+    ajuste: str  # D6
+    ajuste_subir: str  # D6, só sem a regressão por condições
+    registo: str  # D4
+    ligacoes: str
+    mais_calmo: str
+    mais_aulas: str
+    abre_youtube: str
+
+
+class ConteudoDanca(_Conteudo):
+    textos: TextosDanca
+    ligacoes: tuple[LigacaoDanca, ...]
+
+    @model_validator(mode="after")
+    def _niveis_completos(self) -> Self:
+        em_falta = [n for n in NivelDanca if not any(x.nivel is n for x in self.ligacoes)]
+        if em_falta:
+            raise ValueError(f"níveis sem ligações: {', '.join(em_falta)}")
+        urls = [x.url for x in self.ligacoes]
+        repetidos = sorted({u for u in urls if urls.count(u) > 1})
+        if repetidos:
+            raise ValueError(f"ligações repetidas: {', '.join(repetidos)}")
+        return self
+
+    def do_nivel(self, nivel: NivelDanca) -> tuple[LigacaoDanca, ...]:
+        return tuple(x for x in self.ligacoes if x.nivel is nivel)
+
+
 # ---------------------------------------------------------------- ajuda.yaml (Fase 8B)
 
 _ID_AJUDA = r"^[a-z][a-z0-9_]*$"
@@ -407,6 +472,12 @@ def carregar_alimentacao() -> Alimentacao:
 def carregar_manutencao() -> Manutencao:
     """Depois das 16 semanas (volumes 1 a 3 e textos aprovados a 05/11/2026)."""
     return _carregar("manutencao.yaml", Manutencao)
+
+
+@cache
+def carregar_danca() -> ConteudoDanca:
+    """Textos e ligações do bloco «Dança (opcional)» (REGRAS §5.1)."""
+    return _carregar("danca.yaml", ConteudoDanca)
 
 
 @cache

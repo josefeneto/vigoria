@@ -19,6 +19,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from enum import StrEnum
 from importlib.resources import as_file, files
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -27,8 +28,20 @@ from babel.dates import format_date
 from fpdf import FPDF, FontFace, XPos, YPos
 from fpdf.enums import MethodReturnValue
 
-from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
-from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
+from vigoria.conteudo.carregar import (
+    carregar_avisos,
+    carregar_danca,
+    carregar_exercicios,
+    carregar_fases,
+)
+from vigoria.modelos.plano import (
+    DiasDanca,
+    ExercicioPlano,
+    ParteOrientacao,
+    Plano,
+    TreinoFase,
+)
+from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.textos import numero
 
@@ -392,6 +405,37 @@ class _Documento(FPDF):
         # O HORIZONTAL_LINES só desenha as linhas entre filas: falta a de baixo da última.
         self.line(self.l_margin, self.get_y(), self.l_margin + self.epw, self.get_y())
         self.ln(4)
+
+    def ligacoes(self, grupos: Sequence[tuple[str, Sequence[tuple[str, str, str]]]]) -> None:
+        """Ligações clicáveis por grupo: (rótulo, [(título, url, canal)]). Nunca partidas."""
+        self.set_font("Atkinson", "", TEXTO_PT)
+        altura = 0.0
+        for rotulo, itens in grupos:
+            altura += self._altura_texto(rotulo, LINHA)
+            altura += sum(
+                self._altura_texto(f"{x} · {c}", LINHA, self.epw - 7) for x, _, c in itens
+            )
+        self._antes_do_bloco(altura)
+        if self.get_y() + altura > self.fundo:
+            self.add_page()
+        for rotulo, itens in grupos:
+            self.set_font("Atkinson", "B", TEXTO_PT)
+            self.multi_cell(0, LINHA, _limpo(rotulo), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            for titulo, url, canal in itens:
+                self.set_font("Atkinson", "", TEXTO_PT)
+                self.set_x(MARGEM)
+                self.cell(7, LINHA, "•")
+                self.set_left_margin(MARGEM + 7)  # se partir, a 2.ª linha fica alinhada
+                self.set_font("Atkinson", "U", TEXTO_PT)
+                self.set_text_color(*_rgb("principal"))
+                self.write(LINHA, _limpo(titulo), link=url)
+                self.set_font("Atkinson", "", TEXTO_PT)
+                self.set_text_color(*_rgb("texto_secundario"))
+                self.write(LINHA, _limpo(f" · {canal}"))
+                self.set_left_margin(MARGEM)
+                self.ln(LINHA)
+        self.set_text_color(*_rgb("texto"))
+        self.ln(2)
 
     # ------------------------------------------------------------ textos medidos
 
@@ -818,6 +862,36 @@ def _em_todas_as_fases(pdf: _Documento, plano: Plano, c: Comuns, r: dict[str, st
     pdf.lista_icones(itens, colunas)
 
 
+def _danca(pdf: _Documento, plano: Plano, r: dict[str, str], *, secao: bool = False) -> None:
+    """Dança (opcional), REGRAS §5.1: uma só secção, com os minutos de cada fase numa tabela
+    e as ligações uma vez (são as mesmas nas 4 fases). Só com dança no plano (D1)."""
+    d = plano.danca
+    if d is None:
+        return
+    c = carregar_danca().textos
+    lig = ligacoes_danca(d)
+    dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
+    if secao:  # depois das fases: título próprio, para não parecer parte da fase 4
+        pdf.titulo(c.titulo)
+    else:
+        pdf.subtitulo(c.titulo)
+    pdf.paragrafo(f"{dias} {c.estrutura} {c.registo}")
+    pdf.tabela(
+        [f"{r['fase']} {n}" for n in range(1, 5)],
+        [[f"{m} min" for m in d.minutos]],
+        [43, 43, 44, 44],
+    )
+    pdf.paragrafo(c.sem_saltos, estilo="B")
+    pdf.paragrafo(lig.ajuste)
+    grupos = [(c.ligacoes, [(x.titulo, x.url, x.canal) for x in lig.principais])]
+    if lig.mais_calmo is not None:
+        x = lig.mais_calmo
+        grupos.append((c.mais_calmo, [(x.titulo, x.url, x.canal)]))
+    if lig.mais_aulas:
+        grupos.append((c.mais_aulas, [(x.titulo, x.url, x.canal) for x in lig.mais_aulas]))
+    pdf.ligacoes(grupos)
+
+
 def _fase(pdf: _Documento, fase: TreinoFase, c: Comuns, r: dict[str, str]) -> None:
     s = {f.numero: f.semanas for f in carregar_fases()}[fase.numero]
     pdf.titulo(f"{r['fase']} {fase.numero}: {fase.nome}", nova_pagina=True)
@@ -996,6 +1070,55 @@ def _habitos_e_manutencao(
     pdf.colunas(blocos)
 
 
+class LugarDanca(StrEnum):
+    """Onde fica a secção «Dança (opcional)» no PDF."""
+
+    SESSAO = "sessao"  # a seguir a «Como é cada sessão»
+    TODAS_AS_FASES = "todas_as_fases"  # a seguir a «Em todas as fases»
+    FIM_DAS_FASES = "fim_das_fases"  # no espaço que sobra da fase 4
+
+
+def _antes_das_fases(
+    pdf: _Documento,
+    plano: Plano,
+    c: Comuns,
+    r: dict[str, str],
+    criado_em: datetime,
+    lugar: LugarDanca | None,
+) -> None:
+    _inicio(pdf, plano, r, criado_em)
+    _marcos(pdf, plano, r)
+    _semana(pdf, plano, r)
+    if lugar is LugarDanca.SESSAO:
+        _danca(pdf, plano, r)
+    _em_todas_as_fases(pdf, plano, c, r)
+    if lugar is LugarDanca.TODAS_AS_FASES:
+        _danca(pdf, plano, r)
+    pdf._antes_do_bloco(0)
+
+
+def lugar_danca(plano: Plano, criado_em: datetime) -> LugarDanca:
+    """O primeiro lugar antes das fases onde a dança não acrescenta páginas; senão, o fim da
+    fase 4. Cada fase começa numa página nova: basta montar as páginas antes das fases."""
+    r = carregar_avisos().rotulos.plano
+    c = comuns(plano.treino.fases)
+
+    def paginas(lugar: LugarDanca | None) -> int:
+        pdf = _Documento(r["pdf_rodape"])
+        _antes_das_fases(pdf, plano, c, r, criado_em, lugar)
+        return pdf.page
+
+    sem_danca = paginas(None)
+    return next(
+        (
+            lugar
+            for lugar in (LugarDanca.SESSAO, LugarDanca.TODAS_AS_FASES)
+            if paginas(lugar) == sem_danca
+        ),
+        LugarDanca.FIM_DAS_FASES,
+    )
+
+
 def plano_pdf(plano: Plano, criado_em: datetime, idade: int | None = None) -> bytes:
     """O plano em PDF (A4). Os avisos ficam sempre na última página, em destaque.
 
@@ -1004,12 +1127,12 @@ def plano_pdf(plano: Plano, criado_em: datetime, idade: int | None = None) -> by
     r = carregar_avisos().rotulos.plano
     pdf = _Documento(r["pdf_rodape"])
     c = comuns(plano.treino.fases)
-    _inicio(pdf, plano, r, criado_em)
-    _marcos(pdf, plano, r)
-    _semana(pdf, plano, r)
-    _em_todas_as_fases(pdf, plano, c, r)
+    lugar = lugar_danca(plano, criado_em) if plano.danca is not None else None
+    _antes_das_fases(pdf, plano, c, r, criado_em, lugar)
     for fase in plano.treino.fases:
         _fase(pdf, fase, c, r)
+    if lugar is LugarDanca.FIM_DAS_FASES:
+        _danca(pdf, plano, r, secao=True)
     _alimentacao(pdf, plano, r)
     _habitos_e_manutencao(pdf, plano, idade, r)
     pdf.caixa_avisos(r["avisos"], list(plano.avisos))

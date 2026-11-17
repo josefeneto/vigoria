@@ -220,6 +220,8 @@ def _formulario(
             step=1,
             key=f"{base}_sessoes",
         )
+        if p.plano.danca is not None:  # D4: a dança conta como cardio
+            st.caption(t.REGISTO_CARDIO_DANCA)
         cardio = st.number_input(
             t.REGISTO_CARDIO_4 if a_cada_4 else rotulos["cardio_min"],
             min_value=0,

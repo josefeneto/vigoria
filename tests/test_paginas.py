@@ -160,6 +160,46 @@ def test_plano_mostra_faixa_simulado_e_avisos_em_cada_seccao() -> None:
     assert "Em vez de:" in _texto(at)
 
 
+def test_danca_no_treino_de_cada_fase_e_nota_no_registo() -> None:
+    """Fase 10E (REGRAS §5.1): o cartão só com «dança» nas preferências (D1)."""
+    from paginas import textos as t
+
+    at = _app()
+    _persona(at, preferencias=["caminhada", "danca"])
+    at.session_state["passo"] = "7"
+    at.run()
+    _botao(at, "Gerar o meu plano").click().run(timeout=60)
+    at.switch_page("paginas/plano.py").run()
+    at.session_state["plano_seccao"] = "treino"
+    for fase in (1, 2, 3, 4):
+        at.session_state["plano_fase"] = fase
+        at.run()
+        assert not at.exception
+        texto = _texto(at)
+        assert "v-cartao v-danca" in texto and "Sem saltos:" in texto, fase
+        assert 'target="_blank" rel="noopener noreferrer"' in texto
+        assert "danca_web.mp4" in texto
+    at.switch_page("paginas/progresso.py").run()
+    assert not at.exception
+    assert t.REGISTO_CARDIO_DANCA in [c.value for c in at.caption]
+
+
+def test_sem_danca_nao_ha_cartao_nem_nota_no_registo() -> None:
+    from paginas import textos as t
+
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "7"
+    at.run()
+    _botao(at, "Gerar o meu plano").click().run(timeout=60)
+    at.switch_page("paginas/plano.py").run()
+    at.session_state["plano_seccao"] = "treino"
+    at.run()
+    assert "v-cartao v-danca" not in _texto(at)
+    at.switch_page("paginas/progresso.py").run()
+    assert t.REGISTO_CARDIO_DANCA not in [c.value for c in at.caption]
+
+
 def test_manutencao_no_resumo_e_tambem_no_plano_guardado() -> None:
     from paginas import textos as t
     from vigoria.conteudo.carregar import carregar_manutencao

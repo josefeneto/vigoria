@@ -4,6 +4,7 @@ Sem biblioteca para ler PDFs: os testes registam o texto que o gerador escreve e
 página (e o tamanho da letra) e confirmam o ficheiro pelo cabeçalho e pelo número de páginas.
 """
 
+import json
 import re
 import warnings
 from datetime import UTC, datetime
@@ -19,6 +20,7 @@ from vigoria.exportacao import pdf
 from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
+from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.pipeline import gerar_plano_verificado
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -40,6 +42,15 @@ PERSONAS = [
 @cache
 def _plano(persona: str = "persona_teste") -> Plano:
     q = Questionario.model_validate_json((RAIZ / "exemplos" / f"{persona}.json").read_text("utf-8"))
+    return gerar_plano_verificado(q, ProvedorSimulado(), progresso=lambda _: None).plano
+
+
+@cache
+def _plano_com_danca(persona: str) -> Plano:
+    """A mesma persona com «dança» nas preferências (Fase 10E)."""
+    dados = json.loads((RAIZ / "exemplos" / f"{persona}.json").read_text("utf-8"))
+    dados["preferencias"] = [*dados["preferencias"], "danca"]
+    q = Questionario.model_validate(dados)
     return gerar_plano_verificado(q, ProvedorSimulado(), progresso=lambda _: None).plano
 
 
@@ -428,3 +439,56 @@ def test_rodape_com_a_versao_do_plano_sem_o_fornecedor(
     textos = [t for _, _, t in escrito]
     assert f"Versão do plano: {plano.versao_prompt}." in textos
     assert not any(plano.provedor in t for t in textos)
+
+
+# ---------------------------------------------------------------- Dança (Fase 10E)
+
+
+@pytest.mark.parametrize("persona", PERSONAS)
+def test_danca_no_maximo_12_paginas(
+    persona: str, caplog: pytest.LogCaptureFixture, fundos: dict[int, float]
+) -> None:
+    plano = _plano_com_danca(persona)
+    assert plano.danca is not None
+    dados = pdf.plano_pdf(plano, DATA)
+    _sem_falhas_de_letra(caplog)
+    total = _paginas(dados)
+    assert total <= MAX_PAGINAS
+    altura = pdf._Documento("").fundo - pdf.TOPO_PAGINA
+    for pagina in range(1, total):
+        ocupacao = (fundos.get(pagina, pdf.TOPO_PAGINA) - pdf.TOPO_PAGINA) / altura
+        assert ocupacao >= OCUPACAO_MINIMA, (persona, pagina, round(ocupacao, 2))
+
+
+def test_danca_uma_so_seccao_com_ligacoes_clicaveis(
+    escrito: list[tuple[int, float, str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plano = _plano_com_danca("persona_teste")
+    lugar = pdf.lugar_danca(plano, DATA)  # os ensaios também escrevem: fora da contagem
+    monkeypatch.setattr(pdf, "lugar_danca", lambda *_: lugar)
+    escrito.clear()
+    dados = pdf.plano_pdf(plano, DATA)
+    textos = [texto for _, _, texto in escrito]
+    assert textos.count("Dança (opcional)") == 1
+    assert any(texto.startswith("Sem saltos:") for texto in textos)  # D5
+    assert all(t >= 11 for _, t, _ in escrito)
+    assert plano.danca is not None
+    lig = ligacoes_danca(plano.danca)
+    for x in lig.principais:
+        assert x.url.encode() in dados  # ligação clicável (anotação /URI)
+
+
+def test_sem_danca_nao_ha_seccao_nem_ligacoes(escrito: list[tuple[int, float, str]]) -> None:
+    dados = pdf.plano_pdf(_plano(), DATA)
+    assert _plano().danca is None
+    assert "Dança (opcional)" not in [texto for _, _, texto in escrito]
+    assert b"youtube.com" not in dados
+
+
+def test_danca_onde_nao_acrescenta_paginas() -> None:
+    """Com a osteoporose (já com 12 páginas), a dança fica antes das fases."""
+    plano = _plano_com_danca("persona_osteoporose")
+    assert pdf.lugar_danca(plano, DATA) is not pdf.LugarDanca.FIM_DAS_FASES
+    assert _paginas(pdf.plano_pdf(plano, DATA)) == _paginas(
+        pdf.plano_pdf(_plano("persona_osteoporose"), DATA)
+    )

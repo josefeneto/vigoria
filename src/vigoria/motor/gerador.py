@@ -30,6 +30,7 @@ from vigoria.modelos.plano import (
     Treino,
 )
 from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
+from vigoria.motor.danca import construir_danca
 from vigoria.motor.semana import construir_semana
 from vigoria.motor.treino import construir_treino
 
@@ -264,6 +265,7 @@ def montar_plano(
         acompanhamento=acompanhamento,
         notas_personalizadas=tuple(gerado.notas_personalizadas),
         avisos=e.avisos,
+        danca=construir_danca(e, q),
     )
 
 

@@ -1,0 +1,80 @@
+# Dança (opcional), REGRAS_DOMINIO §5.1 (D1 a D7, decisão de 17/11/2026).
+# Ligações escolhidas pelo José (documento «Aerobic_Dance_Zumba_etc»). Classificação:
+# «Esforço Mínimo» → ligeira; «Esforço Médio» → media; «Esforço Normal» → alta;
+# «Esforço Misto» → mais_aulas (só para media e alta, sem restrição por condições).
+# A CONFIRMAR (revisão profissional): a classificação dos níveis.
+# Confirmar as ligações: python scripts/verificar_links_danca.py (atualiza à mão verificado_em).
+# Os vídeos abrem no YouTube numa janela nova; nada fica embutido na app (D7).
+
+textos:
+  titulo: Dança (opcional)
+  dias_cardio: >-
+    Nos dias de cardio, pode trocar o cardio pela dança. Não acrescente dança aos dias de
+    descanso.
+  dias_sem_cardio: >-
+    Pode dançar nos dias de caminhada leve, em vez da caminhada. O domingo fica para
+    descanso.
+  minutos: "{n} minutos de dança"
+  estrutura: >-
+    Comece pelo aquecimento do treino, dance e termine com o retorno à calma do treino.
+  danca: Dança
+  sem_saltos: >-
+    Sem saltos: acompanhe com passos no chão e use os braços para dar intensidade. Se sentir
+    dor ou falta de ar, pare.
+  ajuste: Deve conseguir falar, mas não cantar (esforço 3 a 6 em 10).
+  ajuste_subir: Se for fácil demais, experimente o nível acima na semana seguinte.
+  registo: Os minutos de dança contam como minutos de cardio no registo semanal.
+  ligacoes: Vídeos para dançar
+  mais_calmo: Para um dia mais calmo
+  mais_aulas: Mais aulas
+  abre_youtube: Abre no YouTube, numa janela nova.
+
+ligacoes:
+  # Esforço Mínimo
+  - titulo: Caminhadas a dançar
+    url: https://www.youtube.com/playlist?list=PLy0sFOZU1HZZjUG8SqVS339Z8qeLssipV
+    canal: BoomBox
+    nivel: ligeira
+    verificado_em: 2026-11-17
+  - titulo: Zumba Gold com música dos anos 60 e 70
+    url: https://www.youtube.com/playlist?list=PL4gFE8E9NFmvSx0qSZLhCWvDUSL2B0klb
+    canal: We Keep Moving
+    nivel: ligeira
+    verificado_em: 2026-11-17
+
+  # Esforço Médio
+  - titulo: Zumba com música dos anos 60, 70 e 80
+    url: https://www.youtube.com/playlist?list=PLFtoTL-8T_-BY9n5Eafi6OsgjdZRRkwep
+    canal: Rosely Suemi
+    nivel: media
+    verificado_em: 2026-11-17
+  - titulo: Aulas de Zumba para iniciantes e avançados
+    url: https://www.youtube.com/playlist?list=PLQzvPSFJA6-00HBPSMqlRcxHamTTKMM28
+    canal: umComo
+    nivel: media
+    verificado_em: 2026-11-17
+
+  # Esforço Normal
+  - titulo: Zumba 2025, músicas e coreografias
+    url: https://www.youtube.com/playlist?list=PLJpFb9CCBtvu2RRv-cRHn6FEq9FuRghDE
+    canal: Portal BK2
+    nivel: alta
+    verificado_em: 2026-11-17
+  # Só o vídeo, sem a lista automática (&list=RD…) que o YouTube junta.
+  - titulo: Mix de Zumba sem pausas
+    url: https://www.youtube.com/watch?v=zb9kM1VO9Yk
+    canal: SIMPLE DANCE
+    nivel: alta
+    verificado_em: 2026-11-17
+  - titulo: Danças latinas
+    url: https://www.youtube.com/playlist?list=PLkjXkVQRp2-579cxggaSnIn8oA6BsU5cu
+    canal: Carmela C. (rotinas BoomBox)
+    nivel: alta
+    verificado_em: 2026-11-17
+
+  # Esforço Misto
+  - titulo: Todas as listas da BoomBox Fitness
+    url: https://www.youtube.com/@BoomBoxfitness/playlists
+    canal: BoomBox Fitness
+    nivel: mais_aulas
+    verificado_em: 2026-11-17

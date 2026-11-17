@@ -185,6 +185,7 @@ VIDEO_DESCRICOES = (  # pela ordem de componentes.VIDEOS_TOPO
 )
 VIDEO_PAUSAR = "Pausar o vídeo"
 VIDEO_REPRODUZIR = "Ver o vídeo"
+DANCA_VIDEO_DESCRICAO = "Um grupo de pessoas a dançar ao ar livre."
 INICIO_COMO_TITULO = "Como funciona"
 BENEFICIOS = (
     (
@@ -751,6 +752,7 @@ ROTULOS_REGISTO = {
 }
 REGISTO_SESSOES_4 = "Sessões feitas (numa semana normal)"
 REGISTO_CARDIO_4 = "Minutos de cardio (numa semana normal)"
+REGISTO_CARDIO_DANCA = "Nos minutos de cardio, junte também os minutos de dança."
 REGISTO_FORCA = "Comparando com o registo anterior, os exercícios de força estão…"
 REGISTO_MOBILIDADE = "Comparando com o registo anterior, a mobilidade e o equilíbrio estão…"
 COMPARACAO = {

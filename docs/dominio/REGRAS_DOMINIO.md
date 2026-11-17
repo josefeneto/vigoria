@@ -132,6 +132,22 @@ Nota obrigatória (Vol. 1): o perímetro da cintura é um indicador de adiposida
 - Medições principais repetidas a cada 4 semanas.
 - A alimentação acompanha as fases (Vol. 3): organizar → consolidar hábitos → ajustar quantidades → transformar em rotina. Uma alteração de cada vez quando a evolução abranda.
 
+### 5.1 Dança (opcional) (decisão de 17/11/2026)
+
+Aplicação em `regras/danca.py` e `motor/danca.py`; textos e ligações em `conteudo/danca.yaml`. Nada disto passa pela LLM (o prompt não muda).
+
+| # | Regra | Aplicação |
+|---|---|---|
+| D1 | O bloco Dança só aparece a quem marcou «dança» nas preferências. | Campo `danca` do plano; sem a preferência, fica vazio. Os planos anteriores à Fase 10E não o têm. |
+| D2 | Estrutura: o aquecimento da fase, depois a dança, depois o retorno à calma (os mesmos textos do treino). | Os textos de `estrutura_sessao` (`fases.yaml`). |
+| D3 | Minutos de dança: Fase 1 — ligeira 10, média 15, alta 20; Fases 2–4 — ligeira 10, média 20, alta 30. | Pela intensidade efetiva, limitados à sessão: mínimo entre D3 e `minutos_dia` − 10 (5 min de aquecimento e 5 de retorno à calma), nunca abaixo de 10. |
+| D4 | A dança substitui o cardio nos dias de cardio (opcional); não se acrescenta a dias de descanso e conta como minutos de cardio no registo semanal. | Com 1 ou 2 dias por semana (sem dias de cardio), nos dias de caminhada leve, nunca ao domingo. No registo, uma nota junto aos minutos de cardio. |
+| D5 | Sem saltos, para todos: texto fixo «Sem saltos: acompanhe com passos no chão e use os braços para dar intensidade. Se sentir dor ou falta de ar, pare.» | `danca.yaml`, `sem_saltos`. |
+| D6 | Nível dos links = intensidade da pessoa (ligeira, média, alta). Mostra os links desse nível e um do nível abaixo («para um dia mais calmo»). Com joelhos, osteoporose, equilíbrio ou cardiovascular: só links do nível ligeira, seja qual for a intensidade. Texto de ajuste: «Deve conseguir falar, mas não cantar (esforço 3 a 6 em 10). Se for fácil demais, experimente o nível acima na semana seguinte.» | Joelhos = limitação «joelhos» (qualquer gravidade), dor articular persistente nos joelhos, ou prótese/cirurgia recente (o questionário não diz a articulação: conta sempre, por poder ser anca ou joelho). Cardiovascular = doença cardiovascular; a hipertensão controlada não limita. Com esta regressão, sem «experimente o nível acima» e sem «Mais aulas»; na alta, também sem «experimente o nível acima» (não há nível acima). «Mais aulas» (esforço misto) só para média e alta. |
+| D7 | Os links abrem no YouTube numa nova janela; nada embutido (sem cookies de terceiros na app). | `target="_blank"` com `rel="noopener noreferrer"`; no PDF, ligações clicáveis. Confirmar as ligações: `python scripts/verificar_links_danca.py`. |
+
+**A CONFIRMAR (revisão profissional):** a classificação dos vídeos por nível (ligeira, média, alta, mais aulas) e os minutos da D3.
+
 ## 6. Biblioteca de exercícios e resolução da incoerência da Fase 4
 
 ### 6.1 Campos da biblioteca
@@ -310,3 +326,4 @@ Não há decisões de domínio pendentes.
 - 05/11/2026 — Fase 6B: secção «Depois das 16 semanas» (§5), determinística e sem quinta fase de treino; recomendação da OMS só com idade ≥ 65; textos sem origem nos volumes aprovados na revisão editorial (P1 a P8).
 - 05/11/2026 — Fase 7: regras e mensagens do acompanhamento (§9.1, R1 a R17), com limiares marcados «A CONFIRMAR»; margens em R8 e R9 para absorver oscilações de ±0,8 kg; sem destaque da manutenção pela semana.
 - 07/11/2026 — Fase 8: regras dos lembretes por email (§9.2): L1 a L4 e os textos do email aprovados pelo José; L5 (suspensão ao fim de 3 períodos sem registo) pedida por ele.
+- 17/11/2026 — Fase 10E: dança opcional (§5.1, D1 a D7). Com 1 ou 2 dias por semana, nos dias de caminhada leve; minutos limitados à sessão (`minutos_dia` − 10, mínimo 10); prótese ou cirurgia recente conta como joelhos (qualquer articulação dos membros inferiores); a hipertensão controlada não limita. O prompt fica como está.

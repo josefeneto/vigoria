@@ -20,6 +20,9 @@ PASTA_VIDEO = RAIZ / "static" / "video"  # servida em app/static/video/
 # Vídeos do topo do início, que alternam (um homem e uma mulher): scripts/converter_video.py.
 VIDEOS_TOPO = ("inicio", "inicio_mulher")
 CAPA_VIDEO = PASTA_VIDEO / "inicio_capa.webp"
+# Vídeo do cartão «Dança (opcional)» (provisório; Pexels, docs/CREDITOS_IMAGENS.md).
+VIDEO_DANCA = "danca_web"
+CAPA_DANCA = PASTA_VIDEO / "danca_poster.jpg"
 
 # Vídeos do topo do início: sem som, um a seguir ao outro em ciclo, com capa e botão de pausa
 # (WCAG 2.2.2). Só arrancam por código e só se o sistema não pedir menos movimento; sem
@@ -152,6 +155,68 @@ def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> boo
         unsafe_allow_javascript=True,
     )
     return True
+
+
+def video_danca(descricao: str, pausar: str, reproduzir: str) -> str:
+    """Vídeo do cartão «Dança (opcional)» (provisório): sem som, em ciclo, com botão de pausa;
+    com «menos movimento», só a capa (o mesmo código do topo do início). Vazio sem ficheiros."""
+    if not (PASTA_VIDEO / f"{VIDEO_DANCA}.mp4").exists() or not CAPA_DANCA.exists():
+        return ""
+    capa = f"app/static/video/{CAPA_DANCA.name}"
+    um = _UM_VIDEO % {
+        "nome": VIDEO_DANCA,
+        "descricao": escape(descricao),
+        "preload": "none",  # só descarrega quando começa (poupa dados no telemóvel)
+        "poster": capa,
+    }
+    return _VIDEO % {
+        "capa": capa,
+        "videos": um,
+        "pausar": escape(pausar),
+        "reproduzir": escape(reproduzir),
+    }
+
+
+def _ligacoes(itens: Iterable[tuple[str, str, str]]) -> str:
+    """Ligações externas (D7): abrem no YouTube numa janela nova, sem nada embutido."""
+    linhas = "".join(
+        f'<li><a href="{escape(url)}" target="_blank" rel="noopener noreferrer">'
+        f'{escape(titulo)}</a> <span class="v-danca-canal">{escape(canal)}</span></li>'
+        for titulo, url, canal in itens
+    )
+    return f'<ul class="v-danca-ligacoes">{linhas}</ul>'
+
+
+def cartao_danca(
+    titulo: str,
+    minutos: str,
+    video_html: str,
+    textos: Iterable[str],
+    passos: Iterable[tuple[str, str]],
+    aviso: str,
+    ajuste: str,
+    grupos: Iterable[tuple[str, Iterable[tuple[str, str, str]]]],
+    nota: str,
+) -> str:
+    """Cartão «Dança (opcional)»: ícone, minutos, vídeo, os passos da sessão (D2), o aviso sem
+    saltos (D5), o ajuste (D6) e as ligações por grupo: (rótulo, [(título, url, canal)]).
+    Um passo com rótulo vazio mostra só o texto (os do treino já trazem o seu)."""
+    corpo = "".join(f"<p>{escape(x)}</p>" for x in textos)
+    lista = "".join(
+        f"<li><strong>{escape(a)}:</strong> {escape(b)}</li>" if a else f"<li>{escape(b)}</li>"
+        for a, b in passos
+    )
+    ligacoes = "".join(
+        f'<p class="v-danca-grupo">{escape(rotulo)}</p>{_ligacoes(itens)}'
+        for rotulo, itens in grupos
+    )
+    return (
+        f'<div class="v-cartao v-danca"><div class="v-danca-topo">{_icone("cardio")}'
+        f'<div><h3>{escape(titulo)}</h3><p class="v-danca-min">{escape(minutos)}</p></div></div>'
+        f'{video_html}{corpo}<ol class="v-danca-passos">{lista}</ol>'
+        f'<p class="v-danca-aviso">{escape(aviso)}</p><p>{escape(ajuste)}</p>{ligacoes}'
+        f'<p class="v-danca-nota">{escape(nota)}</p></div>'
+    )
 
 
 @cache

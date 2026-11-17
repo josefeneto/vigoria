@@ -11,6 +11,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
+from vigoria.modelos.questionario import Intensidade
 from vigoria.regras.calculos import Hidratacao, Proteina
 
 
@@ -112,6 +113,23 @@ class Treino(_Modelo):
     fases: tuple[TreinoFase, ...]
 
 
+class DiasDanca(StrEnum):
+    """D4: em que dias se dança (sem dias de cardio, nos de caminhada leve)."""
+
+    CARDIO = "cardio"
+    CAMINHADA = "caminhada"
+
+
+class Danca(_Modelo):
+    """Dança (opcional), REGRAS §5.1 (motor/danca.py). As ligações não ficam no plano:
+    leem-se de danca.yaml ao mostrar, para uma ligação substituída chegar aos planos guardados."""
+
+    minutos: tuple[int, int, int, int]  # por fase (D3, limitado à sessão)
+    intensidade: Intensidade  # a efetiva
+    so_ligeira: bool  # D6: regressão por condições
+    dias: DiasDanca
+
+
 # ---------------------------------------------------------------- Plano final
 
 
@@ -185,3 +203,4 @@ class Plano(_Modelo):
     acompanhamento: Acompanhamento
     notas_personalizadas: tuple[str, ...]
     avisos: tuple[str, ...]  # textos fixos (§7) e condicionais, inseridos pelo código
+    danca: Danca | None = None  # só com «dança» nas preferências (D1); antes da Fase 10E, None

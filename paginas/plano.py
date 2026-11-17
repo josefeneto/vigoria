@@ -15,8 +15,20 @@ import streamlit as st
 
 from paginas import componentes, comum
 from paginas import textos as t
-from vigoria.conteudo.carregar import carregar_avisos, carregar_exercicios, carregar_fases
-from vigoria.modelos.plano import ExercicioPlano, ParteOrientacao, Plano, TreinoFase
+from vigoria.conteudo.carregar import (
+    carregar_avisos,
+    carregar_danca,
+    carregar_exercicios,
+    carregar_fases,
+)
+from vigoria.modelos.plano import (
+    DiasDanca,
+    ExercicioPlano,
+    ParteOrientacao,
+    Plano,
+    TreinoFase,
+)
+from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.calculos import SEMANAS_PROGRAMA
 from vigoria.regras.hoje import Hoje, TipoHoje, sessao_de_hoje
@@ -136,6 +148,42 @@ def _fase(fase: TreinoFase) -> None:
         _exercicios(fase.mobilidade_equilibrio)
 
 
+def _danca(plano: Plano, fase: int) -> None:
+    """Cartão «Dança (opcional)» da fase (REGRAS §5.1): só se a pessoa escolheu dança (D1)."""
+    d = plano.danca
+    if d is None:
+        return
+    c = carregar_danca().textos
+    lig = ligacoes_danca(d)
+    sessao = plano.treino.estrutura_sessao
+    minutos = c.minutos.format(n=d.minutos[fase - 1])
+    dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
+    grupos = [(c.ligacoes, [(x.titulo, x.url, x.canal) for x in lig.principais])]
+    if lig.mais_calmo is not None:
+        x = lig.mais_calmo
+        grupos.append((c.mais_calmo, [(x.titulo, x.url, x.canal)]))
+    if lig.mais_aulas:
+        grupos.append((c.mais_aulas, [(x.titulo, x.url, x.canal) for x in lig.mais_aulas]))
+    st.html(
+        componentes.cartao_danca(
+            c.titulo,
+            minutos,
+            componentes.video_danca(t.DANCA_VIDEO_DESCRICAO, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR),
+            (dias, c.estrutura),
+            (
+                ("", sessao.aquecimento),
+                (c.danca, minutos),
+                ("", sessao.retorno_calma),
+            ),
+            c.sem_saltos,
+            lig.ajuste,
+            grupos,
+            f"{c.abre_youtube} {c.registo}",
+        ),
+        unsafe_allow_javascript=True,
+    )
+
+
 def _treino(plano: Plano) -> None:
     """Maqueta Fase: seletor das 4 fases (abre na fase desta semana), o cartão da fase e os
     exercícios; depois, a semana-tipo e a estrutura de cada sessão."""
@@ -152,6 +200,7 @@ def _treino(plano: Plano) -> None:
         width="stretch",
     )
     _fase(fases[escolhida or atual])
+    _danca(plano, escolhida or atual)
     _semana(plano)
     st.subheader(r["estrutura_sessao"])
     sessao = plano.treino.estrutura_sessao
