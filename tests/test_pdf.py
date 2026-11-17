@@ -219,6 +219,11 @@ def test_cores_iguais_as_da_marca() -> None:
         assert CORES[nome] == valor
 
 
+def test_poster_da_danca_igual_ao_da_app() -> None:
+    copia = (pdf.RECURSOS / pdf.POSTER_DANCA).read_bytes()
+    assert copia == (RAIZ / "static" / "video" / "danca_poster.jpg").read_bytes()
+
+
 def test_logotipo_do_pdf_igual_ao_da_marca() -> None:
     copia = (pdf.RECURSOS / "vigoria_logo.svg").read_bytes()
     assert copia == (RAIZ / "assets" / "marca" / "vigoria_logo.svg").read_bytes()
@@ -476,6 +481,7 @@ def test_danca_uma_so_seccao_com_ligacoes_clicaveis(
     lig = ligacoes_danca(plano.danca)
     for x in lig.principais:
         assert x.url.encode() in dados  # ligação clicável (anotação /URI)
+    assert b"/DCTDecode" in dados  # a miniatura do vídeo (JPEG); o resto é vetorial
 
 
 def test_sem_danca_nao_ha_seccao_nem_ligacoes(escrito: list[tuple[int, float, str]]) -> None:
@@ -483,6 +489,7 @@ def test_sem_danca_nao_ha_seccao_nem_ligacoes(escrito: list[tuple[int, float, st
     assert _plano().danca is None
     assert "Dança (opcional)" not in [texto for _, _, texto in escrito]
     assert b"youtube.com" not in dados
+    assert b"/DCTDecode" not in dados
 
 
 def test_danca_onde_nao_acrescenta_paginas() -> None:

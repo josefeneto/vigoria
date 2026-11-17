@@ -46,6 +46,7 @@ from vigoria.motor.manutencao import orientacoes_manutencao
 from vigoria.regras.textos import numero
 
 RECURSOS = files("vigoria.exportacao") / "recursos"
+POSTER_DANCA = "danca_poster.jpg"  # cópia de static/video/ (um teste confirma)
 ICONES = RECURSOS / "icones"  # cópias de assets/icones/exercicios/ (scripts/folha_icones.py)
 # Semana-tipo: dia, atividade, duração, descrição (mm). «Segunda-feira» numa só linha.
 LARGURAS_SEMANA = [31, 36, 21, 86]
@@ -405,6 +406,33 @@ class _Documento(FPDF):
         # O HORIZONTAL_LINES só desenha as linhas entre filas: falta a de baixo da última.
         self.line(self.l_margin, self.get_y(), self.l_margin + self.epw, self.get_y())
         self.ln(4)
+
+    def paragrafo_com_imagem(
+        self, texto: str, imagem: str, largura: float, proporcao: float
+    ) -> None:
+        """Imagem (`largura` em mm; altura = largura × `proporcao`) à esquerda e o texto ao lado.
+        O bloco nunca se parte entre páginas."""
+        altura_img = largura * proporcao
+        x_texto = MARGEM + largura + INTERVALO
+        self.set_font("Atkinson", "", TEXTO_PT)
+        altura_txt = self._altura_texto(texto, LINHA, self.epw - largura - INTERVALO)
+        altura = max(altura_img, altura_txt)
+        self._antes_do_bloco(altura)
+        if self.get_y() + altura > self.fundo:
+            self.add_page()
+        y = self.get_y()
+        with as_file(RECURSOS / imagem) as caminho:
+            self.image(str(caminho), x=MARGEM, y=y, w=largura, h=altura_img)
+        self.set_xy(x_texto, y)
+        self.set_font("Atkinson", "", TEXTO_PT)
+        self.multi_cell(
+            self.epw - largura - INTERVALO,
+            LINHA,
+            _limpo(texto),
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
+        self.set_y(y + altura + 3)
 
     def ligacoes(self, grupos: Sequence[tuple[str, Sequence[tuple[str, str, str]]]]) -> None:
         """Ligações clicáveis por grupo: (rótulo, [(título, url, canal)]). Nunca partidas."""
@@ -875,7 +903,8 @@ def _danca(pdf: _Documento, plano: Plano, r: dict[str, str], *, secao: bool = Fa
         pdf.titulo(c.titulo)
     else:
         pdf.subtitulo(c.titulo)
-    pdf.paragrafo(f"{dias} {c.estrutura} {c.registo}")
+    # Miniatura do vídeo da app (cópia de static/video/danca_poster.jpg, 16:9).
+    pdf.paragrafo_com_imagem(f"{dias} {c.estrutura} {c.registo}", POSTER_DANCA, 45, 9 / 16)
     pdf.tabela(
         [f"{r['fase']} {n}" for n in range(1, 5)],
         [[f"{m} min" for m in d.minutos]],
