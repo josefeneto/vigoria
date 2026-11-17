@@ -19,7 +19,7 @@ Todas as fotografias usadas na Vigoria têm licença de uso comercial gratuito. 
 |---|---|---|---|---|
 | static/video/inicio.mp4 (e a capa inicio_capa.webp) | Kampus Production | https://www.pexels.com/video/elderly-man-lifting-dumbbells-6892967/ | Licença Pexels | 01/11/2026 |
 | static/video/inicio_mulher.mp4 (e a capa inicio_mulher_capa.webp) | Los Muertos Crew | https://www.pexels.com/video/a-woman-doing-squats-8809584/ | Licença Pexels | 03/11/2026 |
-| static/video/danca_web.mp4 (e a capa danca_poster.jpg) | Kampus Production | https://www.pexels.com/@kampus/ (página do vídeo por confirmar) | Licença Pexels | 17/11/2026 |
+| static/video/danca_web.mp4 (e a capa danca_poster.jpg) | Kampus Production | https://www.pexels.com/video/happy-women-dancing-together-8956012/ | Licença Pexels | 17/11/2026 |
 
 ## Ícones
 
