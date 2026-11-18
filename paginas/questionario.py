@@ -247,7 +247,8 @@ def passo_3() -> None:
     _pills("equipamento", t.EQUIPAMENTO)
     if "halteres" in comum.respostas()["equipamento"]:
         _numero("halteres_kg")
-    _escolha("dias_semana", {d: str(d) for d in range(1, 8)}, **W("dias_semana"))
+    _pills("dias_treino", t.DIAS_TREINO)
+    st.caption(t.DIAS_TREINO_RECOMENDACAO)
     minutos = {m: t.MINUTOS.format(n=m) for m in (15, 20, 30, 45, 60)}
     _escolha("minutos_dia", minutos, **W("minutos_dia"))
     _pills("preferencias", t.PREFERENCIAS)

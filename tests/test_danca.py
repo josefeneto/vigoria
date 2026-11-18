@@ -139,8 +139,9 @@ def test_d4_dias_de_cardio_ou_de_caminhada(dias: int, esperado: DiasDanca) -> No
 
 def test_d4_textos_dos_dias_e_do_registo() -> None:
     c = carregar_danca().textos
-    assert "cardio" in c.dias_cardio and "descanso" in c.dias_cardio
-    assert "caminhada" in c.dias_sem_cardio and "domingo" in c.dias_sem_cardio
+    assert "cardio" in c.dias_cardio and "outros dias" in c.dias_cardio
+    # Desde 18/11/2026, todos os dias valem o mesmo: o domingo não é dia especial.
+    assert "caminhada" in c.dias_sem_cardio and "domingo" not in c.dias_sem_cardio.lower()
     assert "cardio" in c.registo
 
 

@@ -9,11 +9,10 @@
 textos:
   titulo: Dança (opcional)
   dias_cardio: >-
-    Nos dias de cardio, pode trocar o cardio pela dança. Não acrescente dança aos dias de
-    descanso.
+    Nos dias de cardio, pode trocar o cardio pela dança. Não acrescente dança aos outros
+    dias.
   dias_sem_cardio: >-
-    Pode dançar nos dias de caminhada leve, em vez da caminhada. O domingo fica para
-    descanso.
+    Pode dançar nos dias de caminhada leve, em vez da caminhada.
   minutos: "{n} minutos de dança"
   estrutura: >-
     Comece pelo aquecimento do treino, dance e termine com o retorno à calma do treino.

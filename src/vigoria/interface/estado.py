@@ -28,6 +28,7 @@ _LISTAS = {
     "dor_articular_zonas",
     "limitacoes",
     "equipamento",
+    "dias_treino",
     "preferencias",
     "restricoes_alimentares",
 }

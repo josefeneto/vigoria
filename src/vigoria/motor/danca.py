@@ -10,7 +10,7 @@ from vigoria.conteudo.carregar import LigacaoDanca, NivelDanca, carregar_danca
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Danca, DiasDanca
 from vigoria.modelos.questionario import Questionario
-from vigoria.motor.semana import SESSOES, TIPOS_FORCA
+from vigoria.motor.semana import TIPOS_FORCA, sessoes
 from vigoria.regras import danca as regras
 
 
@@ -20,7 +20,7 @@ def construir_danca(e: Estrategia, q: Questionario) -> Danca | None:
         return None
     intensidade = e.intensidade_efetiva
     # D4: com dias de cardio na semana-tipo, nesses; senão, nos de caminhada leve.
-    com_cardio = any(tipo not in TIPOS_FORCA for tipo in SESSOES[q.dias_semana].values())
+    com_cardio = any(tipo not in TIPOS_FORCA for tipo in sessoes(q).values())
     return Danca(
         minutos=tuple(  # type: ignore[arg-type]
             regras.minutos_danca(f, intensidade, q.minutos_dia) for f in range(1, 5)

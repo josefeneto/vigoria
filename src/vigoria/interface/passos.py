@@ -24,6 +24,7 @@ from vigoria.modelos.questionario import (
     Refeicoes,
     RestricaoAlimentar,
 )
+from vigoria.motor.semana import dias_de_treino
 
 PASSOS: tuple[str, ...] = ("0", "1", "2a", "2b", "3", "4a", "4b", "5", "6", "7")
 MINUTOS_QUESTIONARIO = 10  # tempo indicativo, no Início e na Ajuda
@@ -50,7 +51,7 @@ CAMPOS: dict[str, tuple[str, ...]] = {
         "medicacao_notas",
     ),
     "2b": ("limitacoes", "limitacoes_gravidade", "limitacoes_outra"),
-    "3": ("equipamento", "halteres_kg", "dias_semana", "minutos_dia", "preferencias"),
+    "3": ("equipamento", "halteres_kg", "dias_treino", "minutos_dia", "preferencias"),
     "4a": ("refeicoes", "restricoes_alimentares", "restricoes_outra"),
     "4b": (
         "agua_litros",
@@ -78,6 +79,13 @@ _NENHUMA = {
 def _tem(respostas: Mapping[str, Any], campo: str, valor: str) -> bool:
     return valor in (respostas.get(campo) or [])
 
+
+# Campos calculados, sem pergunta própria: o número de dias de treino vem dos dias escolhidos.
+CALCULADOS = frozenset({"dias_semana"})
+
+# Obrigatórios na interface, mas com valor por omissão no Questionario (os dias de treino
+# ficam vazios nos questionários anteriores a 18/11/2026).
+OBRIGATORIOS = frozenset({"dias_treino"})
 
 # Campos condicionais: só se aplicam (e então são obrigatórios) se a opção foi escolhida.
 # A ordem conta: a outra articulação depende das zonas, que dependem da dor articular.
@@ -202,7 +210,7 @@ def validar_passo(passo: str, respostas: Mapping[str, Any]) -> list[ErroCampo]:
         valor = r.get(campo)
         if campo in CONDICIONAIS and not CONDICIONAIS[campo](r):
             continue
-        obrigatorio = info.is_required() or campo in CONDICIONAIS
+        obrigatorio = info.is_required() or campo in CONDICIONAIS or campo in OBRIGATORIOS
         if campo == "refeicoes":
             erros += _erros_refeicoes(r)
         elif campo in {"aceita_termos", "consentimento_saude", "confirma_maior_idade"}:
@@ -268,6 +276,7 @@ def montar_questionario(respostas: Mapping[str, Any]) -> Questionario:
 def respostas_de_questionario(q: Questionario) -> dict[str, Any]:
     """O inverso de montar_questionario (preencher com a persona de teste em local)."""
     dados = q.model_dump(mode="json")
+    dados["dias_treino"] = [d.value for d in dias_de_treino(q)]  # os antigos: a semana fixa
     refeicoes = dados["refeicoes"]
     dados["refeicoes_faz"] = {x: bool(refeicoes[x]) for x in REFEICOES}
     dados["refeicoes"] = {

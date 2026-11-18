@@ -62,7 +62,8 @@ Ao concluir o passo, mostrar o IMC calculado com uma frase de contexto (nunca al
 | Campo | Prompt | Tipo |
 |---|---|---|
 | `equipamento` | 1.I | escolha múltipla: nenhum, bandas elásticas, halteres (indicar kg), step, elíptica, passadeira, cadeira firme, outro |
-| `dias_semana` | 1.J | inteiro 1–7 |
+| `dias_treino` | 1.J | escolha múltipla: Seg, Ter, Qua, Qui, Sex, Sáb, Dom (pelo menos um; decisão de 18/11/2026), com a recomendação «escolha dias de treino intervalados» |
+| `dias_semana` | 1.J | inteiro 1–7, calculado: o número de dias escolhidos (os questionários anteriores a 18/11/2026 só têm este) |
 | `minutos_dia` | 1.J | escolha: 15 / 20 / 30 / 45 / 60 |
 | `preferencias` | 1.K | escolha múltipla: caminhada, Tai Chi, dança, força, natação, outro |
 

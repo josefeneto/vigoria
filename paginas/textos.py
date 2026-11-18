@@ -287,7 +287,7 @@ ROTULOS = {
     "limitacoes_outra": "Que outra limitação?",
     "equipamento": "Que equipamento tem em casa?",
     "halteres_kg": "Peso de cada haltere (kg)",
-    "dias_semana": "Quantos dias por semana pode treinar?",
+    "dias_treino": "Indique os dias da semana em que pode treinar",
     "minutos_dia": "Quantos minutos por dia?",
     "preferencias": "De que atividades gosta?",
     "refeicoes": "Refeições",
@@ -315,7 +315,7 @@ ROTULOS_RESUMO = {
     "medicacao_afeta_fc": "Medicação que baixa o ritmo cardíaco",
     "limitacoes": "Limitações físicas",
     "equipamento": "Equipamento",
-    "dias_semana": "Dias de treino por semana",
+    "dias_treino": "Dias de treino",
     "minutos_dia": "Minutos por dia",
     "preferencias": "Atividades preferidas",
     "agua_litros": "Água por dia",
@@ -434,6 +434,19 @@ PREFERENCIAS = {
     "outro": "Outra",
 }
 MINUTOS = "{n} min"
+DIAS_TREINO = {
+    "segunda": "Seg",
+    "terca": "Ter",
+    "quarta": "Qua",
+    "quinta": "Qui",
+    "sexta": "Sex",
+    "sabado": "Sáb",
+    "domingo": "Dom",
+}
+DIAS_TREINO_RECOMENDACAO = (
+    "Recomendação: se puder, escolha dias de treino intervalados, para um plano otimizado. "
+    "Os treinos de força nunca ficam em dois dias seguidos."
+)
 
 # ---------------------------------------------------------------- Passo 4a e 4b
 
@@ -600,6 +613,7 @@ OPCOES = {
     "medicacao_afeta_fc": SIM_NAO_NAO_SEI,
     "limitacoes": LIMITACOES,
     "equipamento": EQUIPAMENTO,
+    "dias_treino": DIAS_TREINO,
     "preferencias": PREFERENCIAS,
     "restricoes_alimentares": RESTRICOES,
     "agua_litros": AGUA,

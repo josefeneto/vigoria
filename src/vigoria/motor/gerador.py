@@ -41,7 +41,8 @@ PROMPT_CORRECAO = PROMPTS.joinpath("gerador_correcao.md")
 _CABECALHO = re.compile(r"\A<!--\s*versao:\s*(\d+)\b.*?-->\s*", re.DOTALL)
 
 # Lista explícita: um campo novo do questionário não segue para a LLM por omissão.
-# Ficam de fora os consentimentos e as preferências de lembretes.
+# Ficam de fora os consentimentos, as preferências de lembretes e os dias de treino escolhidos
+# (a semana-tipo é do motor; à LLM chega só o número, `dias_semana`).
 CAMPOS_QUESTIONARIO = frozenset(
     {
         "sexo",

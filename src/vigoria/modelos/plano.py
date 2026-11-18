@@ -11,22 +11,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-from vigoria.modelos.questionario import Intensidade
+from vigoria.modelos.questionario import DiaSemana, Intensidade
 from vigoria.regras.calculos import Hidratacao, Proteina
 
 
 class _Modelo(BaseModel):
     model_config = ConfigDict(frozen=True)
-
-
-class DiaSemana(StrEnum):
-    SEGUNDA = "segunda"
-    TERCA = "terca"
-    QUARTA = "quarta"
-    QUINTA = "quinta"
-    SEXTA = "sexta"
-    SABADO = "sabado"
-    DOMINGO = "domingo"
 
 
 class Refeicao(StrEnum):

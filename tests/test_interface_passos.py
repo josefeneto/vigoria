@@ -14,6 +14,7 @@ from vigoria.interface.estado import (
     para_respostas,
 )
 from vigoria.interface.passos import (
+    CALCULADOS,
     CAMPOS,
     PASSOS,
     CodigoErro,
@@ -26,13 +27,22 @@ from vigoria.interface.passos import (
     validar_passo,
 )
 from vigoria.modelos.questionario import REFEICAO_SEM_DESCRICAO, Questionario
+from vigoria.motor.semana import DIAS_FIXOS, sessoes
 
 RAIZ = Path(__file__).resolve().parents[1]
 PERSONAS = sorted(p.name for p in (RAIZ / "exemplos").glob("persona_*.json"))
 
 
-def _q(ficheiro: str = "persona_teste.json") -> Questionario:
+def _q_antigo(ficheiro: str = "persona_teste.json") -> Questionario:
+    """Como nos ficheiros: só com `dias_semana` (questionário anterior a 18/11/2026)."""
     return Questionario.model_validate_json((RAIZ / "exemplos" / ficheiro).read_text("utf-8"))
+
+
+def _q(ficheiro: str = "persona_teste.json") -> Questionario:
+    """Com os dias de treino escolhidos (os da semana fixa), como os da interface."""
+    q = _q_antigo(ficheiro)
+    dias = [d.value for d in DIAS_FIXOS[q.dias_semana]]
+    return Questionario.model_validate(q.model_dump(mode="json") | {"dias_treino": dias})
 
 
 def _r(**alteracoes: Any) -> dict[str, Any]:
@@ -46,7 +56,7 @@ def _codigos(passo: str, respostas: dict[str, Any]) -> list[tuple[str, str]]:
 def test_passos_cobrem_todos_os_campos_uma_vez() -> None:
     assert PASSOS == ("0", "1", "2a", "2b", "3", "4a", "4b", "5", "6", "7")
     todos = [c for p in PASSOS for c in CAMPOS[p]]
-    assert sorted(todos) == sorted(Questionario.model_fields)
+    assert sorted(todos) == sorted(set(Questionario.model_fields) - CALCULADOS)
 
 
 @pytest.mark.parametrize("ficheiro", PERSONAS)
@@ -56,6 +66,22 @@ def test_personas_passam_em_todos_os_passos_e_voltam_iguais(ficheiro: str) -> No
     for passo in PASSOS:
         assert validar_passo(passo, respostas) == [], passo
     assert montar_questionario(respostas) == q
+
+
+@pytest.mark.parametrize("ficheiro", PERSONAS)
+def test_questionario_antigo_volta_com_os_dias_da_semana_fixa(ficheiro: str) -> None:
+    antigo = _q_antigo(ficheiro)
+    assert antigo.dias_treino == []
+    respostas = respostas_de_questionario(antigo)
+    assert respostas["dias_treino"] == [d.value for d in DIAS_FIXOS[antigo.dias_semana]]
+    novo = montar_questionario(respostas)
+    assert novo.dias_semana == antigo.dias_semana
+    assert sessoes(novo) == sessoes(antigo)
+
+
+def test_dias_de_treino_obrigatorios() -> None:
+    assert ("dias_treino", "obrigatorio") in _codigos("3", _r(dias_treino=[]))
+    assert _codigos("3", _r(dias_treino=["sabado", "domingo"])) == []
 
 
 # ---------------------------------------------------------------- Obrigatórios e limites

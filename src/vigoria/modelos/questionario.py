@@ -128,6 +128,16 @@ class PaoPorDia(StrEnum):
     QUATRO_OU_MAIS = "4+"
 
 
+class DiaSemana(StrEnum):
+    SEGUNDA = "segunda"
+    TERCA = "terca"
+    QUARTA = "quarta"
+    QUINTA = "quinta"
+    SEXTA = "sexta"
+    SABADO = "sabado"
+    DOMINGO = "domingo"
+
+
 class Intensidade(StrEnum):
     LIGEIRA = "ligeira"
     MEDIA = "media"
@@ -193,6 +203,9 @@ class Questionario(BaseModel):
     # Passo 3 — exercício
     equipamento: list[Equipamento] = Field(min_length=1)
     halteres_kg: float | None = Field(default=None, gt=0, le=50)
+    # Dias escolhidos (desde 18/11/2026); `dias_semana` passa a ser o número deles. Os
+    # questionários anteriores só têm `dias_semana` (motor/semana.py, DIAS_FIXOS).
+    dias_treino: list[DiaSemana] = []
     dias_semana: int = Field(ge=1, le=7)
     minutos_dia: Literal[15, 20, 30, 45, 60]
     preferencias: list[Preferencia] = Field(min_length=1)
@@ -227,6 +240,19 @@ class Questionario(BaseModel):
         """Ignora chaves começadas por «_» (notas em ficheiros de exemplo)."""
         if isinstance(dados, dict):
             return {k: v for k, v in dados.items() if not str(k).startswith("_")}
+        return dados
+
+    @model_validator(mode="before")
+    @classmethod
+    def _dias_de_treino(cls, dados: Any) -> Any:
+        """Dias escolhidos sem repetições e pela ordem da semana; `dias_semana` = quantos."""
+        if isinstance(dados, dict) and dados.get("dias_treino"):
+            try:
+                escolhidos = {DiaSemana(d) for d in dados["dias_treino"]}
+            except ValueError:
+                return dados  # o Pydantic dá o erro do dia inválido
+            dias = [d for d in DiaSemana if d in escolhidos]
+            return dados | {"dias_treino": dias, "dias_semana": len(dias)}
         return dados
 
     @model_validator(mode="after")

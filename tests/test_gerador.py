@@ -156,6 +156,7 @@ def test_campos_do_questionario_estao_todos_classificados() -> None:
         "aceita_termos",
         "consentimento_saude",
         "confirma_maior_idade",
+        "dias_treino",  # a semana-tipo é do motor; à LLM chega só dias_semana
         "acompanhamento_ativo",
         "lembretes_email",
         "condicoes_outras",
