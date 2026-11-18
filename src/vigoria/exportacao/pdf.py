@@ -407,6 +407,17 @@ class _Documento(FPDF):
         self.line(self.l_margin, self.get_y(), self.l_margin + self.epw, self.get_y())
         self.ln(4)
 
+    def imagem(self, imagem: str, proporcao: float) -> None:
+        """Imagem dos recursos a toda a largura (altura = largura × `proporcao`), nunca partida."""
+        altura = self.epw * proporcao
+        self._antes_do_bloco(altura)
+        if self.get_y() + altura > self.fundo:
+            self.add_page()
+        y = self.get_y()
+        with as_file(RECURSOS / imagem) as caminho:
+            self.image(str(caminho), x=MARGEM, y=y, w=self.epw, h=altura)
+        self.set_y(y + altura + 4)
+
     def paragrafo_com_imagem(
         self, texto: str, imagem: str, largura: float, proporcao: float
     ) -> None:
@@ -899,12 +910,15 @@ def _danca(pdf: _Documento, plano: Plano, r: dict[str, str], *, secao: bool = Fa
     c = carregar_danca().textos
     lig = ligacoes_danca(d)
     dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
-    if secao:  # depois das fases: título próprio, para não parecer parte da fase 4
-        pdf.titulo(c.titulo)
-    else:
+    texto = f"{dias} {c.estrutura} {c.registo}"
+    # A imagem do vídeo da app (cópia de static/video/danca_poster.jpg, 16:9).
+    if secao:  # depois das fases: página própria, com espaço para a imagem a toda a largura
+        pdf.titulo(c.titulo, nova_pagina=True)
+        pdf.imagem(POSTER_DANCA, 9 / 16)
+        pdf.paragrafo(texto)
+    else:  # encaixada antes das fases, sem acrescentar páginas: miniatura ao lado do texto
         pdf.subtitulo(c.titulo)
-    # Miniatura do vídeo da app (cópia de static/video/danca_poster.jpg, 16:9).
-    pdf.paragrafo_com_imagem(f"{dias} {c.estrutura} {c.registo}", POSTER_DANCA, 45, 9 / 16)
+        pdf.paragrafo_com_imagem(texto, POSTER_DANCA, 45, 9 / 16)
     pdf.tabela(
         [f"{r['fase']} {n}" for n in range(1, 5)],
         [[f"{m} min" for m in d.minutos]],
