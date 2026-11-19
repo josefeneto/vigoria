@@ -477,6 +477,9 @@ BEBIDAS_ACUCARADAS = {
     ">1": "Mais de 1 litro",
 }
 PAO = {"nenhum": "Nenhum", "1": "1", "2": "2", "3": "3", "4+": "4 ou mais"}
+# Guardados como número (0 = nenhum); o último botão vale «N ou mais» (estado.ULTIMA_OPCAO).
+VINHO = {0: "Nenhum", 1: "1", 2: "2", 3: "3", 4: "4 ou mais"}
+DOCES = {0: "Nenhum", **{n: str(n) for n in range(1, 7)}, 7: "7 ou mais"}
 
 # ---------------------------------------------------------------- Passo 5
 
@@ -619,7 +622,9 @@ OPCOES = {
     "restricoes_alimentares": RESTRICOES,
     "agua_litros": AGUA,
     "bebidas_acucaradas_litros": BEBIDAS_ACUCARADAS,
+    "vinho_copos_dia": VINHO,
     "pao_por_dia": PAO,
+    "doces_por_semana": DOCES,
     "intensidade_pedida": INTENSIDADE,
     "frequencia_registo": FREQUENCIA,
 }
@@ -687,6 +692,7 @@ RESUMO_MANUTENCAO = "Depois da semana 16, veja em «Manutenção» como continua
 RECOMECAR_QUESTIONARIO = "Responder de novo ao questionário"
 ESCOLHER_FASE = "Fase"
 ESCOLHER = "Escolha uma opção"
+ESCREVER_NUMERO = "Escreva um número"
 MINUTOS_COLUNA = "Minutos"
 DETALHES_SEMANA = "Ver o que fazer em cada dia"
 NOTA_SESSAO_PLANO = "Plano de {data}, guardado na sua conta."

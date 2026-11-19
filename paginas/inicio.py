@@ -61,11 +61,12 @@ with st.container(key="faixa_beneficios"):
 with st.container(key="faixa_como"):
     st.html(f'<h2 class="v-faixa-titulo">{escape(t.INICIO_COMO_TITULO)}</h2>')
     st.html(componentes.passos((titulo, texto) for _, titulo, texto in t.COMO_FUNCIONA))
+    with st.container(key="como_ligacao"):  # em destaque, logo a seguir aos passos (19/11)
+        comum.ligacao_ajuda("como_funciona")
 
 with st.container(key="faixa_final"):
     st.html(f'<h2 class="v-faixa-titulo">{escape(t.FINAL_TITULO)}</h2>')
     _comecar("comecar_fim")
     st.caption(t.INICIO_SESSAO)
-    comum.ligacao_ajuda("como_funciona")
 
 st.html(f'<p class="v-aviso-final">{escape(t.INICIO_AVISO)}</p>')

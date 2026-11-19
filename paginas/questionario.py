@@ -23,7 +23,6 @@ from vigoria.interface.estado import (
     FORCA_TONUS,
     OBJETIVO_KG,
     OBJETIVO_TIPO,
-    ZERO_E_VAZIO,
     chave,
     para_estado,
 )
@@ -142,10 +141,16 @@ def _radio(campo: str, opcoes: dict[str, str], legendas: dict[str, str] | None =
 def _numero(campo: str) -> None:
     """Só números inteiros: não se pede mais rigor a quem responde (a cintura 113 chega).
 
-    Os campos de ZERO_E_VAZIO começam em 0 (estado.py), para as setas +/− funcionarem logo.
+    A caixa começa vazia; as setas +/− funcionam assim que se escreve um número.
     """
-    minimo = 0 if campo in ZERO_E_VAZIO else None
-    st.number_input(t.ROTULOS[campo], value=None, step=1, min_value=minimo, **W(campo))
+    st.number_input(
+        t.ROTULOS[campo],
+        value=None,
+        step=1,
+        min_value=0,
+        placeholder=t.ESCREVER_NUMERO,
+        **W(campo),
+    )
     comum.erro(campo)
 
 
@@ -275,10 +280,10 @@ def passo_4a() -> None:
 def passo_4b() -> None:
     _radio("agua_litros", t.AGUA)
     _radio("bebidas_acucaradas_litros", t.BEBIDAS_ACUCARADAS)
-    _numero("vinho_copos_dia")
+    _escolha("vinho_copos_dia", t.VINHO, **W("vinho_copos_dia"))
     _espirituosas()
     _escolha("pao_por_dia", t.PAO, **W("pao_por_dia"))
-    _numero("doces_por_semana")
+    _escolha("doces_por_semana", t.DOCES, **W("doces_por_semana"))
 
 
 def passo_5() -> None:
@@ -296,7 +301,14 @@ def passo_5() -> None:
         **W(OBJETIVO_TIPO),
     )
     if st.session_state[chave(OBJETIVO_TIPO)] == "kg":
-        st.number_input(t.OBJETIVO_MUSCULAR_KG, value=None, step=1, min_value=0, **W(OBJETIVO_KG))
+        st.number_input(
+            t.OBJETIVO_MUSCULAR_KG,
+            value=None,
+            step=1,
+            min_value=0,
+            placeholder=t.ESCREVER_NUMERO,
+            **W(OBJETIVO_KG),
+        )
     st.caption(t.NOTA_GANHO_MUSCULAR)
     comum.erro("objetivo_muscular")
     _radio("intensidade_pedida", t.INTENSIDADE, t.INTENSIDADE_DESCRICAO)
@@ -320,10 +332,10 @@ def _valor(campo: str, valor: Any) -> str:
         return ", ".join(opcoes[v] if opcoes else str(v) for v in valor) or t.SEM_RESPOSTA
     if isinstance(valor, bool):
         return t.SIM if valor else t.NAO
-    if isinstance(valor, float | int):
-        return numero(valor) + t.UNIDADES.get(campo, "")
     if opcoes and valor in opcoes:
         return opcoes[valor]
+    if isinstance(valor, float | int):
+        return numero(valor) + t.UNIDADES.get(campo, "")
     return str(valor) if valor not in (None, "") else t.SEM_RESPOSTA
 
 

@@ -88,11 +88,38 @@ def test_numeros_pedidos_sem_casas_decimais() -> None:
         "Perímetro da cintura (cm)": 108,
     }
     assert all(type(n.value) is int for n in at.number_input)
-    assert all(n.min == 0 for n in at.number_input)  # começam em 0: setas ativas
+    assert all(n.min == 0 for n in at.number_input)
     at.session_state["passo"] = "4b"
     at.run()
     espirituosas = at.selectbox[0]
     assert "0,5 dl" in espirituosas.options and espirituosas.value == 0
+
+
+def test_caixas_de_numero_vazias_com_texto_de_ajuda() -> None:
+    """Sem zero inicial (19/11/2026): a caixa fica vazia e diz o que escrever."""
+    from paginas import textos as t
+
+    at = _app()
+    at.session_state["passo"] = "1"
+    at.run()
+    assert not at.exception
+    assert at.number_input and all(n.value is None for n in at.number_input)
+    assert all(n.proto.placeholder == t.ESCREVER_NUMERO for n in at.number_input)
+
+
+def test_vinho_e_doces_em_botoes_como_o_pao() -> None:
+    at = _app()
+    _persona(at, vinho_copos_dia=10, doces_por_semana=2)
+    at.session_state["passo"] = "4b"
+    at.run()
+    assert not at.exception
+    assert not at.number_input
+    botoes = {b.label: b for b in at.get("button_group")}
+    vinho = botoes["Copos de vinho por dia"]
+    doces = botoes["Doces por semana"]
+    assert vinho.value == 4 and doces.value == 2  # 10 copos (questionário antigo) → «4 ou mais»
+    assert vinho.options == ["Nenhum", "1", "2", "3", "4 ou mais"]
+    assert len(doces.options) == 8 and doces.options[-1] == "7 ou mais"
 
 
 def test_gravidez_termina_sem_guardar_respostas() -> None:
@@ -103,7 +130,7 @@ def test_gravidez_termina_sem_guardar_respostas() -> None:
     _botao(at, "Seguinte").click().run()
     assert not at.exception
     assert any(textos.GRAVIDEZ in i.value for i in at.info)
-    assert at.session_state[chave("peso_kg")] == 0  # respostas apagadas (valor inicial)
+    assert at.session_state[chave("peso_kg")] is None  # respostas apagadas (caixa vazia)
     assert "resultado" not in at.session_state
 
 
@@ -254,6 +281,19 @@ def test_plano_sem_resultado_convida_ao_questionario() -> None:
     assert at.info
 
 
+def _bloco_das_ligacoes(no: object, bloco: str | None = None) -> dict[str, str | None]:
+    """Ligações st.page_link (fora do rodapé) e a chave do contentor onde estão."""
+    from streamlit.testing.v1.element_tree import Block
+
+    achadas: dict[str, str | None] = {}
+    for filho in getattr(no, "children", {}).values():
+        if getattr(filho, "type", "") == "page_link" and bloco != "rodape":
+            achadas[filho.proto.label] = bloco
+        chave_bloco = filho.key if isinstance(filho, Block) else None
+        achadas |= _bloco_das_ligacoes(filho, chave_bloco or bloco)
+    return achadas
+
+
 def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     assert not at.exception
@@ -271,6 +311,8 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert 'addEventListener("error"' in html
     assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
     assert "Como funciona" in html and "Pronto para começar?" in html
+    # «Como funciona?» (Ajuda) logo a seguir aos passos, não no convite final (19/11/2026).
+    assert _bloco_das_ligacoes(at.main)["Como funciona?"] == "como_ligacao"
     assert [b.label for b in at.button].count("Começar o questionário") == 2
 
 

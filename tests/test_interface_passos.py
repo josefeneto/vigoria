@@ -256,20 +256,48 @@ def test_estado_dos_widgets_ida_e_volta(ficheiro: str) -> None:
     assert volta == q.model_copy(update=inteiros)
 
 
-def test_caixas_comecam_em_zero_e_zero_e_sem_resposta() -> None:
+def test_caixas_comecam_vazias_e_zero_e_sem_resposta() -> None:
+    """Desde 19/11/2026 as caixas de número começam vazias (antes começavam em 0)."""
     estado = estado_inicial()
-    assert all(estado[chave(c)] == 0 for c in ZERO_E_VAZIO)
-    # Vinho e doces: 0 é resposta válida, por isso começam vazios.
+    assert all(estado[chave(c)] is None for c in ZERO_E_VAZIO)
     assert estado[chave("vinho_copos_dia")] is None and estado[chave("doces_por_semana")] is None
     r = para_respostas(estado)
     assert r["peso_kg"] is None and r["cintura_alvo_cm"] is None
     assert {e.campo for e in validar_passo("1", r)} >= {"idade", "altura_cm", "peso_kg"}
+    # 0 escrito à mão continua a ser «sem resposta» nestes campos.
+    estado[chave("idade")] = 0
+    assert para_respostas(estado)["idade"] is None
     estado[chave("objetivo_muscular_tipo")] = "kg"
     assert para_respostas(estado)["objetivo_muscular"] is None
     estado[chave("objetivo_muscular_kg")] = 2
     assert para_respostas(estado)["objetivo_muscular"] == 2
-    # Sem halteres nem cintura-alvo nas respostas, a caixa volta a 0.
-    assert para_estado(_r(halteres_kg=None))[chave("halteres_kg")] == 0
+    assert para_estado(_r(halteres_kg=None))[chave("halteres_kg")] is None
+
+
+@pytest.mark.parametrize(
+    ("campo", "antigo", "botao"),
+    [
+        ("vinho_copos_dia", 0, 0),
+        ("vinho_copos_dia", 4, 4),
+        ("vinho_copos_dia", 10, 4),
+        ("doces_por_semana", 7, 7),
+        ("doces_por_semana", 14, 7),
+    ],
+)
+def test_vinho_e_doces_antigos_no_ultimo_botao(campo: str, antigo: int, botao: int) -> None:
+    estado = para_estado(_r(**{campo: antigo}))
+    assert estado[chave(campo)] == botao
+    assert para_respostas(estado)[campo] == botao
+
+
+def test_botoes_do_vinho_e_dos_doces() -> None:
+    from paginas import textos as t
+    from vigoria.interface.estado import ULTIMA_OPCAO
+
+    assert list(t.VINHO) == list(range(ULTIMA_OPCAO["vinho_copos_dia"] + 1))
+    assert list(t.DOCES) == list(range(ULTIMA_OPCAO["doces_por_semana"] + 1))
+    assert t.VINHO[0] == t.DOCES[0] == "Nenhum"
+    assert t.VINHO[4] == "4 ou mais" and t.DOCES[7] == "7 ou mais"
 
 
 def test_campos_inteiros_arredondam_a_meia_unidade_para_cima() -> None:

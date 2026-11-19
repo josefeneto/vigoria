@@ -82,10 +82,10 @@ Para não cansar, cada refeição tem escolhas rápidas + campo opcional:
 |---|---|---|
 | `agua_litros` | 3.A | escolha: < 0,5 / 0,5–1 / 1–1,5 / 1,5–2 / > 2 |
 | `bebidas_acucaradas_litros` | 3.B | escolha: nenhuma / < 0,33 / 0,33–1 / > 1 |
-| `vinho_copos_dia` | 3.C | inteiro 0–10 |
+| `vinho_copos_dia` | 3.C | inteiro 0–10; na app, escolha: nenhum / 1 / 2 / 3 / 4 ou mais (guarda 0–4; respostas antigas acima de 4 aparecem em «4 ou mais») |
 | `espirituosas_dl_dia` | 3.D | lista de 0 a 5 dl, de 0,5 em 0,5 (com vírgula); um cálice ≈ 0,4 dl |
 | `pao_por_dia` | 3.E | escolha: nenhum / 1 / 2 / 3 / 4 ou mais (fatias ou papos-secos) |
-| `doces_por_semana` | (Vol. 3) | inteiro 0–14 |
+| `doces_por_semana` | (Vol. 3) | inteiro 0–14; na app, escolha: nenhum / 1 a 6 / 7 ou mais (guarda 0–7; respostas antigas acima de 7 aparecem em «7 ou mais») |
 
 ## Passo 5 — Objetivos (5.A–5.E)
 

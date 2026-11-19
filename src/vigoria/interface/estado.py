@@ -49,11 +49,14 @@ INTEIROS = {
     "cintura_alvo_cm",
     OBJETIVO_KG,
 }
-# Caixas que começam em 0 (e não vazias) para as setas +/− funcionarem logo: o Streamlit
-# desativa-as com a caixa vazia. Nestes campos 0 não é resposta possível, por isso 0 conta
-# como «sem resposta». O vinho e os doces ficam vazios: aí 0 é uma resposta válida e não
-# pode ficar dada sem a pessoa a escolher.
+# Caixas de número que começam vazias. Nestes campos 0 não é resposta possível, por isso 0
+# (escrito à mão) também conta como «sem resposta». Até 18/11/2026 começavam em 0, para as
+# setas +/− funcionarem logo (o Streamlit desativa-as com a caixa vazia); desde 19/11 ficam
+# vazias e as setas funcionam assim que se escreve um número.
 ZERO_E_VAZIO = {"idade", "altura_cm"} | INTEIROS
+# Vinho e doces escolhem-se em botões, como o pão; o último é «N ou mais». Os questionários
+# antigos (caixa de número, até 10 copos ou 14 doces) mostram-se nesse último botão.
+ULTIMA_OPCAO: dict[str, int] = {"vinho_copos_dia": 4, "doces_por_semana": 7}
 
 
 def _inteiro(valor: Any) -> Any:
@@ -92,8 +95,7 @@ def estado_inicial() -> dict[str, Any]:
         estado[chave("refeicoes", x)] = ""
         estado[chave("refeicoes_faz", x)] = False
     estado[chave(OBJETIVO_TIPO)] = None
-    for campo in ZERO_E_VAZIO:
-        estado[chave(campo)] = 0
+    estado[chave(OBJETIVO_KG)] = None
     return estado
 
 
@@ -134,8 +136,8 @@ def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
             continue
         if chave(campo) in estado:
             estado[chave(campo)] = _inteiro(valor) if campo in INTEIROS else valor
-            if campo in ZERO_E_VAZIO and valor is None:
-                estado[chave(campo)] = 0
+            if campo in ULTIMA_OPCAO and valor is not None:
+                estado[chave(campo)] = min(valor, ULTIMA_OPCAO[campo])
     for c, controlada in (respostas.get("condicoes_controladas") or {}).items():
         estado[chave("condicoes_controladas", c)] = _SIM_NAO[controlada]
     for x, gravidade in (respostas.get("limitacoes_gravidade") or {}).items():

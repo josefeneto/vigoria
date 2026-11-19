@@ -201,6 +201,7 @@ def _formulario(
             value=v.peso_kg if v else None,
             step=0.1,
             format="%.1f",
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_peso",
         )
         cintura = st.number_input(
@@ -210,6 +211,7 @@ def _formulario(
             value=v.cintura_cm if v else None,
             step=0.5,
             format="%.1f",
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_cintura",
         )
         sessoes = st.number_input(
@@ -218,6 +220,7 @@ def _formulario(
             max_value=14,
             value=v.sessoes if v else None,
             step=1,
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_sessoes",
         )
         if p.plano.danca is not None:  # D4: a dança conta como cardio
@@ -228,6 +231,7 @@ def _formulario(
             max_value=600,
             value=v.cardio_min if v else None,
             step=5,
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_cardio",
         )
         energia = st.number_input(
@@ -236,6 +240,7 @@ def _formulario(
             max_value=10,
             value=v.energia if v else None,
             step=1,
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_energia",
         )
         esforco = st.number_input(
@@ -244,6 +249,7 @@ def _formulario(
             max_value=10,
             value=v.esforco if v else None,
             step=1,
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_esforco",
         )
         sono = st.number_input(
@@ -253,6 +259,7 @@ def _formulario(
             value=v.sono_h if v else None,
             step=0.5,
             format="%.1f",
+            placeholder=t.ESCREVER_NUMERO,
             key=f"{base}_sono",
         )
         forca = _comparacao(t.REGISTO_FORCA, f"{base}_forca", v.forca if v else None)
