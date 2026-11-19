@@ -32,6 +32,7 @@ from vigoria.modelos.plano import (
 from vigoria.modelos.questionario import FrequenciaRegisto, Questionario
 from vigoria.motor.danca import construir_danca
 from vigoria.motor.semana import construir_semana
+from vigoria.motor.taichi import construir_taichi
 from vigoria.motor.treino import construir_treino
 
 # Dados do pacote (vigoria/prompts/): funcionam também quando instalado sem «-e».
@@ -267,6 +268,7 @@ def montar_plano(
         notas_personalizadas=tuple(gerado.notas_personalizadas),
         avisos=e.avisos,
         danca=construir_danca(e, q),
+        taichi=construir_taichi(e, q),
     )
 
 

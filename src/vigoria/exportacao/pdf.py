@@ -33,6 +33,7 @@ from vigoria.conteudo.carregar import (
     carregar_danca,
     carregar_exercicios,
     carregar_fases,
+    carregar_taichi,
 )
 from vigoria.modelos.plano import (
     DiasDanca,
@@ -43,10 +44,13 @@ from vigoria.modelos.plano import (
 )
 from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.manutencao import orientacoes_manutencao
+from vigoria.motor.taichi import ligacoes_taichi
 from vigoria.regras.textos import numero
 
 RECURSOS = files("vigoria.exportacao") / "recursos"
-POSTER_DANCA = "danca_poster.jpg"  # cópia de static/video/ (um teste confirma)
+# Cópias das capas de static/video/ (um teste confirma).
+POSTER_DANCA = "danca_poster.jpg"
+POSTER_TAICHI = "taichi_poster.jpg"
 ICONES = RECURSOS / "icones"  # cópias de assets/icones/exercicios/ (scripts/folha_icones.py)
 # Semana-tipo: dia, atividade, duração, descrição (mm). «Segunda-feira» numa só linha.
 LARGURAS_SEMANA = [31, 36, 21, 86]
@@ -901,38 +905,112 @@ def _em_todas_as_fases(pdf: _Documento, plano: Plano, c: Comuns, r: dict[str, st
     pdf.lista_icones(itens, colunas)
 
 
-def _danca(pdf: _Documento, plano: Plano, r: dict[str, str], *, secao: bool = False) -> None:
-    """Dança (opcional), REGRAS §5.1: uma só secção, com os minutos de cada fase numa tabela
-    e as ligações uma vez (são as mesmas nas 4 fases). Só com dança no plano (D1)."""
-    d = plano.danca
-    if d is None:
-        return
-    c = carregar_danca().textos
-    lig = ligacoes_danca(d)
-    dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
-    texto = f"{dias} {c.estrutura} {c.registo}"
-    # A imagem do vídeo da app (cópia de static/video/danca_poster.jpg, 16:9).
-    if secao:  # depois das fases: página própria, com espaço para a imagem a toda a largura
-        pdf.titulo(c.titulo, nova_pagina=True)
-        pdf.imagem(POSTER_DANCA, 9 / 16)
-        pdf.paragrafo(texto)
-    else:  # encaixada antes das fases, sem acrescentar páginas: miniatura ao lado do texto
-        pdf.subtitulo(c.titulo)
-        pdf.paragrafo_com_imagem(texto, POSTER_DANCA, 45, 9 / 16)
+@dataclass(frozen=True)
+class _SecaoAtividade:
+    """Uma atividade opcional no PDF: dança (REGRAS §5.1) ou Tai Chi (§5.2)."""
+
+    titulo: str
+    nome: str  # curto, na tabela da secção compacta
+    poster: str
+    texto: str
+    minutos: tuple[int, ...]
+    aviso: str
+    ajuste: str
+    grupos: list[tuple[str, list[tuple[str, str, str]]]]
+
+
+def _secoes_atividades(plano: Plano) -> list[_SecaoAtividade]:
+    """As atividades opcionais do plano (D1, T1), pela ordem: dança, Tai Chi."""
+    secoes = []
+    if (d := plano.danca) is not None:
+        c = carregar_danca().textos
+        lig = ligacoes_danca(d)
+        dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
+        secoes.append(
+            _SecaoAtividade(
+                c.titulo,
+                c.danca,
+                POSTER_DANCA,
+                f"{dias} {c.estrutura} {c.registo}",
+                d.minutos,
+                c.sem_saltos,
+                lig.ajuste,
+                lig.grupos(c.ligacoes, c.mais_calmo, c.mais_aulas),
+            )
+        )
+    if (x := plano.taichi) is not None:
+        c2 = carregar_taichi().textos
+        secoes.append(
+            _SecaoAtividade(
+                c2.titulo,
+                c2.taichi,
+                POSTER_TAICHI,
+                f"{c2.dias_sem_treino} {c2.dias_treino} {c2.estrutura} {c2.aquecimento} "
+                f"{c2.nao_cardio}",
+                x.minutos,
+                c2.postura,
+                "",
+                ligacoes_taichi(x).grupos(c2.ligacoes, c2.mais_calmo),
+            )
+        )
+    return secoes
+
+
+def _atividade(
+    pdf: _Documento, s: _SecaoAtividade, r: dict[str, str], *, pagina_propria: bool = False
+) -> None:
+    """Uma secção: os minutos de cada fase numa tabela e as ligações uma vez (são as mesmas
+    nas 4 fases). A imagem é a capa do vídeo da app (16:9)."""
+    if pagina_propria:  # página só para ela: imagem a toda a largura
+        pdf.titulo(s.titulo, nova_pagina=True)
+        pdf.imagem(s.poster, 9 / 16)
+        pdf.paragrafo(s.texto)
+    else:  # encaixada com outras: miniatura ao lado do texto
+        pdf.subtitulo(s.titulo)
+        pdf.paragrafo_com_imagem(s.texto, s.poster, 45, 9 / 16)
     pdf.tabela(
         [f"{r['fase']} {n}" for n in range(1, 5)],
-        [[f"{m} min" for m in d.minutos]],
+        [[f"{m} min" for m in s.minutos]],
         [43, 43, 44, 44],
     )
-    pdf.paragrafo(c.sem_saltos, estilo="B")
-    pdf.paragrafo(lig.ajuste)
-    grupos = [(c.ligacoes, [(x.titulo, x.url, x.canal) for x in lig.principais])]
-    if lig.mais_calmo is not None:
-        x = lig.mais_calmo
-        grupos.append((c.mais_calmo, [(x.titulo, x.url, x.canal)]))
-    if lig.mais_aulas:
-        grupos.append((c.mais_aulas, [(x.titulo, x.url, x.canal) for x in lig.mais_aulas]))
-    pdf.ligacoes(grupos)
+    pdf.paragrafo(s.aviso, estilo="B")
+    if s.ajuste:
+        pdf.paragrafo(s.ajuste)
+    pdf.ligacoes(s.grupos)
+
+
+def _atividades_juntas(
+    pdf: _Documento, secoes: list[_SecaoAtividade], r: dict[str, str], *, secao: bool
+) -> None:
+    """Dança e Tai Chi numa só secção compacta (Fase 10F): miniaturas mais pequenas, uma só
+    tabela de minutos (uma linha por atividade) e as ligações no fim."""
+    titulo = r["pdf_atividades_opcionais"]
+    if secao:
+        pdf.titulo(titulo, nova_pagina=True)
+    else:
+        pdf.subtitulo(titulo)
+    for s in secoes:
+        pdf.paragrafo(s.titulo, estilo="B")
+        pdf.paragrafo_com_imagem(s.texto, s.poster, 32, 9 / 16)
+        pdf.paragrafo(s.aviso, estilo="B")
+        if s.ajuste:
+            pdf.paragrafo(s.ajuste)
+    pdf.tabela(
+        ["", *(f"{r['fase']} {n}" for n in range(1, 5))],
+        [[s.nome, *(f"{m} min" for m in s.minutos)] for s in secoes],
+        [50, 31, 31, 31, 31],
+    )
+    pdf.ligacoes([g for s in secoes for g in s.grupos])
+
+
+def _atividades(pdf: _Documento, plano: Plano, r: dict[str, str], *, secao: bool = False) -> None:
+    """As atividades opcionais. Só uma: a sua secção (depois das fases, `secao`, numa página
+    própria). Dança e Tai Chi: as duas numa só secção compacta."""
+    secoes = _secoes_atividades(plano)
+    if len(secoes) > 1:
+        _atividades_juntas(pdf, secoes, r, secao=secao)
+    elif secoes:
+        _atividade(pdf, secoes[0], r, pagina_propria=secao)
 
 
 def _fase(pdf: _Documento, fase: TreinoFase, c: Comuns, r: dict[str, str]) -> None:
@@ -1113,8 +1191,8 @@ def _habitos_e_manutencao(
     pdf.colunas(blocos)
 
 
-class LugarDanca(StrEnum):
-    """Onde fica a secção «Dança (opcional)» no PDF."""
+class LugarAtividades(StrEnum):
+    """Onde ficam as atividades opcionais (dança e Tai Chi) no PDF."""
 
     SESSAO = "sessao"  # a seguir a «Como é cada sessão»
     TODAS_AS_FASES = "todas_as_fases"  # a seguir a «Em todas as fases»
@@ -1127,38 +1205,39 @@ def _antes_das_fases(
     c: Comuns,
     r: dict[str, str],
     criado_em: datetime,
-    lugar: LugarDanca | None,
+    lugar: LugarAtividades | None,
 ) -> None:
     _inicio(pdf, plano, r, criado_em)
     _marcos(pdf, plano, r)
     _semana(pdf, plano, r)
-    if lugar is LugarDanca.SESSAO:
-        _danca(pdf, plano, r)
+    if lugar is LugarAtividades.SESSAO:
+        _atividades(pdf, plano, r)
     _em_todas_as_fases(pdf, plano, c, r)
-    if lugar is LugarDanca.TODAS_AS_FASES:
-        _danca(pdf, plano, r)
+    if lugar is LugarAtividades.TODAS_AS_FASES:
+        _atividades(pdf, plano, r)
     pdf._antes_do_bloco(0)
 
 
-def lugar_danca(plano: Plano, criado_em: datetime) -> LugarDanca:
-    """O primeiro lugar antes das fases onde a dança não acrescenta páginas; senão, o fim da
-    fase 4. Cada fase começa numa página nova: basta montar as páginas antes das fases."""
+def lugar_atividades(plano: Plano, criado_em: datetime) -> LugarAtividades:
+    """O primeiro lugar antes das fases onde as atividades opcionais não acrescentam páginas;
+    senão, depois da fase 4. Cada fase começa numa página nova: basta montar as páginas
+    antes das fases."""
     r = carregar_avisos().rotulos.plano
     c = comuns(plano.treino.fases)
 
-    def paginas(lugar: LugarDanca | None) -> int:
+    def paginas(lugar: LugarAtividades | None) -> int:
         pdf = _Documento(r["pdf_rodape"])
         _antes_das_fases(pdf, plano, c, r, criado_em, lugar)
         return pdf.page
 
-    sem_danca = paginas(None)
+    sem_atividades = paginas(None)
     return next(
         (
             lugar
-            for lugar in (LugarDanca.SESSAO, LugarDanca.TODAS_AS_FASES)
-            if paginas(lugar) == sem_danca
+            for lugar in (LugarAtividades.SESSAO, LugarAtividades.TODAS_AS_FASES)
+            if paginas(lugar) == sem_atividades
         ),
-        LugarDanca.FIM_DAS_FASES,
+        LugarAtividades.FIM_DAS_FASES,
     )
 
 
@@ -1170,12 +1249,13 @@ def plano_pdf(plano: Plano, criado_em: datetime, idade: int | None = None) -> by
     r = carregar_avisos().rotulos.plano
     pdf = _Documento(r["pdf_rodape"])
     c = comuns(plano.treino.fases)
-    lugar = lugar_danca(plano, criado_em) if plano.danca is not None else None
+    com_atividades = plano.danca is not None or plano.taichi is not None
+    lugar = lugar_atividades(plano, criado_em) if com_atividades else None
     _antes_das_fases(pdf, plano, c, r, criado_em, lugar)
     for fase in plano.treino.fases:
         _fase(pdf, fase, c, r)
-    if lugar is LugarDanca.FIM_DAS_FASES:
-        _danca(pdf, plano, r, secao=True)
+    if lugar is LugarAtividades.FIM_DAS_FASES:
+        _atividades(pdf, plano, r, secao=True)
     _alimentacao(pdf, plano, r)
     _habitos_e_manutencao(pdf, plano, idade, r)
     pdf.caixa_avisos(r["avisos"], list(plano.avisos))

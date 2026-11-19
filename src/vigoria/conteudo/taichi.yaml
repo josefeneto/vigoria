@@ -1,0 +1,57 @@
+# Tai Chi (opcional), REGRAS_DOMINIO §5.2 (T1 a T7, decisão de 18/11/2026).
+# Ligações escolhidas pelo José (docs/referencia/TaiChi-youtube-videos.pdf). Classificação:
+# «Esforço Mínimo» → ligeira (Tai Chi na cadeira); «Esforço Médio» → media;
+# «Esforço Normal» → alta. Sem «Mais aulas».
+# Títulos em PT-PT, neutros e sem promessas (os originais prometem cintura e barriga).
+# A CONFIRMAR (revisão profissional): a classificação dos níveis.
+# Confirmar as ligações: python scripts/verificar_links_danca.py (atualiza à mão verificado_em).
+# Os vídeos abrem no YouTube numa janela nova; nada fica embutido na app (T7).
+
+textos:
+  titulo: Tai Chi (opcional)
+  dias_sem_treino: >-
+    Nos dias sem treino, pode fazer Tai Chi antes ou depois da caminhada leve (ou da dança, se
+    dançar nesse dia).
+  dias_treino: >-
+    Nos dias de treino, pode fazer Tai Chi em vez do retorno à calma, com a mesma duração.
+  minutos: "{n} minutos de Tai Chi"
+  estrutura: >-
+    Comece com um aquecimento curto, faça Tai Chi e termine com o retorno à calma do treino.
+  aquecimento: >-
+    Aquecimento curto: rode devagar as articulações, dos ombros aos tornozelos, e respire
+    fundo algumas vezes.
+  taichi: Tai Chi
+  postura: >-
+    Movimentos lentos e postura alta: joelhos ligeiramente fletidos, sem descer. Se perder o
+    equilíbrio, apoie-se numa cadeira ou parede.
+  nao_cardio: O Tai Chi não conta como minutos de cardio no registo semanal.
+  ligacoes: Vídeos de Tai Chi
+  mais_calmo: Para um dia mais calmo
+  abre_youtube: Abre no YouTube, numa janela nova.
+
+ligacoes:
+  # Esforço Mínimo
+  - titulo: Tai Chi na cadeira, 10 minutos
+    url: https://www.youtube.com/watch?v=OXigYeJlDpA
+    canal: Ivan Trujillo LIVE
+    nivel: ligeira
+    verificado_em: 2026-11-18
+  - titulo: Exercícios sentado na cadeira
+    url: https://www.youtube.com/watch?v=XJJwaK-9nLs
+    canal: Workout Guru
+    nivel: ligeira
+    verificado_em: 2026-11-18
+
+  # Esforço Médio
+  - titulo: Tai Chi diário para iniciantes
+    url: https://www.youtube.com/playlist?list=PLDp1shtZKlx_rM5XHvsIvL2PLBc7Zb172
+    canal: TaiChiHealthProducts with Don Fiore
+    nivel: media
+    verificado_em: 2026-11-18
+
+  # Esforço Normal
+  - titulo: Curso completo de Tai Chi para iniciantes
+    url: https://www.youtube.com/playlist?list=PLFmYdpcDhIdTF4Y17njAuzCrqFtlPWf9k
+    canal: Tao Chi TV
+    nivel: alta
+    verificado_em: 2026-11-18

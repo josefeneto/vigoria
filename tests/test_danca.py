@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from paginas import componentes
-from vigoria.conteudo.carregar import ConteudoDanca, NivelDanca, carregar_danca
+from vigoria.conteudo.carregar import ConteudoDanca, NivelLigacao, carregar_danca
 from vigoria.llm.simulado import ProvedorSimulado
 from vigoria.modelos.estrategia import Estrategia
 from vigoria.modelos.plano import Danca, DiasDanca
@@ -211,20 +211,20 @@ def _danca(intensidade: Intensidade, so_ligeira: bool = False) -> Danca:
     )
 
 
-def _niveis(ligacoes: tuple[Any, ...]) -> set[NivelDanca]:
+def _niveis(ligacoes: tuple[Any, ...]) -> set[NivelLigacao]:
     return {x.nivel for x in ligacoes}
 
 
 @pytest.mark.parametrize(
     ("intensidade", "abaixo"),
-    [(L, None), (M, NivelDanca.LIGEIRA), (A, NivelDanca.MEDIA)],
+    [(L, None), (M, NivelLigacao.LIGEIRA), (A, NivelLigacao.MEDIA)],
 )
 def test_d6_nivel_da_pessoa_e_um_do_nivel_abaixo(
-    intensidade: Intensidade, abaixo: NivelDanca | None
+    intensidade: Intensidade, abaixo: NivelLigacao | None
 ) -> None:
     lig = ligacoes_danca(_danca(intensidade))
-    assert _niveis(lig.principais) == {NivelDanca(intensidade)}
-    assert lig.principais == carregar_danca().do_nivel(NivelDanca(intensidade))
+    assert _niveis(lig.principais) == {NivelLigacao(intensidade)}
+    assert lig.principais == carregar_danca().do_nivel(NivelLigacao(intensidade))
     if abaixo is None:
         assert lig.mais_calmo is None
     else:
@@ -235,13 +235,13 @@ def test_d6_nivel_da_pessoa_e_um_do_nivel_abaixo(
 def test_mais_aulas_so_para_media_e_alta(intensidade: Intensidade, mostra: bool) -> None:
     lig = ligacoes_danca(_danca(intensidade))
     assert bool(lig.mais_aulas) is mostra
-    assert all(x.nivel is NivelDanca.MAIS_AULAS for x in lig.mais_aulas)
+    assert all(x.nivel is NivelLigacao.MAIS_AULAS for x in lig.mais_aulas)
 
 
 @pytest.mark.parametrize("intensidade", [L, M, A])
 def test_d6_com_condicoes_so_ligeira_sem_subir_nem_mais_aulas(intensidade: Intensidade) -> None:
     lig = ligacoes_danca(_danca(intensidade, so_ligeira=True))
-    assert _niveis(lig.principais) == {NivelDanca.LIGEIRA}
+    assert _niveis(lig.principais) == {NivelLigacao.LIGEIRA}
     assert lig.mais_calmo is None and lig.mais_aulas == ()
     assert "nível acima" not in lig.ajuste
 
@@ -265,7 +265,7 @@ def test_d6_regressao_no_bloco_do_plano() -> None:
 
 def test_cada_nivel_tem_pelo_menos_uma_ligacao() -> None:
     c = carregar_danca()
-    for nivel in NivelDanca:
+    for nivel in NivelLigacao:
         assert c.do_nivel(nivel), nivel
 
 
@@ -297,7 +297,7 @@ def _ligacao(nivel: str, url: str) -> dict[str, Any]:
 def _quatro_niveis(**trocar: str) -> list[dict[str, Any]]:
     return [
         _ligacao(n.value, trocar.get(n.value, f"https://www.youtube.com/watch?v={n.value}"))
-        for n in NivelDanca
+        for n in NivelLigacao
     ]
 
 
@@ -332,7 +332,9 @@ def test_validacao_recusa_ligacoes_repetidas() -> None:
 
 
 def test_d7_ligacoes_abrem_numa_janela_nova() -> None:
-    html = componentes.cartao_danca(
+    html = componentes.cartao_atividade(
+        "danca",
+        "cardio",
         "Dança (opcional)",
         "20 minutos de dança",
         "",

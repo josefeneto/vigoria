@@ -120,6 +120,15 @@ class Danca(_Modelo):
     dias: DiasDanca
 
 
+class TaiChi(_Modelo):
+    """Tai Chi (opcional), REGRAS §5.2 (motor/taichi.py). Como na dança, as ligações leem-se
+    de taichi.yaml ao mostrar."""
+
+    minutos: tuple[int, int, int, int]  # por fase (T3, limitado à sessão)
+    intensidade: Intensidade  # a efetiva
+    so_ligeira: bool  # T6: equilíbrio ou osteoporose
+
+
 # ---------------------------------------------------------------- Plano final
 
 
@@ -194,3 +203,4 @@ class Plano(_Modelo):
     notas_personalizadas: tuple[str, ...]
     avisos: tuple[str, ...]  # textos fixos (§7) e condicionais, inseridos pelo código
     danca: Danca | None = None  # só com «dança» nas preferências (D1); antes da Fase 10E, None
+    taichi: TaiChi | None = None  # só com «Tai Chi» nas preferências (T1); antes da 10F, None

@@ -223,6 +223,7 @@ rotulos:
     pdf_perguntas_revisao: Perguntas para cada revisão
     pdf_em_todas_fases: Em todas as fases
     pdf_em_todas_fases_nota: "Estes exercícios repetem-se em todas as sessões das 4 fases."
+    pdf_atividades_opcionais: Atividades opcionais
     pdf_so_nesta_fase: Só nesta fase
   # Semana-tipo (motor/semana.py, Fase 4C): atividade e descrição de cada tipo de dia.
   semana:

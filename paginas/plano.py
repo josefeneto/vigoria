@@ -20,6 +20,7 @@ from vigoria.conteudo.carregar import (
     carregar_danca,
     carregar_exercicios,
     carregar_fases,
+    carregar_taichi,
 )
 from vigoria.modelos.plano import (
     DiasDanca,
@@ -30,6 +31,7 @@ from vigoria.modelos.plano import (
 )
 from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.manutencao import orientacoes_manutencao
+from vigoria.motor.taichi import ligacoes_taichi
 from vigoria.regras.calculos import SEMANAS_PROGRAMA
 from vigoria.regras.hoje import Hoje, TipoHoje, sessao_de_hoje
 from vigoria.regras.progresso import (
@@ -158,14 +160,10 @@ def _danca(plano: Plano, fase: int) -> None:
     sessao = plano.treino.estrutura_sessao
     minutos = c.minutos.format(n=d.minutos[fase - 1])
     dias = c.dias_cardio if d.dias is DiasDanca.CARDIO else c.dias_sem_cardio
-    grupos = [(c.ligacoes, [(x.titulo, x.url, x.canal) for x in lig.principais])]
-    if lig.mais_calmo is not None:
-        x = lig.mais_calmo
-        grupos.append((c.mais_calmo, [(x.titulo, x.url, x.canal)]))
-    if lig.mais_aulas:
-        grupos.append((c.mais_aulas, [(x.titulo, x.url, x.canal) for x in lig.mais_aulas]))
     st.html(
-        componentes.cartao_danca(
+        componentes.cartao_atividade(
+            "danca",
+            "cardio",
             c.titulo,
             minutos,
             componentes.video_danca(t.DANCA_VIDEO_DESCRICAO, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR),
@@ -177,8 +175,37 @@ def _danca(plano: Plano, fase: int) -> None:
             ),
             c.sem_saltos,
             lig.ajuste,
-            grupos,
+            lig.grupos(c.ligacoes, c.mais_calmo, c.mais_aulas),
             f"{c.abre_youtube} {c.registo}",
+        ),
+        unsafe_allow_javascript=True,
+    )
+
+
+def _taichi(plano: Plano, fase: int) -> None:
+    """Cartão «Tai Chi (opcional)» da fase (REGRAS §5.2): só se a pessoa o escolheu (T1)."""
+    x = plano.taichi
+    if x is None:
+        return
+    c = carregar_taichi().textos
+    minutos = c.minutos.format(n=x.minutos[fase - 1])
+    st.html(
+        componentes.cartao_atividade(
+            "taichi",
+            "mobilidade",
+            c.titulo,
+            minutos,
+            componentes.video_taichi(t.TAICHI_VIDEO_DESCRICAO, t.VIDEO_PAUSAR, t.VIDEO_REPRODUZIR),
+            (c.dias_sem_treino, c.dias_treino, c.estrutura),
+            (
+                ("", c.aquecimento),
+                (c.taichi, minutos),
+                ("", plano.treino.estrutura_sessao.retorno_calma),
+            ),
+            c.postura,
+            "",
+            ligacoes_taichi(x).grupos(c.ligacoes, c.mais_calmo),
+            f"{c.abre_youtube} {c.nao_cardio}",
         ),
         unsafe_allow_javascript=True,
     )
@@ -201,6 +228,7 @@ def _treino(plano: Plano) -> None:
     )
     _fase(fases[escolhida or atual])
     _danca(plano, escolhida or atual)
+    _taichi(plano, escolhida or atual)
     _semana(plano)
     st.subheader(r["estrutura_sessao"])
     sessao = plano.treino.estrutura_sessao

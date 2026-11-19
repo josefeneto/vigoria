@@ -11,29 +11,39 @@ from vigoria.modelos.questionario import (
     Preferencia,
     Questionario,
 )
+from vigoria.regras.atividades import (
+    MINIMO_MIN,
+    MINUTOS_FASE_1,
+    MINUTOS_FASES_2_A_4,
+    RESERVA_MIN,
+    minutos_atividade,
+    nivel_das_ligacoes,
+    nivel_mais_calmo,
+)
+
+__all__ = [
+    "MINIMO_MIN",
+    "MINUTOS_FASE_1",
+    "MINUTOS_FASES_2_A_4",
+    "RESERVA_MIN",
+    "minutos_danca",
+    "mostra_mais_aulas",
+    "nivel_das_ligacoes",
+    "nivel_mais_calmo",
+    "so_nivel_ligeira",
+    "sugere_subir",
+    "tem_danca",
+]
 
 In = Intensidade
-# D3: minutos de dança por intensidade, na fase 1 e nas fases 2 a 4.
-MINUTOS_FASE_1 = {In.LIGEIRA: 10, In.MEDIA: 15, In.ALTA: 20}
-MINUTOS_FASES_2_A_4 = {In.LIGEIRA: 10, In.MEDIA: 20, In.ALTA: 30}
-# Decisão de 17/11/2026: a sessão guarda 10 min para o aquecimento e o retorno à calma;
-# a dança nunca tem menos de 10 min.
-RESERVA_MIN = 10
-MINIMO_MIN = 10
-NIVEL_ABAIXO = {In.ALTA: In.MEDIA, In.MEDIA: In.LIGEIRA, In.LIGEIRA: None}
+
+# Minutos (D3) e níveis (D6) comuns ao Tai Chi: regras/atividades.py.
+minutos_danca = minutos_atividade
 
 
 def tem_danca(q: Questionario) -> bool:
     """D1: o bloco só aparece a quem marcou «dança» nas preferências."""
     return Preferencia.DANCA in q.preferencias
-
-
-def minutos_danca(fase: int, intensidade: Intensidade, minutos_dia: int) -> int:
-    """D3, limitado à sessão: min(D3, minutos_dia − 10), nunca abaixo de 10."""
-    if not 1 <= fase <= 4:
-        raise ValueError(f"fase {fase} fora do programa (1 a 4)")
-    tabela = MINUTOS_FASE_1 if fase == 1 else MINUTOS_FASES_2_A_4
-    return max(MINIMO_MIN, min(tabela[intensidade], minutos_dia - RESERVA_MIN))
 
 
 def so_nivel_ligeira(q: Questionario) -> bool:
@@ -58,16 +68,6 @@ def so_nivel_ligeira(q: Questionario) -> bool:
             Condicao.DOENCA_CARDIOVASCULAR,
         }
     )
-
-
-def nivel_das_ligacoes(intensidade: Intensidade, so_ligeira: bool) -> Intensidade:
-    """D6: o nível da pessoa, ou ligeira com a regressão por condições."""
-    return In.LIGEIRA if so_ligeira else intensidade
-
-
-def nivel_mais_calmo(intensidade: Intensidade, so_ligeira: bool) -> Intensidade | None:
-    """D6: o nível abaixo («para um dia mais calmo»); nenhum na ligeira."""
-    return NIVEL_ABAIXO[nivel_das_ligacoes(intensidade, so_ligeira)]
 
 
 def mostra_mais_aulas(intensidade: Intensidade, so_ligeira: bool) -> bool:

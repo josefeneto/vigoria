@@ -177,6 +177,7 @@ def test_danca_no_treino_de_cada_fase_e_nota_no_registo() -> None:
         assert not at.exception
         texto = _texto(at)
         assert "v-cartao v-danca" in texto and "Sem saltos:" in texto, fase
+        assert "v-cartao v-taichi" not in texto  # sem «Tai Chi» nas preferências (T1)
         assert 'target="_blank" rel="noopener noreferrer"' in texto
         assert "danca_web.mp4" in texto
     at.switch_page("paginas/progresso.py").run()
@@ -366,3 +367,27 @@ def test_consentimento_de_producao_nomeia_o_fornecedor_de_ia() -> None:
     assert encontrar_termos(carregar_avisos().brasileirismos, saude) == ()
     for ambiente in ("local",):
         assert rotulos_consentimento(ambiente) == t.ROTULOS_CONSENTIMENTO
+
+
+def test_danca_e_taichi_no_treino_de_cada_fase() -> None:
+    """Fase 10F (REGRAS §5.2): os dois cartões; o Tai Chi não conta como cardio (T4)."""
+    from paginas import textos as t
+
+    at = _app()
+    _persona(at, preferencias=["danca", "tai_chi"])
+    at.session_state["passo"] = "7"
+    at.run()
+    _botao(at, "Gerar o meu plano").click().run(timeout=60)
+    at.switch_page("paginas/plano.py").run()
+    at.session_state["plano_seccao"] = "treino"
+    for fase in (1, 2, 3, 4):
+        at.session_state["plano_fase"] = fase
+        at.run()
+        assert not at.exception
+        texto = _texto(at)
+        assert "v-cartao v-danca" in texto and "v-cartao v-taichi" in texto, fase
+        assert "Movimentos lentos e postura alta" in texto
+        assert "taichi_web.mp4" in texto
+    at.switch_page("paginas/progresso.py").run()
+    assert not at.exception
+    assert t.REGISTO_CARDIO_DANCA in [c.value for c in at.caption]  # só pela dança

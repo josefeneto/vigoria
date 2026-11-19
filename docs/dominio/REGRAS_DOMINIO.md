@@ -99,7 +99,7 @@ Exemplo (persona de teste, 68 anos, 94 kg → 85 kg): ritmo máximo 0,4 % × 94 
 | 3 dias, ou menos de 30 min/dia | Ligeira |
 | 1 ou 2 dias (qualquer duração) | Ligeira, com aviso honesto (decisão de 28/10/2026). 1 dia: «Com 1 dia por semana fica abaixo do mínimo recomendado de força (2 dias) e de atividade aeróbia regular.» 2 dias: «Com 2 dias por semana cumpre o mínimo de força, mas fica abaixo da atividade aeróbia recomendada (150 a 300 minutos semanais).» Em ambos, o plano junta caminhada diária fora das sessões e sugere acrescentar um dia logo que possível |
 
-**A CONFIRMAR (revisão profissional):** o Tai Chi da intensidade Ligeira não está na biblioteca (os volumes não o descrevem). Proposta: até haver conteúdo editorial, o plano usa os exercícios de mobilidade e equilíbrio da biblioteca no lugar do Tai Chi, que pode ser mencionado só como atividade que o utilizador já pratique. Aplicação (decisão de 30/10/2026): «já pratica» = `tai_chi` nas preferências (1.K); uma menção ao Tai Chi sem essa resposta é falha de segurança e leva a regenerar.
+**A CONFIRMAR (revisão profissional):** o Tai Chi da intensidade Ligeira não está na biblioteca (os volumes não o descrevem). Proposta: até haver conteúdo editorial, o plano usa os exercícios de mobilidade e equilíbrio da biblioteca no lugar do Tai Chi, que pode ser mencionado só como atividade que o utilizador já pratique. Aplicação (decisão de 30/10/2026): «já pratica» = `tai_chi` nas preferências (1.K); uma menção ao Tai Chi sem essa resposta é falha de segurança e leva a regenerar. Desde 18/11/2026 (Fase 10F), quem marca `tai_chi` recebe também o bloco «Tai Chi (opcional)» (§5.2), feito pelo código e não pela LLM; para os restantes, mantém-se a proposta acima.
 
 Com 15 ou 20 min/dia, as sessões concentram-se no essencial (aquecimento curto, 4 a 5 exercícios de força, retorno à calma) e a caminhada diária completa o resto.
 
@@ -147,6 +147,24 @@ Aplicação em `regras/danca.py` e `motor/danca.py`; textos e ligações em `con
 | D7 | Os links abrem no YouTube numa nova janela; nada embutido (sem cookies de terceiros na app). | `target="_blank"` com `rel="noopener noreferrer"`; no PDF, ligações clicáveis. Confirmar as ligações: `python scripts/verificar_links_danca.py`. |
 
 **A CONFIRMAR (revisão profissional):** a classificação dos vídeos por nível (ligeira, média, alta, mais aulas) e os minutos da D3.
+
+### 5.2 Tai Chi (opcional) (decisão de 18/11/2026)
+
+Aplicação em `regras/taichi.py` e `motor/taichi.py`; o que é comum à dança (minutos e níveis das ligações) em `regras/atividades.py` e `motor/atividades.py`; textos e ligações em `conteudo/taichi.yaml`. Nada disto passa pela LLM (o prompt não muda: a regra 6 do prompt e a verificação já só deixam mencionar o Tai Chi a quem o marcou, a mesma condição de T1).
+
+| # | Regra | Aplicação |
+|---|---|---|
+| T1 | O bloco Tai Chi só aparece a quem marcou «Tai Chi» nas preferências. | Campo `taichi` do plano; sem a preferência, fica vazio. Os planos anteriores à Fase 10F não o têm. |
+| T2 | Estrutura: aquecimento curto (articulações e respiração), Tai Chi, retorno à calma. | Aquecimento em `taichi.yaml`; o retorno à calma é o do treino (`fases.yaml`). |
+| T3 | Minutos: os da D3 (Fase 1 — 10/15/20; Fases 2–4 — 10/20/30 por intensidade), com o mesmo limite: mínimo entre T3 e `minutos_dia` − 10, nunca abaixo de 10. | Um só número por fase, como na dança. |
+| T4 | O Tai Chi não substitui o cardio nem conta como minutos de cardio. | Decisões de 18/11/2026: nos dias sem treino, antes ou depois da caminhada leve (ou da dança, se dançar nesse dia), com os minutos da T3; nos dias de treino, só em vez do retorno à calma, com a duração deste (o dia não fica mais longo). Sem nota no registo de cardio. |
+| T5 | Texto fixo: «Movimentos lentos e postura alta: joelhos ligeiramente fletidos, sem descer. Se perder o equilíbrio, apoie-se numa cadeira ou parede.» | `taichi.yaml`, `postura`. |
+| T6 | Nível dos links = intensidade da pessoa, mais um do nível abaixo. Com a limitação «equilíbrio» (qualquer gravidade) ou com osteoporose: só o nível ligeira (Tai Chi na cadeira). | Sem «Mais aulas» nem texto de ajuste. As restantes condições da D6 (joelhos, prótese ou cirurgia, doença cardiovascular) não limitam o Tai Chi: os níveis da dança e do Tai Chi são independentes. |
+| T7 | Os links abrem no YouTube numa nova janela; nada embutido. | Como na D7; `python scripts/verificar_links_danca.py` confirma também as do Tai Chi. |
+
+Dança e Tai Chi juntos: na app, dois cartões em cada fase; no PDF, uma só secção compacta «Atividades opcionais» (uma tabela de minutos com uma linha por atividade), para caber nas 12 páginas (testado com a persona da osteoporose).
+
+**A CONFIRMAR (revisão profissional):** a classificação dos vídeos de Tai Chi por nível («Esforço Mínimo» → ligeira, na cadeira; «Esforço Médio» → média; «Esforço Normal» → alta) e se outras condições, além do equilíbrio e da osteoporose, devem limitar o Tai Chi ao nível ligeira.
 
 ## 6. Biblioteca de exercícios e resolução da incoerência da Fase 4
 
@@ -328,3 +346,4 @@ Não há decisões de domínio pendentes.
 - 07/11/2026 — Fase 8: regras dos lembretes por email (§9.2): L1 a L4 e os textos do email aprovados pelo José; L5 (suspensão ao fim de 3 períodos sem registo) pedida por ele.
 - 17/11/2026 — Fase 10E: dança opcional (§5.1, D1 a D7). Com 1 ou 2 dias por semana, nos dias de caminhada leve; minutos limitados à sessão (`minutos_dia` − 10, mínimo 10); prótese ou cirurgia recente conta como joelhos (qualquer articulação dos membros inferiores); a hipertensão controlada não limita. O prompt fica como está.
 - 18/11/2026 — Dias de treino escolhidos pela pessoa (1.J, `dias_treino`) em vez do número de dias; todos os dias equivalentes, sem domingo de descanso; força nunca em dias seguidos (com dois dias seguidos, 1 dia de força); dança em qualquer dia de caminhada leve (§5 e §5.1, D4).
+- 18/11/2026 — Fase 10F: Tai Chi opcional (§5.2, T1 a T7), com o mesmo código da dança onde é comum; no PDF, dança e Tai Chi juntos numa secção compacta. O prompt fica como está.

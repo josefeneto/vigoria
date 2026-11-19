@@ -9,7 +9,7 @@ from datetime import date
 from enum import StrEnum
 from functools import cache
 from importlib.resources import files
-from typing import Literal, Self
+from typing import ClassVar, Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -310,11 +310,11 @@ class Manutencao(_Conteudo):
     recomecar: ParteManutencao
 
 
-# ---------------------------------------------------------------- danca.yaml (Fase 10E)
+# ------------------------------------------- danca.yaml e taichi.yaml (Fases 10E e 10F)
 
 
-class NivelDanca(StrEnum):
-    """Nível das ligações (D6): os três da intensidade e as «Mais aulas» (media e alta)."""
+class NivelLigacao(StrEnum):
+    """Nível das ligações (D6, T6): os três da intensidade e as «Mais aulas» (só na dança)."""
 
     LIGEIRA = "ligeira"
     MEDIA = "media"
@@ -322,12 +322,12 @@ class NivelDanca(StrEnum):
     MAIS_AULAS = "mais_aulas"
 
 
-class LigacaoDanca(_Conteudo):
+class LigacaoAtividade(_Conteudo):
     titulo: str = Field(min_length=1, max_length=60)
     # Só YouTube, sem a lista automática «&list=RD…» (fica só o vídeo).
     url: str = Field(pattern=r"^https://www\.youtube\.com/")
     canal: str = Field(min_length=1)
-    nivel: NivelDanca
+    nivel: NivelLigacao
     verificado_em: date
 
     @model_validator(mode="after")
@@ -354,13 +354,31 @@ class TextosDanca(_Conteudo):
     abre_youtube: str
 
 
-class ConteudoDanca(_Conteudo):
-    textos: TextosDanca
-    ligacoes: tuple[LigacaoDanca, ...]
+class TextosTaiChi(_Conteudo):
+    titulo: str
+    dias_sem_treino: str  # T4
+    dias_treino: str  # T4 (decisão de 18/11/2026: só em vez do retorno à calma)
+    minutos: str  # com {n}
+    estrutura: str  # T2
+    aquecimento: str  # T2
+    taichi: str
+    postura: str  # T5
+    nao_cardio: str  # T4
+    ligacoes: str
+    mais_calmo: str
+    abre_youtube: str
+
+
+class _ConteudoAtividade(_Conteudo):
+    """Ligações de uma atividade opcional: cada nível obrigatório com pelo menos uma, sem
+    repetições."""
+
+    NIVEIS: ClassVar[tuple[NivelLigacao, ...]] = tuple(NivelLigacao)
+    ligacoes: tuple[LigacaoAtividade, ...]
 
     @model_validator(mode="after")
     def _niveis_completos(self) -> Self:
-        em_falta = [n for n in NivelDanca if not any(x.nivel is n for x in self.ligacoes)]
+        em_falta = [n for n in self.NIVEIS if not any(x.nivel is n for x in self.ligacoes)]
         if em_falta:
             raise ValueError(f"níveis sem ligações: {', '.join(em_falta)}")
         urls = [x.url for x in self.ligacoes]
@@ -369,8 +387,23 @@ class ConteudoDanca(_Conteudo):
             raise ValueError(f"ligações repetidas: {', '.join(repetidos)}")
         return self
 
-    def do_nivel(self, nivel: NivelDanca) -> tuple[LigacaoDanca, ...]:
+    def do_nivel(self, nivel: NivelLigacao) -> tuple[LigacaoAtividade, ...]:
         return tuple(x for x in self.ligacoes if x.nivel is nivel)
+
+
+class ConteudoDanca(_ConteudoAtividade):
+    textos: TextosDanca
+
+
+class ConteudoTaiChi(_ConteudoAtividade):
+    NIVEIS = (NivelLigacao.LIGEIRA, NivelLigacao.MEDIA, NivelLigacao.ALTA)
+    textos: TextosTaiChi
+
+    @model_validator(mode="after")
+    def _sem_mais_aulas(self) -> Self:
+        if any(x.nivel is NivelLigacao.MAIS_AULAS for x in self.ligacoes):
+            raise ValueError("o Tai Chi não tem «Mais aulas» (T6)")
+        return self
 
 
 # ---------------------------------------------------------------- ajuda.yaml (Fase 8B)
@@ -478,6 +511,12 @@ def carregar_manutencao() -> Manutencao:
 def carregar_danca() -> ConteudoDanca:
     """Textos e ligações do bloco «Dança (opcional)» (REGRAS §5.1)."""
     return _carregar("danca.yaml", ConteudoDanca)
+
+
+@cache
+def carregar_taichi() -> ConteudoTaiChi:
+    """Textos e ligações do bloco «Tai Chi (opcional)» (REGRAS §5.2)."""
+    return _carregar("taichi.yaml", ConteudoTaiChi)
 
 
 @cache

@@ -182,6 +182,7 @@ VIDEO_DESCRICOES = (  # pela ordem de componentes.VIDEOS_TOPO
 VIDEO_PAUSAR = "Pausar o vídeo"
 VIDEO_REPRODUZIR = "Ver o vídeo"
 DANCA_VIDEO_DESCRICAO = "Um grupo de mulheres a dançar numa sala, a sorrir."
+TAICHI_VIDEO_DESCRICAO = "A silhueta de um homem a praticar Tai Chi num parque, junto à água."
 INICIO_COMO_TITULO = "Como funciona"
 BENEFICIOS = (
     (

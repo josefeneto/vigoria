@@ -1,4 +1,4 @@
-"""Confirma as ligações de conteudo/danca.yaml e lista as que falham (REGRAS §5.1, D7).
+"""Confirma as ligações de conteudo/danca.yaml e taichi.yaml e lista as que falham (D7, T7).
 
 Vídeos e listas: pelo oEmbed do YouTube, que devolve o título e o canal. A página de um
 canal (/@nome/playlists) não tem oEmbed: basta responder 200. Só lê os URL públicos do YAML;
@@ -13,7 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from vigoria.conteudo.carregar import carregar_danca
+from vigoria.conteudo.carregar import carregar_danca, carregar_taichi
 
 OEMBED = "https://www.youtube.com/oembed?format=json&url="
 AGENTE = "vigoria-verificar-links/1.0"
@@ -48,7 +48,7 @@ def main() -> int:
     # Os títulos do YouTube trazem emojis; a consola do Windows (cp1252) não os escreve.
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
     falhas = []
-    for ligacao in carregar_danca().ligacoes:
+    for ligacao in (*carregar_danca().ligacoes, *carregar_taichi().ligacoes):
         funciona, detalhe = verificar(ligacao.url)
         marca = "ok   " if funciona else "FALHA"
         print(f"{marca} [{ligacao.nivel}] {ligacao.titulo}\n      {ligacao.url}\n      {detalhe}")

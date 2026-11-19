@@ -22,6 +22,7 @@ from vigoria.modelos.plano import Plano
 from vigoria.modelos.questionario import Questionario
 from vigoria.motor.danca import ligacoes_danca
 from vigoria.motor.pipeline import gerar_plano_verificado
+from vigoria.motor.taichi import ligacoes_taichi
 
 RAIZ = Path(__file__).resolve().parents[1]
 DATA = datetime(2026, 11, 4, 17, 30, tzinfo=UTC)
@@ -39,19 +40,25 @@ PERSONAS = [
 ]
 
 
-@cache
 def _plano(persona: str = "persona_teste") -> Plano:
-    q = Questionario.model_validate_json((RAIZ / "exemplos" / f"{persona}.json").read_text("utf-8"))
-    return gerar_plano_verificado(q, ProvedorSimulado(), progresso=lambda _: None).plano
+    """O plano base, sem atividades opcionais (as secções de dança e Tai Chi têm testes
+    próprios)."""
+    return _plano_com(persona)
 
 
 @cache
-def _plano_com_danca(persona: str) -> Plano:
-    """A mesma persona com «dança» nas preferências (Fase 10E)."""
+def _plano_com(persona: str, *preferencias: str) -> Plano:
+    """A mesma persona só com estas atividades opcionais nas preferências (dança, Tai Chi),
+    além das que não são opcionais."""
     dados = json.loads((RAIZ / "exemplos" / f"{persona}.json").read_text("utf-8"))
-    dados["preferencias"] = [*dados["preferencias"], "danca"]
+    outras = [x for x in dados["preferencias"] if x not in ("danca", "tai_chi")]
+    dados["preferencias"] = [*(outras or ["caminhada"]), *preferencias]
     q = Questionario.model_validate(dados)
     return gerar_plano_verificado(q, ProvedorSimulado(), progresso=lambda _: None).plano
+
+
+def _plano_com_danca(persona: str) -> Plano:
+    return _plano_com(persona, "danca")
 
 
 def _paginas(dados: bytes) -> int:
@@ -469,8 +476,8 @@ def test_danca_uma_so_seccao_com_ligacoes_clicaveis(
     escrito: list[tuple[int, float, str]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     plano = _plano_com_danca("persona_teste")
-    lugar = pdf.lugar_danca(plano, DATA)  # os ensaios também escrevem: fora da contagem
-    monkeypatch.setattr(pdf, "lugar_danca", lambda *_: lugar)
+    lugar = pdf.lugar_atividades(plano, DATA)  # os ensaios também escrevem: fora da contagem
+    monkeypatch.setattr(pdf, "lugar_atividades", lambda *_: lugar)
     escrito.clear()
     dados = pdf.plano_pdf(plano, DATA)
     textos = [texto for _, _, texto in escrito]
@@ -485,9 +492,11 @@ def test_danca_uma_so_seccao_com_ligacoes_clicaveis(
 
 
 def test_sem_danca_nao_ha_seccao_nem_ligacoes(escrito: list[tuple[int, float, str]]) -> None:
-    dados = pdf.plano_pdf(_plano(), DATA)
-    assert _plano().danca is None
-    assert "Dança (opcional)" not in [texto for _, _, texto in escrito]
+    plano = _plano_com("persona_teste")
+    assert plano.danca is None and plano.taichi is None
+    dados = pdf.plano_pdf(plano, DATA)
+    textos = [texto for _, _, texto in escrito]
+    assert "Dança (opcional)" not in textos and "Tai Chi (opcional)" not in textos
     assert b"youtube.com" not in dados
     assert b"/DCTDecode" not in dados
 
@@ -495,7 +504,58 @@ def test_sem_danca_nao_ha_seccao_nem_ligacoes(escrito: list[tuple[int, float, st
 def test_danca_onde_nao_acrescenta_paginas() -> None:
     """Com a osteoporose (já com 12 páginas), a dança fica antes das fases."""
     plano = _plano_com_danca("persona_osteoporose")
-    assert pdf.lugar_danca(plano, DATA) is not pdf.LugarDanca.FIM_DAS_FASES
+    assert pdf.lugar_atividades(plano, DATA) is not pdf.LugarAtividades.FIM_DAS_FASES
     assert _paginas(pdf.plano_pdf(plano, DATA)) == _paginas(
         pdf.plano_pdf(_plano("persona_osteoporose"), DATA)
     )
+
+
+# ---------------------------------------------------------------- Tai Chi (Fase 10F)
+
+
+@pytest.mark.parametrize("atividades", [("tai_chi",), ("danca", "tai_chi")])
+@pytest.mark.parametrize("persona", PERSONAS)
+def test_taichi_e_danca_no_maximo_12_paginas(
+    persona: str,
+    atividades: tuple[str, ...],
+    caplog: pytest.LogCaptureFixture,
+    fundos: dict[int, float],
+) -> None:
+    plano = _plano_com(persona, *atividades)
+    assert plano.taichi is not None
+    assert (plano.danca is not None) is ("danca" in atividades)
+    dados = pdf.plano_pdf(plano, DATA)
+    _sem_falhas_de_letra(caplog)
+    total = _paginas(dados)
+    assert total <= MAX_PAGINAS, (persona, atividades, total)
+    altura = pdf._Documento("").fundo - pdf.TOPO_PAGINA
+    for pagina in range(1, total):
+        ocupacao = (fundos.get(pagina, pdf.TOPO_PAGINA) - pdf.TOPO_PAGINA) / altura
+        assert ocupacao >= OCUPACAO_MINIMA, (persona, atividades, pagina, round(ocupacao, 2))
+
+
+def test_taichi_uma_so_seccao_com_ligacoes_clicaveis(
+    escrito: list[tuple[int, float, str]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    plano = _plano_com("persona_teste", "danca", "tai_chi")
+    lugar = pdf.lugar_atividades(plano, DATA)  # os ensaios também escrevem: fora da contagem
+    monkeypatch.setattr(pdf, "lugar_atividades", lambda *_: lugar)
+    escrito.clear()
+    dados = pdf.plano_pdf(plano, DATA)
+    textos = [texto for _, _, texto in escrito]
+    assert textos.count("Tai Chi (opcional)") == 1
+    assert textos.count("Dança (opcional)") == 1
+    assert any(texto.startswith("Movimentos lentos e postura alta") for texto in textos)  # T5
+    assert any("não conta como minutos de cardio" in texto for texto in textos)  # T4
+    assert plano.taichi is not None
+    for x in ligacoes_taichi(plano.taichi).principais:
+        assert x.url.encode() in dados  # T7: ligação clicável, nada embutido
+    assert b"/DCTDecode" in dados
+
+
+def test_osteoporose_com_danca_e_taichi() -> None:
+    """A persona mais longa, com as duas atividades: 12 páginas ou menos, só nível ligeira."""
+    plano = _plano_com("persona_osteoporose", "danca", "tai_chi")
+    assert plano.danca is not None and plano.danca.so_ligeira
+    assert plano.taichi is not None and plano.taichi.so_ligeira
+    assert _paginas(pdf.plano_pdf(plano, DATA)) <= MAX_PAGINAS

@@ -459,17 +459,17 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 
 /* ---- Dança (opcional), Fase 10E: cartão no Treino de cada fase (REGRAS §5.1). As ligações
    abrem no YouTube numa janela nova (D7); o vídeo usa o mesmo .v-video do início. */
-.v-danca { margin-top: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
-.v-danca-topo { display: flex; gap: 12px; align-items: center; }
-.v-danca-topo h3 { margin: 0; }
-.v-danca-min { color: var(--v-cobre); font-weight: 700; }
-.v-danca .v-video { box-shadow: none; }
-.v-danca-passos { margin: 0; padding-left: 1.4rem; }
-.v-danca-passos li { margin: .2rem 0; }
-.v-danca-aviso { font-weight: 700; color: var(--v-principal-profundo); }
-.v-danca-grupo { font-weight: 700; margin-top: .25rem !important; }
-.v-danca-ligacoes { margin: 0; padding-left: 1.2rem; }
-.v-danca-ligacoes li { margin: .35rem 0; }
-.v-danca-ligacoes a { color: var(--v-principal); text-decoration: underline; font-weight: 700; }
-.v-danca-canal { color: var(--v-texto-secundario); font-size: .95rem; }
-.v-danca-nota { color: var(--v-texto-secundario); font-size: .95rem; }
+.v-atividade { margin-top: 1.5rem; display: flex; flex-direction: column; gap: .75rem; }
+.v-atividade-topo { display: flex; gap: 12px; align-items: center; }
+.v-atividade-topo h3 { margin: 0; }
+.v-atividade-min { color: var(--v-cobre); font-weight: 700; }
+.v-atividade .v-video { box-shadow: none; }
+.v-atividade-passos { margin: 0; padding-left: 1.4rem; }
+.v-atividade-passos li { margin: .2rem 0; }
+.v-atividade-aviso { font-weight: 700; color: var(--v-principal-profundo); }
+.v-atividade-grupo { font-weight: 700; margin-top: .25rem !important; }
+.v-atividade-ligacoes { margin: 0; padding-left: 1.2rem; }
+.v-atividade-ligacoes li { margin: .35rem 0; }
+.v-atividade-ligacoes a { color: var(--v-principal); text-decoration: underline; font-weight: 700; }
+.v-atividade-canal { color: var(--v-texto-secundario); font-size: .95rem; }
+.v-atividade-nota { color: var(--v-texto-secundario); font-size: .95rem; }
