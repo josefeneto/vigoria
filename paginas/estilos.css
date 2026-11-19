@@ -178,8 +178,12 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .st-key-como_ligacao [data-testid="stPageLink"] p,
 .st-key-como_ligacao [data-testid="stPageLink"] span { color: var(--v-principal-profundo);
   font-size: 1.2rem; font-weight: 700; }
-.st-key-como_ligacao [data-testid="stPageLink"] a { text-decoration: underline;
+/* Só o texto sublinhado (não o ícone); a seta maior e mais grossa (contorno da mesma cor). */
+.st-key-como_ligacao [data-testid="stPageLink"] a { text-decoration: none; }
+.st-key-como_ligacao [data-testid="stPageLink"] p { text-decoration: underline;
   text-underline-offset: .2em; }
+.st-key-como_ligacao [data-testid="stIconMaterial"] { font-size: 1.6rem;
+  font-variation-settings: "wght" 700; -webkit-text-stroke: .05em currentColor; }
 
 /* ---- Vídeo do topo: capa enquanto carrega, botão de pausa sempre visível */
 .v-video { position: relative; border-radius: var(--v-raio); overflow: hidden; aspect-ratio: 16 / 9;
