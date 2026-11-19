@@ -57,6 +57,13 @@ ZERO_E_VAZIO = {"idade", "altura_cm"} | INTEIROS
 # Vinho e doces escolhem-se em botões, como o pão; o último é «N ou mais». Os questionários
 # antigos (caixa de número, até 10 copos ou 14 doces) mostram-se nesse último botão.
 ULTIMA_OPCAO: dict[str, int] = {"vinho_copos_dia": 4, "doces_por_semana": 7}
+# Opções que deixaram de aparecer no ecrã (19/11/2026): «Outro» no equipamento e «Outra» nas
+# preferências só chegavam à LLM como a palavra «outro», sem dizer o quê. Continuam válidas no
+# modelo (questionários antigos); ao reabrir o questionário, deixam de vir marcadas.
+RETIRADAS: dict[str, frozenset[str]] = {
+    "equipamento": frozenset({"outro"}),
+    "preferencias": frozenset({"outro"}),
+}
 
 
 def _inteiro(valor: Any) -> Any:
@@ -138,6 +145,8 @@ def para_estado(respostas: Mapping[str, Any]) -> dict[str, Any]:
             estado[chave(campo)] = _inteiro(valor) if campo in INTEIROS else valor
             if campo in ULTIMA_OPCAO and valor is not None:
                 estado[chave(campo)] = min(valor, ULTIMA_OPCAO[campo])
+            if campo in RETIRADAS and valor:
+                estado[chave(campo)] = [x for x in valor if x not in RETIRADAS[campo]]
     for c, controlada in (respostas.get("condicoes_controladas") or {}).items():
         estado[chave("condicoes_controladas", c)] = _SIM_NAO[controlada]
     for x, gravidade in (respostas.get("limitacoes_gravidade") or {}).items():

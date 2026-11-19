@@ -31,6 +31,7 @@ from vigoria.interface.passos import (
     PASSOS,
     REFEICOES,
     controladas_aplicaveis,
+    escolha_sem_conflito,
     limitacoes_com_gravidade,
     montar_questionario,
     respostas_de_questionario,
@@ -107,13 +108,24 @@ def _pedir_geracao() -> None:
 
 
 def _pills(campo: str, opcoes: dict[str, str]) -> None:
+    """Escolha múltipla; nas que têm «Nenhum(a)», essa opção desmarca as outras e vice-versa."""
+    k = chave(campo)
+    antes = f"_antes.{campo}"  # sem o prefixo «q.»: não é uma resposta
+
+    def _sem_conflito() -> None:
+        st.session_state[k] = escolha_sem_conflito(
+            campo, st.session_state.get(antes) or [], st.session_state[k] or []
+        )
+
     st.pills(
         t.ROTULOS[campo],
         list(opcoes),
         selection_mode="multi",
         format_func=opcoes.__getitem__,
+        on_change=_sem_conflito,
         **W(campo),
     )
+    st.session_state[antes] = list(st.session_state[k] or [])
     comum.erro(campo)
 
 

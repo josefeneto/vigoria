@@ -66,12 +66,14 @@ def parar() -> NoReturn:
     st.stop()
 
 
-def ligacao_ajuda(tema: str) -> None:
+def ligacao_ajuda(
+    tema: str, rotulo: str = t.COMO_FUNCIONA_LIGACAO, icone: str = ":material/help:"
+) -> None:
     """«Como funciona?»: abre a Ajuda com este tema primeiro e aberto."""
     st.page_link(
         PAGINA_AJUDA,
-        label=t.COMO_FUNCIONA_LIGACAO,
-        icon=":material/help:",
+        label=rotulo,
+        icon=icone,
         query_params={"tema": tema},
     )
 

@@ -198,7 +198,8 @@ def _ligacoes(at: AppTest) -> list[object]:
 def test_inicio_tem_ligacao_como_funciona() -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     assert not at.exception
-    ligacoes = [p for p in _ligacoes(at) if p.label == t.COMO_FUNCIONA_LIGACAO]
+    ligacoes = [p for p in _ligacoes(at) if p.label == t.COMO_FUNCIONA_INICIO]
     assert len(ligacoes) == 1
+    assert ligacoes[0].icon == ":material/arrow_forward:"  # seta, não o ponto de interrogação
     assert ligacoes[0].page.endswith("ajuda")
     assert "tema=como_funciona" in ligacoes[0].query_string

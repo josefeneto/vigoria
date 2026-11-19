@@ -312,7 +312,7 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
     assert "Como funciona" in html and "Pronto para começar?" in html
     # «Como funciona?» (Ajuda) logo a seguir aos passos, não no convite final (19/11/2026).
-    assert _bloco_das_ligacoes(at.main)["Como funciona?"] == "como_ligacao"
+    assert _bloco_das_ligacoes(at.main)["Veja aqui como funciona"] == "como_ligacao"
     assert [b.label for b in at.button].count("Começar o questionário") == 2
 
 
@@ -433,3 +433,43 @@ def test_danca_e_taichi_no_treino_de_cada_fase() -> None:
     at.switch_page("paginas/progresso.py").run()
     assert not at.exception
     assert t.REGISTO_CARDIO_DANCA in [c.value for c in at.caption]  # só pela dança
+
+
+@pytest.mark.parametrize(
+    ("campo", "rotulo", "nenhum", "outra"),
+    [
+        ("equipamento", "Que equipamento tem em casa?", "Nenhum", "Halteres"),
+        ("condicoes", None, "Nenhuma", None),
+    ],
+)
+def test_nenhum_desmarca_as_outras_escolhas(
+    campo: str, rotulo: str | None, nenhum: str, outra: str | None
+) -> None:
+    """Marcar «Nenhum» deixa só «Nenhum»; marcar outra opção a seguir tira o «Nenhum»."""
+    from paginas import textos as t
+
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "3" if campo == "equipamento" else "2a"
+    at.run()
+    caixa = next(b for b in at.get("button_group") if b.label == t.ROTULOS[campo])
+    marcadas = [t.OPCOES[campo][v] for v in caixa.value]
+    assert marcadas and nenhum not in marcadas
+    caixa.set_value([*marcadas, nenhum]).run()
+    valor = {rotulo: v for v, rotulo in t.OPCOES[campo].items()}  # o widget guarda o valor
+    caixa = next(b for b in at.get("button_group") if b.label == t.ROTULOS[campo])
+    assert caixa.value == [valor[nenhum]]
+    outra = outra or next(o for o in caixa.options if o != nenhum)
+    caixa.set_value([nenhum, outra]).run()
+    caixa = next(b for b in at.get("button_group") if b.label == t.ROTULOS[campo])
+    assert caixa.value == [valor[outra]]
+    assert not at.exception
+
+
+def test_outro_ja_nao_aparece_no_equipamento_nem_nas_preferencias() -> None:
+    at = _app()
+    _persona(at)
+    at.session_state["passo"] = "3"
+    at.run()
+    for caixa in at.get("button_group"):
+        assert "Outro" not in caixa.options and "Outra" not in caixa.options, caixa.label

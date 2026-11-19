@@ -326,3 +326,45 @@ def test_objetivo_muscular_em_kg_e_controlo_sim_nao() -> None:
     assert estado[chave("condicoes_controladas", "hipertensao")] == "sim"
     estado[chave("condicoes_controladas", "hipertensao")] = "nao"
     assert para_respostas(estado)["condicoes_controladas"] == {"hipertensao": False}
+
+
+@pytest.mark.parametrize(
+    ("antes", "agora", "fica"),
+    [
+        ([], ["nenhum"], ["nenhum"]),
+        (["halteres", "step"], ["nenhum", "halteres", "step"], ["nenhum"]),
+        (["nenhum"], ["nenhum", "halteres"], ["halteres"]),
+        (["halteres"], ["halteres", "step"], ["halteres", "step"]),
+        (["halteres"], [], []),
+    ],
+)
+def test_nenhum_exclui_as_outras_escolhas(
+    antes: list[str], agora: list[str], fica: list[str]
+) -> None:
+    from vigoria.interface.passos import escolha_sem_conflito
+
+    assert escolha_sem_conflito("equipamento", antes, agora) == fica
+
+
+def test_nenhum_so_nas_escolhas_que_o_tem() -> None:
+    from vigoria.interface.passos import NENHUMA, escolha_sem_conflito
+
+    assert set(NENHUMA) == {"condicoes", "limitacoes", "equipamento"}
+    assert escolha_sem_conflito("condicoes", ["diabetes"], ["diabetes", "nenhuma"]) == ["nenhuma"]
+    assert escolha_sem_conflito("preferencias", [], ["caminhada", "danca"]) == [
+        "caminhada",
+        "danca",
+    ]
+
+
+def test_outro_antigo_deixa_de_vir_marcado() -> None:
+    """Questionários antigos com «outro» continuam válidos, mas a opção já não aparece."""
+    from paginas import textos as t
+    from vigoria.interface.estado import RETIRADAS
+
+    estado = para_estado(_r(equipamento=["halteres", "outro"], preferencias=["outro", "danca"]))
+    assert estado[chave("equipamento")] == ["halteres"]
+    assert estado[chave("preferencias")] == ["danca"]
+    assert all(not (RETIRADAS[c] & set(t.OPCOES[c])) for c in RETIRADAS)
+    q = _q()
+    assert q.model_validate(q.model_dump() | {"preferencias": ["outro"]}).preferencias

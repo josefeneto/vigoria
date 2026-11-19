@@ -69,11 +69,24 @@ CAMPOS: dict[str, tuple[str, ...]] = {
 REFEICOES: tuple[str, ...] = tuple(Refeicoes.model_fields)
 
 # Escolhas que não se podem combinar com outras.
-_NENHUMA = {
+NENHUMA = {
     "condicoes": Condicao.NENHUMA.value,
     "limitacoes": Limitacao.NENHUMA.value,
     "equipamento": Equipamento.NENHUM.value,
 }
+
+
+def escolha_sem_conflito(campo: str, antes: list[str], agora: list[str]) -> list[str]:
+    """«Nenhum(a)» exclui as outras escolhas: fica a última que a pessoa marcou.
+
+    Marcar «Nenhum» deixa só «Nenhum»; marcar outra opção com «Nenhum» já marcado tira-o.
+    """
+    nenhuma = NENHUMA.get(campo)
+    if nenhuma is None or nenhuma not in agora or len(agora) == 1:
+        return agora
+    if nenhuma not in antes:
+        return [nenhuma]
+    return [x for x in agora if x != nenhuma]
 
 
 def _tem(respostas: Mapping[str, Any], campo: str, valor: str) -> bool:
@@ -219,7 +232,7 @@ def validar_passo(passo: str, respostas: Mapping[str, Any]) -> list[ErroCampo]:
         elif _vazio(valor):
             if obrigatorio:
                 erros.append(ErroCampo(campo=campo, codigo=CodigoErro.OBRIGATORIO))
-        elif campo in _NENHUMA and _NENHUMA[campo] in valor and len(valor) > 1:
+        elif campo in NENHUMA and NENHUMA[campo] in valor and len(valor) > 1:
             erros.append(ErroCampo(campo=campo, codigo=CodigoErro.NENHUMA_EXCLUSIVA))
         elif (erro := _validar_campo(campo, valor)) is not None:
             erros.append(erro)

@@ -52,6 +52,7 @@ AJUDA_INTRO = (
     "Respostas curtas sobre como a Vigoria funciona. Se não encontrar o que procura, escreva-nos."
 )
 COMO_FUNCIONA_LIGACAO = "Como funciona?"
+COMO_FUNCIONA_INICIO = "Veja aqui como funciona"  # no Início, logo a seguir aos passos
 SECCAO_CONTA = "Conta"  # grupo do menu com «A minha conta» e «Terminar sessão»
 # Navegação (Fase 8D): rótulos curtos na barra; os títulos das páginas (separador) não mudam.
 NAV = {
@@ -424,7 +425,6 @@ EQUIPAMENTO = {
     "eliptica": "Elíptica",
     "passadeira": "Passadeira",
     "cadeira_firme": "Cadeira firme",
-    "outro": "Outro",
 }
 PREFERENCIAS = {
     "caminhada": "Caminhada",
@@ -432,7 +432,6 @@ PREFERENCIAS = {
     "danca": "Dança",
     "forca": "Força",
     "natacao": "Natação",
-    "outro": "Outra",
 }
 MINUTOS = "{n} min"
 DIAS_TREINO = {
