@@ -299,13 +299,19 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert not at.exception
     html = "\n".join(h.proto.body for h in at.get("html"))
     assert "<video" in html and "app/static/video/inicio.mp4" in html
-    # Homem e mulher alternam no mesmo espaço; o segundo só descarrega depois de o primeiro
-    # começar, e nenhum fica em ciclo sozinho (o «ended» passa ao seguinte).
-    assert html.count("<video ") == 2
-    assert 'preload="none" poster="app/static/video/inicio_mulher_capa.webp"' in html
-    assert "app/static/video/inicio_mulher.mp4" in html
+    # Quatro vídeos alternam no mesmo espaço (desde 20/11/2026: homem, dança, mulher, Tai Chi);
+    # cada um só descarrega quando o anterior começa, e nenhum fica em ciclo sozinho (o
+    # «ended» passa ao seguinte).
+    assert html.count("<video ") == 4
+    ordem = ["inicio.mp4", "danca_web.mp4", "inicio_mulher.mp4", "taichi_web.mp4"]
+    posicoes = [html.index(f"app/static/video/{n}") for n in ordem]
+    assert posicoes == sorted(posicoes)
+    for capa in ("danca_poster.jpg", "inicio_mulher_capa.webp", "taichi_poster.jpg"):
+        assert f'preload="none" poster="app/static/video/{capa}"' in html
+    assert html.count('preload="auto"') == 1
     assert " loop" not in html and 'addEventListener("ended"' in html
     assert "Homem de cabelo grisalho" in html and "Mulher a fazer agachamentos" in html
+    assert "mulheres a dançar" in html and "Tai Chi num parque" in html
     # A capa vem embutida como fundo da caixa: vê-se mesmo que o vídeo demore ou falhe.
     assert 'class="v-video" style="background-image:url(data:image/webp;base64,' in html
     assert 'addEventListener("error"' in html

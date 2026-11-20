@@ -17,8 +17,14 @@ from paginas.estilos import ICONES_ATIVIDADES, RAIZ, icone
 PASTA_FOTOS = RAIZ / "assets" / "img"
 PASTA_MARCA = RAIZ / "assets" / "marca"
 PASTA_VIDEO = RAIZ / "static" / "video"  # servida em app/static/video/
-# Vídeos do topo do início, que alternam (um homem e uma mulher): scripts/converter_video.py.
-VIDEOS_TOPO = ("inicio", "inicio_mulher")
+# Vídeos do topo do início, que alternam (nome do .mp4, capa): o homem e a mulher
+# (scripts/converter_video.py) e, desde 20/11/2026, os das atividades opcionais.
+VIDEOS_TOPO = (
+    ("inicio", "inicio_capa.webp"),
+    ("danca_web", "danca_poster.jpg"),
+    ("inicio_mulher", "inicio_mulher_capa.webp"),
+    ("taichi_web", "taichi_poster.jpg"),
+)
 CAPA_VIDEO = PASTA_VIDEO / "inicio_capa.webp"
 # Vídeos dos cartões das atividades opcionais (Pexels, docs/CREDITOS_IMAGENS.md):
 # <atividade>_web.mp4 e a capa <atividade>_poster.jpg.
@@ -29,7 +35,7 @@ CAPA_TAICHI = PASTA_VIDEO / "taichi_poster.jpg"
 
 # Vídeos do topo do início: sem som, um a seguir ao outro em ciclo, com capa e botão de pausa
 # (WCAG 2.2.2). Só arrancam por código e só se o sistema não pedir menos movimento; sem
-# código, fica a capa. O segundo só começa a descarregar quando o primeiro já está a passar.
+# código, fica a capa. Cada um só começa a descarregar quando o anterior já está a passar.
 # A capa do primeiro vai embutida como fundo da caixa: vê-se mesmo que o servidor demore ou
 # os vídeos falhem (logo a seguir a entrar ou sair); um vídeo com erro
 # sai do ciclo e, sem nenhum, saem também o botão e os vídeos.
@@ -74,10 +80,11 @@ _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
       video.addEventListener("error", () => falhou(video));
       video.addEventListener("ended", seguinte);
     });
-    // O segundo vídeo só se descarrega depois de o primeiro começar (poupa dados no telemóvel).
-    videos[0].addEventListener("playing", () => videos.slice(1).forEach((v) => {
-      if (v.preload === "none") { v.preload = "auto"; v.load(); }
-    }), { once: true });
+    // Cada vídeo só se descarrega quando o anterior começa (poupa dados no telemóvel).
+    videos.forEach((video) => video.addEventListener("playing", () => {
+      const v = videos[(videos.indexOf(video) + 1) %% videos.length];
+      if (v && v.preload === "none") { v.preload = "auto"; v.load(); }
+    }));
     botao.addEventListener("click", () => {
       if (atual.paused) { tocar(atual); } else { atual.pause(); mostrar(false); }
     });
@@ -131,9 +138,9 @@ def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> boo
     `descricoes`: uma por vídeo de VIDEOS_TOPO, pela mesma ordem (para leitores de ecrã).
     """
     existentes = [
-        (nome, descricao)
-        for nome, descricao in zip(VIDEOS_TOPO, descricoes, strict=True)
-        if (PASTA_VIDEO / f"{nome}.mp4").exists()
+        (nome, capa, descricao)
+        for (nome, capa), descricao in zip(VIDEOS_TOPO, descricoes, strict=True)
+        if (PASTA_VIDEO / f"{nome}.mp4").exists() and (PASTA_VIDEO / capa).exists()
     ]
     if not existentes or not CAPA_VIDEO.exists():
         return False
@@ -143,9 +150,9 @@ def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> boo
             "nome": nome,
             "descricao": escape(descricao),
             "preload": "auto" if i == 0 else "none",
-            "poster": f"app/static/video/{nome}_capa.webp",
+            "poster": f"app/static/video/{capa}",
         }
-        for i, (nome, descricao) in enumerate(existentes)
+        for i, (nome, capa, descricao) in enumerate(existentes)
     )
     st.html(
         _VIDEO

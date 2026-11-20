@@ -175,15 +175,17 @@ COMO_FUNCIONA = (
     ),
 )
 FINAL_TITULO = "Pronto para começar?"
+DANCA_VIDEO_DESCRICAO = "Um grupo de mulheres a dançar numa sala, a sorrir."
+TAICHI_VIDEO_DESCRICAO = "A silhueta de um homem a praticar Tai Chi num parque, junto à água."
 VIDEO_DESCRICOES = (  # pela ordem de componentes.VIDEOS_TOPO
     "Homem de cabelo grisalho a levantar halteres acima da cabeça, devagar e com controlo.",
+    DANCA_VIDEO_DESCRICAO,
     "Mulher a fazer agachamentos com uma banda elástica à volta das pernas, numa varanda, "
     "devagar e com controlo.",
+    TAICHI_VIDEO_DESCRICAO,
 )
 VIDEO_PAUSAR = "Pausar o vídeo"
 VIDEO_REPRODUZIR = "Ver o vídeo"
-DANCA_VIDEO_DESCRICAO = "Um grupo de mulheres a dançar numa sala, a sorrir."
-TAICHI_VIDEO_DESCRICAO = "A silhueta de um homem a praticar Tai Chi num parque, junto à água."
 INICIO_COMO_TITULO = "Como funciona"
 BENEFICIOS = (
     (
