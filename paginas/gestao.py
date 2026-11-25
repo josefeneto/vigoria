@@ -32,7 +32,7 @@ except Exception as e:  # sem o conteúdo: só o tipo do erro
 st.subheader(t.GESTAO_NUMEROS)
 cartoes: list[tuple[str, int, str]] = [
     (t.GESTAO_ROTULOS["contas_ativas"], resumo.contas_ativas, t.GESTAO_SEM_PERIODO),
-    (t.GESTAO_ROTULOS["com_plano"], resumo.com_plano, t.GESTAO_SEM_PERIODO),
+    (t.GESTAO_ROTULOS["com_plano"], resumo.com_plano, t.GESTAO_COM_PLANO_NOTA),
 ]
 for tipo, numeros in resumo.contagens.items():
     periodos = t.GESTAO_PERIODOS.format(d7=numeros.ultimos[7], d30=numeros.ultimos[30])

@@ -904,7 +904,7 @@ GESTAO_INTRO = (
 GESTAO_NUMEROS = "Números"
 GESTAO_ROTULOS = {
     "contas_ativas": "Contas registadas (hoje)",
-    "com_plano": "Pessoas com plano (questionário até ao fim)",
+    "com_plano": "Pessoas com plano",
     "conta_criada": "Contas criadas (acumulado)",
     "plano_gerado": "Planos gerados (acumulado)",
     "pdf_descarregado": "Descargas do plano em PDF",
@@ -912,6 +912,7 @@ GESTAO_ROTULOS = {
 }
 GESTAO_PERIODOS = "Últimos 7 dias: {d7} · últimos 30 dias: {d30}"
 GESTAO_SEM_PERIODO = "Número de hoje, sem histórico por dia."
+GESTAO_COM_PLANO_NOTA = "Fizeram o questionário até ao fim. Número de hoje, sem histórico por dia."
 GESTAO_CONTAS = "Contas registadas"
 GESTAO_CONTAS_NOTA = (
     "Use esta lista só para gerir o serviço: enviar publicidade exige um consentimento à parte "
