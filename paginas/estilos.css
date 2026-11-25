@@ -487,7 +487,7 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 
 /* ---- Descarregar na app instalada (25/11/2026, comum.descarga). No iPhone, com a app no ecrã
    principal, um ficheiro descarregado abre por cima da app sem forma de voltar: aí mostra-se a
-   ligação (abre no Safari, com «OK») e esconde-se o botão. No navegador, o contrário. */
+   ligação (página com «Voltar à Vigoria») e esconde-se o botão. No navegador, o contrário. */
 @media not all and (display-mode: standalone) {
   [class*="st-key-descarga_app_"] { display: none; }
 }

@@ -141,24 +141,53 @@ def _contagem(fabrica: sessionmaker[Session], tipo: g.TipoContagem) -> int:
         return g.resumo(s, AGORA.date()).contagens[tipo].total
 
 
-def test_pdf_para_ver_no_ecra_e_contado(fabrica: sessionmaker[Session]) -> None:
+def _ficheiro(resposta_url: str) -> str:
+    return resposta_url + "&ficheiro=1"
+
+
+def test_pdf_pagina_com_voltar_e_ficheiro(fabrica: sessionmaker[Session]) -> None:
     uid, pid = _com_plano(fabrica, A)
-    resposta = _cliente(fabrica).get(ligacao.url(_token(TipoDescarga.PDF, uid, A.sub, pid)))
+    cliente = _cliente(fabrica)
+    caminho = ligacao.url(_token(TipoDescarga.PDF, uid, A.sub, pid))
+    pagina = cliente.get(caminho)
+    assert pagina.status_code == 200
+    assert pagina.headers["content-type"].startswith("text/html")
+    assert pagina.headers["cache-control"] == "no-store"
+    textos = textos_descarregar()
+    assert textos.voltar in pagina.text and 'href="/plano"' in pagina.text
+    assert textos.a_preparar in pagina.text and textos.pdf_botao in pagina.text
+    assert "navigator.share" in pagina.text and "%PDF" not in pagina.text
+    assert _contagem(fabrica, g.TipoContagem.PDF_DESCARREGADO) == 1
+    resposta = cliente.get(_ficheiro(caminho))
     assert resposta.status_code == 200
     assert resposta.headers["content-type"] == "application/pdf"
     assert resposta.headers["content-disposition"].startswith('inline; filename="vigoria_plano_')
     assert resposta.headers["cache-control"] == "no-store"
     assert resposta.content.startswith(b"%PDF")
-    assert _contagem(fabrica, g.TipoContagem.PDF_DESCARREGADO) == 1
+    assert _contagem(fabrica, g.TipoContagem.PDF_DESCARREGADO) == 1  # o ficheiro não conta
 
 
-def test_dados_em_json(fabrica: sessionmaker[Session]) -> None:
+def test_dados_na_pagina_e_em_json(fabrica: sessionmaker[Session]) -> None:
     uid, _ = _com_plano(fabrica, A)
-    resposta = _cliente(fabrica).get(ligacao.url(_token(TipoDescarga.DADOS, uid, A.sub)))
+    cliente = _cliente(fabrica)
+    caminho = ligacao.url(_token(TipoDescarga.DADOS, uid, A.sub))
+    pagina = cliente.get(caminho)
+    assert pagina.status_code == 200
+    assert textos_descarregar().voltar in pagina.text and 'href="/conta"' in pagina.text
+    assert "<pre>" not in pagina.text and A.email not in pagina.text
+    resposta = cliente.get(_ficheiro(caminho))
     assert resposta.status_code == 200
     assert resposta.headers["content-type"].startswith("application/json")
     assert json.loads(resposta.content)["conta"]["email"] == A.email
     assert _contagem(fabrica, g.TipoContagem.DADOS_DESCARREGADOS) == 1
+
+
+def test_script_sem_fecho_de_script() -> None:
+    from vigoria.web.descarregar import _json_no_script
+
+    texto = _json_no_script({"x": "</script><!--&"})
+    assert "<" not in texto and ">" not in texto and "&" not in texto
+    assert json.loads(texto) == {"x": "</script><!--&"}
 
 
 def test_a_nunca_descarrega_o_plano_de_b(fabrica: sessionmaker[Session]) -> None:
@@ -166,6 +195,10 @@ def test_a_nunca_descarrega_o_plano_de_b(fabrica: sessionmaker[Session]) -> None
     _, plano_b = _com_plano(fabrica, B)
     resposta = _cliente(fabrica).get(ligacao.url(_token(TipoDescarga.PDF, a, A.sub, plano_b)))
     assert resposta.status_code == 400 and b"%PDF" not in resposta.content
+    ficheiro = _cliente(fabrica).get(
+        _ficheiro(ligacao.url(_token(TipoDescarga.PDF, a, A.sub, plano_b)))
+    )
+    assert ficheiro.status_code == 400 and b"%PDF" not in ficheiro.content
     assert _contagem(fabrica, g.TipoContagem.PDF_DESCARREGADO) == 0
 
 
@@ -175,7 +208,9 @@ def test_ligacao_expirada_ou_sem_segredo(fabrica: sessionmaker[Session]) -> None
     tarde = AGORA + ligacao.VALIDADE + timedelta(minutes=1)
     expirada = _cliente(fabrica, agora=tarde).get(caminho)
     assert expirada.status_code == 410
-    assert "30 minutos" in expirada.text and "OK" in expirada.text
+    assert "30 minutos" in expirada.text
+    assert textos_descarregar().voltar in expirada.text
+    assert _cliente(fabrica, agora=tarde).get(_ficheiro(caminho)).status_code == 410
     assert _cliente(fabrica, _config(None)).get(caminho).status_code == 400
     assert _cliente(fabrica).get("/descarregar?t=lixo").status_code == 400
 

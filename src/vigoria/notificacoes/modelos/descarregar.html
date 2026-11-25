@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>$titulo · Vigoria</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+  body { margin: 0; background: $cor_fundo; color: $cor_texto;
+         font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .barra { position: sticky; top: 0; z-index: 1; background: $cor_principal_profundo;
+           padding: calc(.5rem + env(safe-area-inset-top)) 1rem .5rem; }
+  .barra a { display: inline-flex; align-items: center; gap: .5rem; min-height: 48px;
+             color: $cor_branco; font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+  main { max-width: 34rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .cartao { background: $cor_cartao; border: 1px solid $cor_borda; border-radius: 12px;
+            padding: 1.5rem; }
+  h1 { color: $cor_principal_profundo; font-size: 1.6rem; margin: 0 0 1rem; }
+  p { margin: 0 0 1rem; }
+  button { width: 100%; min-height: 52px; border: 0; border-radius: 10px; cursor: pointer;
+           background: $cor_principal; color: $cor_branco; font: inherit; font-weight: 700; }
+  button:disabled { opacity: .6; cursor: default; }
+  button:focus-visible, a:focus-visible { outline: 3px solid $cor_principal_profundo;
+                                         outline-offset: 2px; }
+  .barra a:focus-visible { outline-color: $cor_branco; }
+  a { color: $cor_principal; }
+  .nota { color: $cor_texto_secundario; font-size: 1rem; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<header class="barra">
+  <a id="voltar" href="$voltar_url"><span aria-hidden="true">←</span> $voltar</a>
+</header>
+<main>
+  <div class="cartao">
+    <h1>$titulo</h1>
+    $conteudo
+  </div>
+</main>
+<script>
+  // Voltar: o ecrã de onde se veio (a app instalada abre esta página na mesma janela).
+  document.getElementById("voltar").addEventListener("click", function (e) {
+    if (history.length > 1) { e.preventDefault(); history.back(); }
+  });
+</script>
+$script
+</body>
+</html>

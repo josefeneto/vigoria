@@ -187,8 +187,9 @@ def descarga(
 
     Na app instalada no ecrã principal, o iPhone abre o ficheiro descarregado por cima
     da app, sem forma de voltar. Aí (CSS, display-mode: standalone) o botão esconde-se e
-    aparece uma ligação para /descarregar (web/descarregar.py), que abre no Safari por
-    cima da app, com «OK». Só em produção: em local, o Caddy não existe.
+    aparece uma ligação para /descarregar (web/descarregar.py), uma página com a barra
+    «Voltar à Vigoria» e o menu de partilha do telemóvel. Só em produção: em local, o Caddy
+    não existe.
     """
     configuracao = config.obter_configuracao()
     segredo = configuracao.vigoria_segredo_lembretes

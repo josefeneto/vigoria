@@ -1,9 +1,9 @@
 """Ligação curta para descarregar o plano (PDF) ou os dados (JSON) na app instalada (25/11/2026).
 
 No iPhone, com a Vigoria instalada no ecrã principal, um ficheiro descarregado abre por cima
-da app sem forma de voltar. Por isso, aí, o botão abre /descarregar?t=… no Safari por cima
-da app (com «OK»), servido pelo Starlette (web/cancelar.py). O endereço não leva sessão:
-leva este token.
+da app sem forma de voltar. Por isso, aí, o botão abre /descarregar?t=… (na mesma janela
+da app, numa página com a barra «Voltar à Vigoria»), servido pelo Starlette
+(web/cancelar.py). O endereço não leva sessão: leva este token.
 
 Token = «tipo.id.plano.expira.assinatura»: tipo («pdf» ou «dados»), id do utilizador, id do
 plano (0 nos dados), fim da validade (segundos Unix, UTC) e HMAC-SHA256 sobre

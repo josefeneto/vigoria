@@ -1,11 +1,25 @@
-# Descarregar na app instalada (25/11/2026; vigoria/web/descarregar.py): só aparece quando a
-# ligação não serve. {minutos}: a validade (exportacao/ligacao.py, VALIDADE).
+# Descarregar na app instalada (vigoria/web/descarregar.py; modelo em descarregar.html).
+# A app instalada abre /descarregar na mesma janela, sem botão de voltar: por isso a página
+# tem sempre a barra «Voltar à Vigoria» e o ficheiro vai pelo menu de partilha do telemóvel.
+# {minutos}: a validade (exportacao/ligacao.py, VALIDADE).
 titulo: Descarregar
+voltar: Voltar à Vigoria
 invalida: >-
   Esta ligação não é válida ou já não corresponde a nenhum plano. Volte à Vigoria e carregue de
   novo no botão para descarregar.
 expirada: >-
   Esta ligação expirou: vale {minutos} minutos. Volte à Vigoria e carregue de novo no botão para
   descarregar.
-voltar: Toque em «OK», no canto de cima, para voltar à Vigoria.
-inicio: Ir para o Início
+pdf_titulo: O seu plano em PDF
+pdf_texto: >-
+  Carregue no botão para guardar o PDF no telemóvel (por exemplo, em Ficheiros), abri-lo noutra
+  app ou enviá-lo por email ou mensagem.
+pdf_botao: Guardar ou enviar o PDF
+dados_titulo: Os seus dados
+dados_texto: >-
+  São os dados da sua conta, em formato técnico (JSON). Carregue no botão para os guardar no
+  telemóvel (por exemplo, em Ficheiros) ou enviar por email ou mensagem.
+dados_botao: Guardar ou enviar o ficheiro
+a_preparar: A preparar o ficheiro…
+erro: Não foi possível preparar o ficheiro. Volte à Vigoria e tente de novo.
+nota: Quando terminar, carregue em «Voltar à Vigoria», no topo.
