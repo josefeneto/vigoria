@@ -90,7 +90,8 @@ _VIDEO = """<div class="v-video" data-auto="%(auto)s" style="background-image:ur
     // Cada vídeo só se descarrega quando o anterior começa (poupa dados no telemóvel).
     videos.forEach((video) => video.addEventListener("playing", () => {
       const v = videos[(videos.indexOf(video) + 1) %% videos.length];
-      if (v && v.preload === "none") { v.preload = "auto"; v.load(); }
+      // Nunca o próprio (um só vídeo, nos cartões do plano): o load() parava-o logo ao começar.
+      if (v && v !== video && v.preload === "none") { v.preload = "auto"; v.load(); }
     }));
     botao.addEventListener("click", () => {
       if (atual.paused) { tocar(atual); } else { atual.pause(); mostrar(false); }

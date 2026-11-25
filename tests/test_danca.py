@@ -360,6 +360,8 @@ def test_video_da_danca_sem_som_em_ciclo_e_menos_movimento() -> None:
     assert "prefers-reduced-motion" in html
     # No plano, parado na capa até um toque: o botão começa em «Ver» (25/11/2026).
     assert 'data-auto="0"' in html and ">Ver</button>" in html
+    # Um só vídeo: ao começar, não se recarrega a si próprio (parava logo; 25/11/2026).
+    assert 'v !== video && v.preload === "none"' in html
 
 
 def test_video_da_danca_sem_ficheiros(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
