@@ -186,6 +186,7 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 | `VIGORIA_ACESSO` | `convidados` (só entram os emails da linha seguinte; ver o passo 9) |
 | `VIGORIA_EMAILS_PERMITIDOS` | os emails do beta, separados por vírgulas |
 | `VIGORIA_PLANOS_POR_DIA` | `3` (opcional: é o valor por omissão; `0` = sem limite) |
+| `VIGORIA_ADMINS` | o teu `sub` do Auth0 (ver «Página Gestão», no passo 9); vazio: ninguém vê a Gestão |
 | `VIGORIA_SEGREDO_LEMBRETES` | secreto **novo** (ver abaixo) |
 | `AUTH_REDIRECT_URI` | `https://app.vigoria.pt/oauth2callback` |
 | `AUTH_COOKIE_SECRET` | secreto **novo** (ver abaixo) |
@@ -280,6 +281,16 @@ No Auth0, em *Branding → Universal Login → Customization Options*:
 2. Para acrescentar ou retirar um convidado, edita `VIGORIA_EMAILS_PERMITIDOS` **nos dois serviços** (web e `lembretes`) e carrega em *Deploy* em cada um para aplicar. O email tem de ser o da conta com que a pessoa entra (o do Google, se entrar com Google).
 3. Quem não está na lista vê «A Vigoria está em fase de testes, apenas por convite. Se quiser participar, escreva para geral@vigoria.pt.» e não fica com nenhum registo na base de dados.
 4. Confirma a lista «A CONFIRMAR», abaixo.
+
+### Página Gestão (números e lista de contas)
+
+Só as contas em `VIGORIA_ADMINS` (serviço web) veem, no menu «Conta», a página **Gestão**, com os totais (contas, pessoas com plano, planos gerados, descargas) e a lista de emails (com CSV). Essas contas também não têm o limite diário de planos. Para os outros, a página não existe.
+
+1. Descobre o teu `sub`: no Auth0 (tenant de produção), *User Management → Users*, abre a tua conta e copia o *user_id* (por exemplo, `google-oauth2|1234567890`). Se entras com Google e com email, são duas contas, cada uma com o seu `sub`.
+2. No Railway, serviço web, *Variables*: `VIGORIA_ADMINS` = esse `sub` (vários, separados por vírgulas). Carrega em *Deploy*.
+3. Na app, entra com essa conta: «Conta → Gestão». Também funciona em `https://app.vigoria.pt/gestao`.
+
+Em local, para ver a página com o utilizador fictício, põe `VIGORIA_ADMINS=local|desenvolvimento` no teu `.env`. Os números de local são os do SQLite do PC, não os de produção.
 5. Faz os testes manuais (passo 10).
 
 ### Passar a beta aberto

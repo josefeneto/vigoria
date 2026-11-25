@@ -445,7 +445,7 @@ def _decisoes(q: Questionario) -> bool:
 def _limite_atingido() -> bool:
     """Já chegou ao limite de planos de hoje? Se a base de dados falhar, não bloqueia."""
     limite = obter_configuracao().vigoria_planos_por_dia
-    if limite == 0:
+    if limite == 0 or sessao.e_admin():
         return False
     try:
         with sessao.fabrica().begin() as s:

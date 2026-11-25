@@ -106,6 +106,13 @@ if isinstance(entrada, int):
         "sair": st.Page(_sair, title=t.PAGINAS["sair"], icon=":material/logout:", url_path="sair"),
         "cancelar_lembretes": cancelar_lembretes,
     }
+    if sessao.e_admin():  # só para VIGORIA_ADMINS: para os outros, o endereço nem existe
+        nomeadas["gestao"] = st.Page(
+            comum.PAGINA_GESTAO,
+            title=t.PAGINAS["gestao"],
+            icon=":material/insights:",
+            url_path="gestao",
+        )
     paginas = list(nomeadas.values())
 else:
     paginas = [inicio, ajuda, privacidade, cancelar_lembretes]

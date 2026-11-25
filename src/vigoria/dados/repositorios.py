@@ -15,6 +15,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from vigoria.contas.entrada import Identidade
+from vigoria.dados.gestao import TipoContagem, contar
 from vigoria.dados.tabelas import (
     Consentimento,
     GeracaoPlano,
@@ -139,6 +140,7 @@ def entrar(s: Session, identidade: Identidade) -> Utilizador | Recusa:
         )
         s.add(utilizador)
         s.flush()
+        contar(s, TipoContagem.CONTA_CRIADA)
     elif utilizador.email != identidade.email and outro is None:
         utilizador.email = identidade.email  # mudou o email no Auth0
     return utilizador
@@ -231,6 +233,7 @@ def guardar_plano(
         )
         utilizador.lembretes_email = questionario.respostas.get("lembretes_email", True)
     s.flush()
+    contar(s, TipoContagem.PLANO_GERADO)
     return _plano_da_conta(s, linha)
 
 

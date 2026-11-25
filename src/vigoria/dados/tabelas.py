@@ -133,3 +133,15 @@ class LembreteEnviado(Base):
     semana_fim: Mapped[int] = mapped_column(Integer)
     numero: Mapped[int] = mapped_column(Integer)  # 1 ou 2
     enviado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
+
+
+class ContagemDiaria(Base):
+    """Quantas vezes aconteceu cada coisa em cada dia de Lisboa (25/11/2026): contas criadas,
+    planos gerados, PDF e dados descarregados. Sem utilizador nem nada pessoal: não se apaga
+    com as contas, por isso os totais acumulados não descem (página Gestão)."""
+
+    __tablename__ = "contagem_diaria"
+
+    dia: Mapped[date] = mapped_column(Date, primary_key=True)
+    tipo: Mapped[str] = mapped_column(String(30), primary_key=True)
+    total: Mapped[int] = mapped_column(Integer, default=0)

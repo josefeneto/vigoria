@@ -83,6 +83,9 @@ class Configuracao(BaseSettings):
     vigoria_acesso: Literal["convidados", "aberto"] = "convidados"
     # Lista de convidados: emails separados por vírgulas.
     vigoria_emails_permitidos: Annotated[frozenset[str], NoDecode] = frozenset()
+    # Contas de administração (25/11/2026): o `sub` do login (nunca o email), separados por
+    # vírgulas. Veem a página Gestão e não têm o limite de planos por dia.
+    vigoria_admins: Annotated[frozenset[str], NoDecode] = frozenset()
 
     @classmethod
     def settings_customise_sources(
@@ -113,6 +116,16 @@ class Configuracao(BaseSettings):
             valor = re.split(r"[,;\n]", valor)
         if isinstance(valor, (list, tuple, set, frozenset)):
             return frozenset(normalizar_email(str(e)) for e in valor if str(e).strip())
+        return valor
+
+    @field_validator("vigoria_admins", mode="before")
+    @classmethod
+    def _lista_de_subs(cls, valor: object) -> object:
+        """«google-oauth2|123, auth0|abc» → conjunto (sem vazios). O «|» faz parte do `sub`."""
+        if isinstance(valor, str):
+            valor = re.split(r"[,;\n]", valor)
+        if isinstance(valor, (list, tuple, set, frozenset)):
+            return frozenset(str(x).strip() for x in valor if str(x).strip())
         return valor
 
     @field_validator("vigoria_segredo_lembretes", mode="after")

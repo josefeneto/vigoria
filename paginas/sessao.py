@@ -92,6 +92,12 @@ def utilizador_id() -> int:
     return st.session_state[UTILIZADOR][1]
 
 
+def e_admin() -> bool:
+    """Conta de administração (VIGORIA_ADMINS, pelo `sub`): vê a Gestão, sem limite diário."""
+    guardado = st.session_state.get(UTILIZADOR)
+    return guardado is not None and guardado[0] in obter_configuracao().vigoria_admins
+
+
 def base_indisponivel(erro: OperationalError) -> NoReturn:
     """Base de dados sem resposta (o Neon a acordar, rede): mensagem clara em vez de rodar."""
     registo.warning("base de dados indisponível: %s", type(erro.orig).__name__)

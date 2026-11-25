@@ -44,6 +44,7 @@ PAGINAS = {
     "privacidade": "Privacidade",
     "ajuda": "Ajuda",
     "cancelar_lembretes": "Lembretes por email",
+    "gestao": "Gestão",
 }
 
 # Ajuda (Fase 8B): as perguntas e respostas estão em src/vigoria/conteudo/ajuda.yaml.
@@ -890,3 +891,35 @@ def mensagem_erro(erro: ErroCampo) -> str:
 
 def _n(valor: float) -> str:
     return f"{valor:g}".replace(".", ",")
+
+
+# ---------------------------------------------------------------- Gestão (25/11/2026)
+# Só para as contas de VIGORIA_ADMINS (paginas/gestao.py).
+
+GESTAO_INTRO = (
+    "Só as contas de administração veem esta página. Os totais de contas criadas, planos e "
+    "descargas não descem quando alguém apaga a conta; as contas registadas são as que existem "
+    "hoje."
+)
+GESTAO_NUMEROS = "Números"
+GESTAO_ROTULOS = {
+    "contas_ativas": "Contas registadas (hoje)",
+    "com_plano": "Pessoas com plano (questionário até ao fim)",
+    "conta_criada": "Contas criadas (acumulado)",
+    "plano_gerado": "Planos gerados (acumulado)",
+    "pdf_descarregado": "Descargas do plano em PDF",
+    "dados_descarregados": "Descargas dos dados (JSON)",
+}
+GESTAO_PERIODOS = "Últimos 7 dias: {d7} · últimos 30 dias: {d30}"
+GESTAO_SEM_PERIODO = "Número de hoje, sem histórico por dia."
+GESTAO_CONTAS = "Contas registadas"
+GESTAO_CONTAS_NOTA = (
+    "Use esta lista só para gerir o serviço: enviar publicidade exige um consentimento à parte "
+    "(RGPD)."
+)
+GESTAO_COLUNAS = ("Email", "Entrada", "Criada em", "Planos")
+GESTAO_FORNECEDORES = {"google-oauth2": "Google", "auth0": "Email e palavra-passe"}
+GESTAO_CSV = "Descarregar a lista (CSV)"
+GESTAO_CSV_FICHEIRO = "vigoria-contas-{data}.csv"
+GESTAO_SEM_CONTAS = "Ainda não há contas."
+GESTAO_ERRO = "Não foi possível ler os números agora. Tente de novo daqui a pouco."

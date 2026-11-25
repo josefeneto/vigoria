@@ -1,5 +1,6 @@
 """Apoio comum às páginas: estado da sessão, erros junto aos campos e avisos do plano."""
 
+import logging
 from collections.abc import Callable
 from datetime import UTC, date, datetime
 from functools import partial
@@ -14,6 +15,7 @@ from paginas import textos as t
 from vigoria import config
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.dados import repositorios
+from vigoria.dados.gestao import TipoContagem, contar
 from vigoria.exportacao.pdf import plano_pdf
 from vigoria.interface.estado import PREFIXO, chave, estado_inicial, para_estado, para_respostas
 from vigoria.interface.passos import CAMPOS, respostas_de_questionario
@@ -35,6 +37,9 @@ PAGINA_PRIVACIDADE = "paginas/privacidade.py"
 PAGINA_CONTA = "paginas/conta.py"
 PAGINA_CANCELAR_LEMBRETES = "paginas/cancelar_lembretes.py"
 PAGINA_AJUDA = "paginas/ajuda.py"
+PAGINA_GESTAO = "paginas/gestao.py"
+
+registo = logging.getLogger(__name__)
 
 
 def rodape() -> None:
@@ -148,6 +153,26 @@ def avisos(plano: Plano, chave: str) -> None:
 # ---------------------------------------------------------------- Plano em PDF
 
 
+def _gerar_e_contar(
+    gerar: Callable[[], bytes], fabrica: sessionmaker[Session], tipo: TipoContagem
+) -> bytes:
+    """Gera o ficheiro e soma uma descarga (sem quem). Se a contagem falhar, o ficheiro segue."""
+    dados = gerar()
+    if dados:
+        try:
+            with fabrica.begin() as s:
+                contar(s, tipo)
+        except Exception as e:  # sem o conteúdo: só o tipo do erro
+            registo.warning("descarga não contada: %s", type(e).__name__)
+    return dados
+
+
+def contado(gerar: Callable[[], bytes], tipo: TipoContagem) -> Callable[[], bytes]:
+    """Para o `data` de st.download_button: corre ao carregar no botão, noutra thread, por
+    isso a fábrica da base de dados é lida já aqui."""
+    return partial(_gerar_e_contar, gerar, sessao.fabrica(), tipo)
+
+
 def _pdf_guardado(fabrica: sessionmaker[Session], utilizador_id: int, plano_id: int) -> bytes:
     """Lê o plano da conta e gera o PDF (corre fora do script, ao carregar no botão)."""
     with fabrica.begin() as s:
@@ -182,7 +207,7 @@ def botao_pdf(
     dia = criado_em.astimezone(ZoneInfo("Europe/Lisbon")).date().isoformat()
     st.download_button(
         t.DESCARREGAR_PDF,
-        data=gerar,
+        data=contado(gerar, TipoContagem.PDF_DESCARREGADO),
         file_name=t.PDF_FICHEIRO.format(data=dia),
         mime="application/pdf",
         icon=":material/picture_as_pdf:",

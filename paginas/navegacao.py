@@ -26,9 +26,10 @@ ICONES = {
     "conta": ":material/person:",
     "privacidade": ":material/policy:",
     "sair": ":material/logout:",
+    "gestao": ":material/insights:",
 }
 PRINCIPAIS = ("inicio", "plano", "progresso")  # a Ajuda está no menu «Conta»
-NO_MENU_CONTA = ("conta", "ajuda", "privacidade", "sair")
+NO_MENU_CONTA = ("conta", "gestao", "ajuda", "privacidade", "sair")  # gestão: só administração
 
 
 def _chave(nome: str, ativa: bool) -> str:
@@ -53,7 +54,7 @@ def desenhar(atual: StreamlitPage, paginas: Mapping[str, StreamlitPage] | None) 
                 st.container(key=_chave("conta", conta_ativa)),
                 st.popover(t.NAV["conta"], icon=ICONES["conta"], key="nav_conta_menu"),
             ):
-                for nome in NO_MENU_CONTA:
+                for nome in (n for n in NO_MENU_CONTA if n in paginas):
                     st.page_link(
                         paginas[nome], label=t.PAGINAS[nome], icon=ICONES[nome], width="stretch"
                     )

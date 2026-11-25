@@ -7,6 +7,8 @@ dados já foram apagados e o `sub` fica registado para o José apagar à mão (c
 """
 
 import json
+from functools import partial
+from typing import Any
 
 import streamlit as st
 
@@ -15,6 +17,7 @@ from paginas import textos as t
 from vigoria.config import obter_auth0, obter_configuracao
 from vigoria.contas.auth0 import apagar_conta_auth0
 from vigoria.dados import repositorios
+from vigoria.dados.gestao import TipoContagem
 from vigoria.modelos.questionario import FrequenciaRegisto
 
 CONFIRMA = "conta_apagar_confirma"
@@ -23,6 +26,10 @@ APAGAR_PLANO = "conta_apagar_plano"  # id do plano à espera de confirmação
 ACOMPANHAMENTO_ATIVO = "conta_acompanhamento_ativo"
 FREQUENCIA = "conta_frequencia"
 LEMBRETES_EMAIL = "conta_lembretes_email"
+
+
+def _json(dados: dict[str, Any]) -> bytes:
+    return json.dumps(dados, ensure_ascii=False, indent=2).encode("utf-8")
 
 
 def _abrir(plano_id: int) -> None:
@@ -165,7 +172,10 @@ st.subheader(t.CONTA_EXPORTAR_TITULO)
 st.write(t.CONTA_EXPORTAR_TEXTO)
 st.download_button(
     t.CONTA_EXPORTAR,
-    data=json.dumps(dados, ensure_ascii=False, indent=2),
+    data=comum.contado(
+        partial(_json, dados),
+        TipoContagem.DADOS_DESCARREGADOS,
+    ),
     file_name=t.CONTA_EXPORTAR_FICHEIRO,
     mime="application/json",
     icon=":material/download:",
