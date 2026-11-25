@@ -34,8 +34,12 @@
 		file_server
 	}
 
-	# Cancelamento dos lembretes num clique (RFC 8058, Fase 10B): serviço Starlette.
+	# Cancelamento dos lembretes num clique (RFC 8058, Fase 10B) e descargas na app
+	# instalada (25/11/2026): serviço Starlette.
 	handle /cancelar {
+		reverse_proxy 127.0.0.1:8001
+	}
+	handle /descarregar {
 		reverse_proxy 127.0.0.1:8001
 	}
 

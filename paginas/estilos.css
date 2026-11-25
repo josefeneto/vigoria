@@ -484,3 +484,13 @@ body:has(.st-key-faixa_topo) [data-testid="stMainBlockContainer"] > [data-testid
 .v-atividade-ligacoes a { color: var(--v-principal); text-decoration: underline; font-weight: 700; }
 .v-atividade-canal { color: var(--v-texto-secundario); font-size: .95rem; }
 .v-atividade-nota { color: var(--v-texto-secundario); font-size: .95rem; }
+
+/* ---- Descarregar na app instalada (25/11/2026, comum.descarga). No iPhone, com a app no ecrã
+   principal, um ficheiro descarregado abre por cima da app sem forma de voltar: aí mostra-se a
+   ligação (abre no Safari, com «OK») e esconde-se o botão. No navegador, o contrário. */
+@media not all and (display-mode: standalone) {
+  [class*="st-key-descarga_app_"] { display: none; }
+}
+@media (display-mode: standalone) {
+  [class*="st-key-descarga_navegador_"] { display: none; }
+}

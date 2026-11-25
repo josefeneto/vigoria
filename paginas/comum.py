@@ -16,6 +16,8 @@ from vigoria import config
 from vigoria.conteudo.carregar import carregar_avisos
 from vigoria.dados import repositorios
 from vigoria.dados.gestao import TipoContagem, contar
+from vigoria.exportacao import ligacao
+from vigoria.exportacao.ligacao import TipoDescarga
 from vigoria.exportacao.pdf import plano_pdf
 from vigoria.interface.estado import PREFIXO, chave, estado_inicial, para_estado, para_respostas
 from vigoria.interface.passos import CAMPOS, respostas_de_questionario
@@ -173,6 +175,35 @@ def contado(gerar: Callable[[], bytes], tipo: TipoContagem) -> Callable[[], byte
     return partial(_gerar_e_contar, gerar, sessao.fabrica(), tipo)
 
 
+def descarga(
+    chave: str,
+    tipo: TipoDescarga,
+    botao: Callable[[], None],
+    rotulo: str,
+    icone: str,
+    plano_id: int = 0,
+) -> None:
+    """O botão de descarregar e, em produção, a alternativa para a app instalada.
+
+    Na app instalada no ecrã principal, o iPhone abre o ficheiro descarregado por cima
+    da app, sem forma de voltar. Aí (CSS, display-mode: standalone) o botão esconde-se e
+    aparece uma ligação para /descarregar (web/descarregar.py), que abre no Safari por
+    cima da app, com «OK». Só em produção: em local, o Caddy não existe.
+    """
+    configuracao = config.obter_configuracao()
+    segredo = configuracao.vigoria_segredo_lembretes
+    if configuracao.ambiente != "producao" or segredo is None:
+        botao()
+        return
+    with st.container(key=f"descarga_navegador_{chave}"):
+        botao()
+    token = ligacao.gerar(
+        tipo, sessao.utilizador_id(), sessao.sub(), segredo, datetime.now(UTC), plano_id
+    )
+    with st.container(key=f"descarga_app_{chave}"):
+        st.link_button(rotulo, ligacao.url(token), icon=icone)
+
+
 def _pdf_guardado(fabrica: sessionmaker[Session], utilizador_id: int, plano_id: int) -> bytes:
     """Lê o plano da conta e gera o PDF (corre fora do script, ao carregar no botão)."""
     with fabrica.begin() as s:
@@ -193,7 +224,8 @@ def botao_pdf(
     """«Descarregar o plano (PDF)». O PDF só se gera quando a pessoa carrega no botão.
 
     Com `plano` (e a `idade` do questionário), o que está em memória; com `plano_id`,
-    lê-o da conta desta sessão.
+    lê-o da conta desta sessão. O `plano_id` também serve a ligação da app instalada
+    (`descarga`); sem ele (plano por guardar), fica só o botão.
     """
     gerar: Callable[[], bytes]
     if plano is not None:
@@ -205,12 +237,27 @@ def botao_pdf(
     if criado_em.tzinfo is None:
         criado_em = criado_em.replace(tzinfo=UTC)
     dia = criado_em.astimezone(ZoneInfo("Europe/Lisbon")).date().isoformat()
-    st.download_button(
+    dados = contado(gerar, TipoContagem.PDF_DESCARREGADO)
+
+    def botao() -> None:
+        st.download_button(
+            t.DESCARREGAR_PDF,
+            data=dados,
+            file_name=t.PDF_FICHEIRO.format(data=dia),
+            mime="application/pdf",
+            icon=":material/picture_as_pdf:",
+            key=chave,
+            on_click="ignore",
+        )
+
+    if not plano_id:  # plano só em memória (não ficou guardado): só o botão
+        botao()
+        return
+    descarga(
+        chave,
+        TipoDescarga.PDF,
+        botao,
         t.DESCARREGAR_PDF,
-        data=contado(gerar, TipoContagem.PDF_DESCARREGADO),
-        file_name=t.PDF_FICHEIRO.format(data=dia),
-        mime="application/pdf",
-        icon=":material/picture_as_pdf:",
-        key=chave,
-        on_click="ignore",
+        ":material/picture_as_pdf:",
+        plano_id,
     )

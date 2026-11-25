@@ -416,6 +416,7 @@ with st.container(key="plano_titulo", horizontal=True, vertical_alignment="cente
         resultado.criado_em,
         plano=plano,
         idade=getattr(resultado, "idade", None),
+        plano_id=getattr(resultado, "id", 0) or None,
         chave="plano_pdf",
     )
 if st.session_state.get(comum.ERRO_GUARDAR):

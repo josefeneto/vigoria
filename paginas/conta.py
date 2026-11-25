@@ -18,6 +18,7 @@ from vigoria.config import obter_auth0, obter_configuracao
 from vigoria.contas.auth0 import apagar_conta_auth0
 from vigoria.dados import repositorios
 from vigoria.dados.gestao import TipoContagem
+from vigoria.exportacao.ligacao import TipoDescarga
 from vigoria.modelos.questionario import FrequenciaRegisto
 
 CONFIRMA = "conta_apagar_confirma"
@@ -170,17 +171,20 @@ st.toggle(
 
 st.subheader(t.CONTA_EXPORTAR_TITULO)
 st.write(t.CONTA_EXPORTAR_TEXTO)
-st.download_button(
-    t.CONTA_EXPORTAR,
-    data=comum.contado(
-        partial(_json, dados),
-        TipoContagem.DADOS_DESCARREGADOS,
-    ),
-    file_name=t.CONTA_EXPORTAR_FICHEIRO,
-    mime="application/json",
-    icon=":material/download:",
-    width="stretch",
-)
+
+
+def _botao_dados() -> None:
+    st.download_button(
+        t.CONTA_EXPORTAR,
+        data=comum.contado(partial(_json, dados), TipoContagem.DADOS_DESCARREGADOS),
+        file_name=t.CONTA_EXPORTAR_FICHEIRO,
+        mime="application/json",
+        icon=":material/download:",
+        width="stretch",
+    )
+
+
+comum.descarga("dados", TipoDescarga.DADOS, _botao_dados, t.CONTA_EXPORTAR, ":material/download:")
 
 st.subheader(t.CONTA_APAGAR_TITULO)
 st.write(t.CONTA_APAGAR_TEXTO)

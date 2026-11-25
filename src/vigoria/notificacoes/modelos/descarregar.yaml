@@ -1,0 +1,11 @@
+# Descarregar na app instalada (25/11/2026; vigoria/web/descarregar.py): só aparece quando a
+# ligação não serve. {minutos}: a validade (exportacao/ligacao.py, VALIDADE).
+titulo: Descarregar
+invalida: >-
+  Esta ligação não é válida ou já não corresponde a nenhum plano. Volte à Vigoria e carregue de
+  novo no botão para descarregar.
+expirada: >-
+  Esta ligação expirou: vale {minutos} minutos. Volte à Vigoria e carregue de novo no botão para
+  descarregar.
+voltar: Toque em «OK», no canto de cima, para voltar à Vigoria.
+inicio: Ir para o Início

@@ -92,6 +92,11 @@ def utilizador_id() -> int:
     return st.session_state[UTILIZADOR][1]
 
 
+def sub() -> str:
+    """O `sub` desta sessão (nas páginas que só existem com sessão iniciada)."""
+    return st.session_state[UTILIZADOR][0]
+
+
 def e_admin() -> bool:
     """Conta de administração (VIGORIA_ADMINS, pelo `sub`): vê a Gestão, sem limite diário."""
     guardado = st.session_state.get(UTILIZADOR)

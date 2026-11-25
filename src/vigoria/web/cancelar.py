@@ -1,4 +1,5 @@
-"""Cancelamento dos lembretes num clique (RFC 8058), em produção (Fase 10B).
+"""Cancelamento dos lembretes num clique (RFC 8058), em produção (Fase 10B), e, desde
+25/11/2026, as descargas na app instalada (/descarregar, web/descarregar.py).
 
 O Caddy encaminha /cancelar para aqui (uvicorn em 127.0.0.1:8001, docker/arrancar.sh):
 
@@ -21,14 +22,16 @@ from string import Template
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, Response
 from starlette.routing import Route
 
 from vigoria.config import Configuracao, obter_configuracao
 from vigoria.dados.bd import criar_motor, fabrica_sessoes
+from vigoria.exportacao.ligacao import CAMINHO as CAMINHO_DESCARREGAR
 from vigoria.notificacoes.cancelamento import cancelar_lembretes, estado_da_ligacao
 from vigoria.notificacoes.lembrete import CORES, modelo_cancelar, textos_cancelar, url_cancelar
 from vigoria.notificacoes.token import EstadoToken, id_do_token
+from vigoria.web.descarregar import descarregar as _descarregar
 
 registo = logging.getLogger(__name__)
 
@@ -101,4 +104,12 @@ def criar_app(
         )
         return _pagina(_paragrafo(t.pergunta) + formulario, 200)
 
-    return Starlette(routes=[Route(CAMINHO, cancelar, methods=["GET", "POST"])])
+    def descarregar(request: Request) -> Response:  # web/descarregar.py (25/11/2026)
+        return _descarregar(request, _fabrica(), _config(), relogio)
+
+    return Starlette(
+        routes=[
+            Route(CAMINHO, cancelar, methods=["GET", "POST"]),
+            Route(CAMINHO_DESCARREGAR, descarregar, methods=["GET"]),
+        ]
+    )
