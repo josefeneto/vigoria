@@ -136,7 +136,7 @@ def test_ao_chegar_ao_limite_nao_ha_botao_e_explica_porque(app: None) -> None:
     at = _no_passo_7()  # nova sessão, mesma conta, mesmo dia
     assert not at.exception
     assert t.GERAR not in [b.label for b in at.button]
-    assert t.LIMITE_DIARIO.format(n=1) in [i.value for i in at.info]
+    assert t.LIMITE_DIARIO.format(n=1) in [w.value for w in at.warning]  # aviso, não só info
 
 
 def test_texto_do_limite_sem_brasileirismos() -> None:

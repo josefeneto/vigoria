@@ -211,7 +211,6 @@ ALT_FOTO_PLANO = "Pessoa a fazer um alongamento de pernas no chão de uma sala d
 ALT_FOTO_FIM = (
     "Pessoa ao ar livre, à sombra de uma árvore, a beber água com um tapete debaixo do braço."
 )
-INICIO_SELO = "Para quem tem 45 anos ou mais"
 INICIO_DURACAO = (
     f"Responder ao questionário demora cerca de {MINUTOS_QUESTIONARIO} minutos, sem compromisso."
 )
@@ -561,7 +560,8 @@ A_PREPARAR = "A preparar o seu plano… pode demorar até 2 minutos."
 A_ESPERA = "Estamos a preparar o seu plano, pode demorar um minuto."
 # Fase 10D: VIGORIA_PLANOS_POR_DIA (dia de Lisboa).
 LIMITE_DIARIO = (
-    "Hoje já chegou ao máximo de planos por dia ({n}). Amanhã pode pedir outro; as suas "
+    "Hoje já chegou ao máximo de planos por dia ({n}), por isso não pode gerar um plano novo. "
+    "Pode pedir outro a partir da meia-noite (hora de Portugal continental); as suas "
     "respostas continuam aqui."
 )
 NAO_PODE_GERAR = "Não é possível preparar um plano com estas respostas."

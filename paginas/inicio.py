@@ -32,7 +32,7 @@ def _comecar(chave: str) -> None:
 with st.container(key="faixa_topo"):
     with st.container(key="topo_texto"):
         st.html(
-            componentes.selo(t.INICIO_SELO) + f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
+            f'<h1 class="v-promessa">{escape(t.PROMESSA)}</h1>'
             f'<p class="v-faixa-texto">{escape(t.INICIO_TEXTO)}</p>'
         )
     with st.container(key="topo_media"):

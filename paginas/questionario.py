@@ -538,7 +538,7 @@ def passo_7() -> None:
     pode = _decisoes(q)  # desenha as decisões: chamar uma só vez
     if pode and _limite_atingido():
         limite = obter_configuracao().vigoria_planos_por_dia
-        st.info(t.LIMITE_DIARIO.format(n=limite), icon=":material/event_busy:")
+        st.warning(t.LIMITE_DIARIO.format(n=limite), icon=":material/event_busy:")
     elif pode:
         st.button(
             t.GERAR,
