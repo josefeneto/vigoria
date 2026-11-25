@@ -201,7 +201,7 @@ def passo_0() -> None:
     for campo, rotulo in rotulos_consentimento(obter_configuracao().ambiente).items():
         st.checkbox(rotulo, width="stretch", **W(campo))
         comum.erro(campo)
-    st.page_link(comum.PAGINA_PRIVACIDADE, label=t.LER_PRIVACIDADE, icon=":material/policy:")
+    # A política de privacidade: na caixa dos termos e no rodapé (sem ligação repetida aqui).
 
 
 def passo_1() -> None:

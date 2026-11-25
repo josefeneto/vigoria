@@ -177,11 +177,12 @@ def test_rodape_sem_sessao(sem_sessao: None) -> None:
     assert _rodape(at)[0] == ["Privacidade", "Ajuda"]
 
 
-def test_consentimento_mantem_a_ligacao_a_privacidade(com_sessao: None) -> None:
+def test_consentimento_com_a_privacidade_so_nos_termos_e_no_rodape(com_sessao: None) -> None:
     at = AppTest.from_file(APP, default_timeout=30).run()
     at.switch_page("paginas/questionario.py").run()
-    rotulos = [p.proto.label for p in at.get("page_link")]
-    assert t.LER_PRIVACIDADE in rotulos
+    assert "Privacidade" in _rodape(at)[0]
+    assert any("(/privacidade)" in c.label for c in at.checkbox)
+    assert "Ler a política de privacidade" not in [p.proto.label for p in at.get("page_link")]
 
 
 def test_mensagens_sem_menu_tem_o_contacto() -> None:

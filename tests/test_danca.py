@@ -358,6 +358,8 @@ def test_video_da_danca_sem_som_em_ciclo_e_menos_movimento() -> None:
     assert "muted" in html and "playsinline" in html
     assert "autoplay" not in html  # só arranca por código, e não com «menos movimento»
     assert "prefers-reduced-motion" in html
+    # No plano, parado na capa até um toque: o botão começa em «Ver» (25/11/2026).
+    assert 'data-auto="0"' in html and ">Ver</button>" in html
 
 
 def test_video_da_danca_sem_ficheiros(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

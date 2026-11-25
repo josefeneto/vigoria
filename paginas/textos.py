@@ -262,7 +262,6 @@ CONSENTIMENTO_SAUDE_PRODUCAO = (
     "que podem tratar os dados nos Estados Unidos. Recebem só as respostas necessárias ao "
     "plano, sem o meu nome nem o meu email, e não as usam para treinar os seus modelos."
 )
-LER_PRIVACIDADE = "Ler a política de privacidade"
 AJUDA_TEXTO_LIVRE = "Não escreva o seu nome nem contactos."
 
 # ---------------------------------------------------------------- Passo 1

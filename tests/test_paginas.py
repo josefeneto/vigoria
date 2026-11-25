@@ -313,7 +313,11 @@ def test_inicio_em_faixas_com_video_e_dois_botoes() -> None:
     assert "Homem de cabelo grisalho" in html and "Mulher a fazer agachamentos" in html
     assert "mulheres a dançar" in html and "Tai Chi num parque" in html
     # A capa vem embutida como fundo da caixa: vê-se mesmo que o vídeo demore ou falhe.
-    assert 'class="v-video" style="background-image:url(data:image/webp;base64,' in html
+    assert (
+        'class="v-video" data-auto="1" style="background-image:url(data:image/webp;base64,' in html
+    )
+    # O botão segue o estado real do vídeo (o navegador pausa sozinho fora do ecrã).
+    assert 'addEventListener("pause"' in html and 'addEventListener("playing"' in html
     assert 'addEventListener("error"' in html
     assert " autoplay" not in html  # só arranca por código, se o sistema não pedir menos movimento
     assert "Como funciona" in html and "Pronto para começar?" in html

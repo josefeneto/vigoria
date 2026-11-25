@@ -41,7 +41,7 @@ CAPA_TAICHI = PASTA_VIDEO / "taichi_poster.jpg"
 # sai do ciclo e, sem nenhum, saem também o botão e os vídeos.
 _UM_VIDEO = """<video muted playsinline preload="%(preload)s" poster="%(poster)s"
  aria-label="%(descricao)s"><source src="app/static/video/%(nome)s.mp4" type="video/mp4"></video>"""
-_VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
+_VIDEO = """<div class="v-video" data-auto="%(auto)s" style="background-image:url(%(capa)s)">
 %(videos)s
 <button type="button" class="v-video-botao" data-pausar="%(pausar)s"
  data-reproduzir="%(reproduzir)s">%(reproduzir)s</button></div>
@@ -50,6 +50,7 @@ _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
   const menos = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll(".v-video:not([data-pronto])").forEach((caixa) => {
     caixa.dataset.pronto = "1";
+    const sozinho = !menos && caixa.dataset.auto === "1";  // arranca sem toque
     const botao = caixa.querySelector("button");
     let videos = [...caixa.querySelectorAll("video")];
     let atual = videos[0];
@@ -73,12 +74,18 @@ _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
       videos = videos.filter((v) => v !== video);
       video.remove();
       if (!videos.length) { botao.remove(); return; }
-      if (video === atual) { atual = videos[0]; visivel(atual); if (!menos) tocar(atual); }
+      if (video === atual) { atual = videos[0]; visivel(atual); if (sozinho) tocar(atual); }
     };
     videos.forEach((video) => {
       video.querySelector("source").addEventListener("error", () => falhou(video));
       video.addEventListener("error", () => falhou(video));
       video.addEventListener("ended", seguinte);
+      // O botão diz sempre o que o vídeo está a fazer (o navegador também pausa sozinho,
+      // por exemplo fora do ecrã ou em poupança de energia).
+      video.addEventListener("playing", () => { if (video === atual) mostrar(true); });
+      video.addEventListener("pause", () => {
+        if (video === atual && !video.ended) mostrar(false);
+      });
     });
     // Cada vídeo só se descarrega quando o anterior começa (poupa dados no telemóvel).
     videos.forEach((video) => video.addEventListener("playing", () => {
@@ -89,7 +96,7 @@ _VIDEO = """<div class="v-video" style="background-image:url(%(capa)s)">
       if (atual.paused) { tocar(atual); } else { atual.pause(); mostrar(false); }
     });
     visivel(atual);
-    if (!menos) tocar(atual);
+    if (sozinho) tocar(atual);
   });
 })();
 </script>"""
@@ -161,6 +168,7 @@ def video_topo(descricoes: tuple[str, ...], pausar: str, reproduzir: str) -> boo
             "videos": videos,
             "pausar": escape(pausar),
             "reproduzir": escape(reproduzir),
+            "auto": "1",
         },
         unsafe_allow_javascript=True,
     )
@@ -178,8 +186,8 @@ def video_taichi(descricao: str, pausar: str, reproduzir: str) -> str:
 def video_atividade(
     nome: str, capa_ficheiro: Path, descricao: str, pausar: str, reproduzir: str
 ) -> str:
-    """Vídeo do cartão de uma atividade opcional: sem som, em ciclo, com botão de pausa;
-    com «menos movimento», só a capa (o mesmo código do topo do início). Vazio sem ficheiros."""
+    """Vídeo do cartão de uma atividade opcional: sem som, em ciclo, parado na capa até um
+    toque em «Ver o vídeo» (o mesmo código do topo do início). Vazio sem ficheiros."""
     if not (PASTA_VIDEO / f"{nome}.mp4").exists() or not capa_ficheiro.exists():
         return ""
     capa = f"app/static/video/{capa_ficheiro.name}"
@@ -194,6 +202,7 @@ def video_atividade(
         "videos": um,
         "pausar": escape(pausar),
         "reproduzir": escape(reproduzir),
+        "auto": "0",  # no plano, só com um toque em «Ver o vídeo»
     }
 
 
