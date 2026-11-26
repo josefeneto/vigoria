@@ -69,6 +69,8 @@ ENTRAR_CURTO = "Entrar"
 # ---------------------------------------------------------------- Conta e sessão
 
 ENTRAR = "Entrar ou criar conta"
+# Sem sessão, num endereço que a exige (por exemplo, a ligação do lembrete para o Progresso).
+ENTRAR_PRIMEIRO = "Para abrir «{pagina}», entre primeiro na sua conta."
 # Por baixo do botão «Entrar ou criar conta», só sem sessão iniciada (decisão do José,
 # 16/11/2026). A aceitação explícita e registada é a caixa do passo 0.
 # (antes, ligação, depois): a ligação abre /privacidade no mesmo separador.

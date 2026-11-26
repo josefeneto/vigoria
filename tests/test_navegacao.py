@@ -128,7 +128,10 @@ def test_sem_sessao_so_inicio_e_entrar(menu: list[Any], sem_sessao: None) -> Non
     assert not at.exception
     paginas, opcoes = menu[-1]
     assert opcoes["position"] == "hidden"
-    assert [p.url_path for p in paginas if p.url_path not in OCULTAS] == ["", "ajuda"]
+    assert [p.url_path for p in paginas if p.visibility != "hidden"] == ["", "ajuda"]
+    # Escondidas: as de sempre e, desde 26/11/2026, as que pedem para entrar (ligação do lembrete).
+    escondidas = {p.url_path for p in paginas if p.visibility == "hidden"}
+    assert escondidas == OCULTAS | {"questionario", "plano", "progresso", "conta"}
     assert not _tem_chave(at, "barra_nav")
     assert at.button(key="topo_entrar").label == "Entrar"
     assert "Entrar ou criar conta" in [b.label for b in at.button]
@@ -191,3 +194,28 @@ def test_mensagens_sem_menu_tem_o_contacto() -> None:
         "para geral@vigoria.pt."
     )
     assert t.BD_INDISPONIVEL.endswith("Se o problema continuar, escreva para geral@vigoria.pt.")
+
+
+def _pedir_entrada_no_progresso() -> None:
+    from paginas import comum
+
+    comum.pedir_entrada("progresso")
+
+
+def test_sem_sessao_o_progresso_pede_para_entrar(sem_sessao: None) -> None:
+    """A ligação do lembrete (/progresso) no navegador do Gmail, sem sessão (26/11/2026):
+    antes, «Page not found»; agora, o pedido para entrar."""
+    at = AppTest.from_function(_pedir_entrada_no_progresso).run()
+    assert not at.exception
+    assert at.title[0].value == t.PAGINAS["progresso"]
+    assert at.info[0].value == t.ENTRAR_PRIMEIRO.format(pagina=t.PAGINAS["progresso"])
+    assert [b.label for b in at.button] == [t.ENTRAR]
+
+
+def test_sem_sessao_os_enderecos_com_sessao_existem(sem_sessao: None) -> None:
+    from pathlib import Path
+
+    codigo = (Path(APP)).read_text("utf-8")
+    assert 'PAGINAS_COM_SESSAO = ("questionario", "plano", "progresso", "conta")' in codigo
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    assert not at.exception  # registar as páginas sem sessão não parte o arranque

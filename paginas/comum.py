@@ -67,6 +67,19 @@ def pedir_login() -> None:
         st.login("auth0")
 
 
+def pedir_entrada(nome: str) -> None:
+    """Sem sessão, num endereço que a exige (a ligação do lembrete abre /progresso, muitas
+    vezes no navegador do Gmail, onde a pessoa ainda não entrou): explica e mostra «Entrar».
+    """
+    pagina = t.PAGINAS[nome]
+    st.title(pagina)
+    st.info(t.ENTRAR_PRIMEIRO.format(pagina=pagina), icon=":material/lock:")
+    if st.button(
+        t.ENTRAR, type="primary", icon=":material/login:", width="stretch", key="entrar_primeiro"
+    ):
+        pedir_login()
+
+
 def parar() -> NoReturn:
     """Em vez de st.stop() numa página: desenha primeiro o rodapé (app.py já não o desenharia)."""
     rodape()

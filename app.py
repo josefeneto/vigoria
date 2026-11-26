@@ -21,6 +21,20 @@ estilos.aplicar()
 # O logotipo está no topo desenhado por paginas/navegacao.py (Fase 8D), não no st.logo.
 
 config = obter_configuracao()
+# Endereços (url_path) que, sem sessão, pedem para entrar em vez de «Page not found».
+PAGINAS_COM_SESSAO = ("questionario", "plano", "progresso", "conta")
+
+
+def _so_com_sessao(nome: str) -> StreamlitPage:
+    """Sem sessão, o endereço da página (por exemplo /progresso, na ligação do lembrete)
+    existe, mas só pede para entrar (comum.pedir_entrada); antes, dava «Page not found».
+    """
+
+    def pagina() -> None:
+        comum.pedir_entrada(nome)
+
+    pagina.__name__ = f"entrar_{nome}"
+    return st.Page(pagina, title=t.PAGINAS[nome], url_path=nome, visibility="hidden")
 
 
 def _sair() -> None:
@@ -115,7 +129,10 @@ if isinstance(entrada, int):
         )
     paginas = list(nomeadas.values())
 else:
-    paginas = [inicio, ajuda, privacidade, cancelar_lembretes]
+    # A Gestão fica de fora: sem sessão, o endereço nem existe.
+    paginas = [inicio, ajuda, privacidade, cancelar_lembretes] + [
+        _so_com_sessao(nome) for nome in PAGINAS_COM_SESSAO
+    ]
 
 try:
     # Menu do Streamlit escondido: a navegação é a de paginas/navegacao.py (Fase 8D).
