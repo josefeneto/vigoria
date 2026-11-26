@@ -178,6 +178,40 @@ def test_migracao_0005_conta_o_que_ja_existe(tmp_path: Path) -> None:
     motor.dispose()
 
 
+def test_migracao_0006_conta_os_lembretes_ja_enviados(tmp_path: Path) -> None:
+    motor = criar_motor(f"sqlite:///{tmp_path / 'm.db'}")
+    config = Config()
+    config.set_main_option("script_location", str(files("vigoria.dados") / "migracoes"))
+    with motor.begin() as ligacao:
+        config.attributes["connection"] = ligacao
+        command.upgrade(config, "0005")
+        for sql in (
+            "INSERT INTO utilizador (id, sub, fornecedor, email, criado_em, acompanhamento_ativo, "
+            "frequencia_registo, lembretes_email) VALUES (1, 'auth0|1', 'auth0', '1@exemplo.pt', "
+            "'2026-11-01 10:00:00', 1, 'semanal', 1)",
+            "INSERT INTO questionario (id, utilizador_id, respostas, criado_em) "
+            "VALUES (1, 1, '{}', '2026-11-01 10:00:00')",
+            "INSERT INTO plano (id, utilizador_id, questionario_id, conteudo, estrategia, "
+            "versao_prompt, provedor, modelo, criado_em) VALUES (1, 1, 1, '{}', '{}', 'v', 'p', "
+            "'m', '2026-11-01 10:00:00')",
+            "INSERT INTO lembrete_enviado (utilizador_id, plano_id, semana_inicio, semana_fim, "
+            "numero, enviado_em) VALUES (1, 1, 1, 1, 1, '2026-11-10 09:07:00'), "
+            "(1, 1, 1, 1, 2, '2026-11-13 09:07:00')",
+        ):
+            ligacao.execute(text(sql))
+    migrar(motor)
+    with fabrica_sessoes(motor).begin() as s:
+        lembretes = set(
+            s.execute(
+                select(ContagemDiaria.dia, ContagemDiaria.total).where(
+                    ContagemDiaria.tipo == g.TipoContagem.LEMBRETE_ENVIADO.value
+                )
+            )
+        )
+        assert lembretes == {(date(2026, 11, 10), 1), (date(2026, 11, 13), 1)}
+    motor.dispose()
+
+
 # ---------------------------------------------------------------- Configuração
 
 
@@ -234,6 +268,32 @@ def test_admin_ve_os_numeros_e_a_lista(app: pytest.MonkeyPatch) -> None:
     assert set(rotulos) == set(t.GESTAO_ROTULOS.values())
     assert len(at.dataframe) == 1
     assert any(b.label == t.GESTAO_CSV for b in at.get("download_button"))
+
+
+def test_admin_testa_os_lembretes_sem_envio_real(app: pytest.MonkeyPatch) -> None:
+    from vigoria.notificacoes import brevo
+
+    def _nunca(*_a: object, **_k: object) -> str:
+        raise AssertionError("os testes nunca enviam emails")
+
+    app.setattr(brevo, "enviar", _nunca)
+    app.setenv("BREVO_API_KEY", "")  # mesmo com uma chave no .env
+    _admin(app)
+    at = AppTest.from_file(str(RAIZ / "app.py"), default_timeout=30).run()
+    at.switch_page("paginas/gestao.py").run()
+    rotulos = {m.label: m.value for m in at.metric}
+    assert rotulos[t.GESTAO_ROTULOS["envio_diario"]] == t.GESTAO_ENVIO_NUNCA
+    (enviar,) = [b for b in at.button if b.label == t.GESTAO_TESTE_ENVIAR]
+    enviar.click().run()
+    assert not at.exception
+    (aviso,) = at.warning
+    assert "BREVO_API_KEY" in aviso.value
+    (simular,) = [b for b in at.button if b.label == t.GESTAO_SIMULAR]
+    simular.click().run()
+    assert not at.exception
+    assert t.GESTAO_SIMULAR_TITULO in [m.value for m in at.markdown]
+    (codigo,) = at.code
+    assert "com lembretes ligados" in codigo.value and "@" not in codigo.value
 
 
 def _no_passo_7() -> AppTest:

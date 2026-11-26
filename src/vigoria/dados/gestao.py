@@ -6,6 +6,8 @@ paginas/gestao.py verifica-o antes de chamar). Nada de respostas ao questionári
 ou registos de progresso: só contagens, emails, método de entrada e datas.
 
 As contagens (`contar`) não guardam quem fez a ação: não se apagam com as contas.
+Desde 26/11/2026 também os lembretes: enviados, falhados (o Brevo recusou), cancelados
+pela ligação do email e cada execução do envio diário (para saber quando correu).
 """
 
 import csv
@@ -28,9 +30,24 @@ class TipoContagem(StrEnum):
     PLANO_GERADO = "plano_gerado"
     PDF_DESCARREGADO = "pdf_descarregado"
     DADOS_DESCARREGADOS = "dados_descarregados"
+    LEMBRETE_ENVIADO = "lembrete_enviado"
+    LEMBRETE_FALHADO = "lembrete_falhado"
+    LEMBRETES_CANCELADOS = "lembretes_cancelados"
+    ENVIO_DIARIO = "envio_diario"  # uma por execução do cron (não é um cartão)
 
 
 PERIODOS_DIAS = (7, 30)
+NUMEROS_GERAIS = (
+    TipoContagem.CONTA_CRIADA,
+    TipoContagem.PLANO_GERADO,
+    TipoContagem.PDF_DESCARREGADO,
+    TipoContagem.DADOS_DESCARREGADOS,
+)
+NUMEROS_LEMBRETES = (
+    TipoContagem.LEMBRETE_ENVIADO,
+    TipoContagem.LEMBRETE_FALHADO,
+    TipoContagem.LEMBRETES_CANCELADOS,
+)
 
 
 def contar(s: Session, tipo: TipoContagem, quando: datetime | None = None) -> None:
@@ -57,7 +74,9 @@ class Numeros:
 class Resumo:
     contas_ativas: int  # contas que existem hoje (as apagadas já não contam)
     com_plano: int  # contas com pelo menos um plano: o questionário foi até ao fim
-    contagens: dict[TipoContagem, Numeros]
+    lembretes_ligados: int  # acompanhamento e lembretes ligados, com um plano
+    ultimo_envio_diario: date | None  # dia (Lisboa) da última execução do cron
+    contagens: dict[TipoContagem, Numeros]  # NUMEROS_GERAIS e NUMEROS_LEMBRETES
 
 
 def _numeros(s: Session, tipo: TipoContagem, hoje: date) -> Numeros:
@@ -78,10 +97,22 @@ def _numeros(s: Session, tipo: TipoContagem, hoje: date) -> Numeros:
 def resumo(s: Session, hoje: date) -> Resumo:
     contas = int(s.scalar(select(func.count()).select_from(Utilizador)) or 0)
     com_plano = int(s.scalar(select(func.count(func.distinct(PlanoGuardado.utilizador_id)))) or 0)
+    ligados = s.scalar(
+        select(func.count(func.distinct(Utilizador.id)))
+        .join(PlanoGuardado, PlanoGuardado.utilizador_id == Utilizador.id)
+        .where(Utilizador.acompanhamento_ativo, Utilizador.lembretes_email)
+    )
+    ultimo = s.scalar(
+        select(func.max(ContagemDiaria.dia)).where(
+            ContagemDiaria.tipo == TipoContagem.ENVIO_DIARIO.value
+        )
+    )
     return Resumo(
         contas_ativas=contas,
         com_plano=com_plano,
-        contagens={tipo: _numeros(s, tipo, hoje) for tipo in TipoContagem},
+        lembretes_ligados=int(ligados or 0),
+        ultimo_envio_diario=ultimo,
+        contagens={tipo: _numeros(s, tipo, hoje) for tipo in NUMEROS_GERAIS + NUMEROS_LEMBRETES},
     )
 
 

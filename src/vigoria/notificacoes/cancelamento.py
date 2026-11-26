@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from sqlalchemy.orm import Session
 
 from vigoria.dados import repositorios
+from vigoria.dados.gestao import TipoContagem, contar
 from vigoria.notificacoes.token import EstadoToken, id_do_token, verificar_token
 
 
@@ -32,10 +33,12 @@ def cancelar_lembretes(
     """Desliga os lembretes da conta do token, se for válido; devolve o estado do token.
 
     Só desliga os lembretes por email: o acompanhamento e os registos ficam como estão.
+    Conta o cancelamento na Gestão só se os lembretes estavam ligados.
     """
     estado = estado_da_ligacao(s, token, segredo, agora)
     if estado is EstadoToken.VALIDO:
         utilizador_id = id_do_token(token)
         assert utilizador_id is not None
-        repositorios.desligar_lembretes(s, utilizador_id)
+        if repositorios.desligar_lembretes(s, utilizador_id):
+            contar(s, TipoContagem.LEMBRETES_CANCELADOS, agora)
     return estado

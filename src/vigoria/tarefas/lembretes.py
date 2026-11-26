@@ -12,6 +12,10 @@ nunca emails nem dados de saúde. Com --simular, não envia nem grava nada.
 Com --testar-envio, manda já um lembrete de exemplo (o primeiro) a quem tem os lembretes
 ligados e está na lista de convidados, sem olhar às regras L1 a L5 e sem o gravar. Serve
 para ver o email a sério; se houver mais de uma pessoa, é preciso escolher com --utilizador.
+
+A página Gestão (26/11/2026) usa `enviar_teste` (o exemplo só para o email da própria
+conta de administração) e `executar(..., simular=True)`. Cada envio, falha e execução
+real conta-se em dados/gestao.py, sem quem.
 """
 
 import argparse
@@ -19,6 +23,7 @@ import logging
 import sys
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
@@ -28,6 +33,7 @@ from vigoria.config import Configuracao, obter_configuracao
 from vigoria.contas.entrada import AVISO_LISTA_VAZIA, email_convidado, ninguem_entra
 from vigoria.dados import repositorios as r
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
+from vigoria.dados.gestao import TipoContagem, contar
 from vigoria.notificacoes import brevo
 from vigoria.notificacoes.lembrete import email_lembrete
 from vigoria.notificacoes.token import gerar_token
@@ -55,7 +61,7 @@ def _um_clique(config: Configuracao) -> bool:
     return config.ambiente == "producao"
 
 
-def _faltas(config: Configuracao) -> list[str]:
+def faltas_para_enviar(config: Configuracao) -> list[str]:
     """As variáveis que faltam para enviar a sério."""
     faltas = []
     if config.brevo_api_key is None or not config.brevo_api_key.get_secret_value():
@@ -122,6 +128,7 @@ def executar(
             # Grava e envia na mesma transação: se o Brevo falhar, a gravação é desfeita.
             with fabrica.begin() as s:
                 r.registar_lembrete(s, d.utilizador_id, d.plano_id, lembrete, agora)
+                contar(s, TipoContagem.LEMBRETE_ENVIADO, agora)
                 enviar(
                     email,
                     chave=config.brevo_api_key,
@@ -133,10 +140,15 @@ def executar(
             escrever(f"{linha}: já enviado por outra execução")
         except brevo.ErroEnvio as erro:
             resumo.falhados += 1
+            with fabrica.begin() as s:
+                contar(s, TipoContagem.LEMBRETE_FALHADO, agora)
             escrever(f"{linha}: falhou ({erro.tipo})")
         else:
             resumo.enviados += 1
             escrever(f"{linha}: enviado")
+    if not simular:  # a Gestão mostra o dia da última execução
+        with fabrica.begin() as s:
+            contar(s, TipoContagem.ENVIO_DIARIO, agora)
     escrever(
         f"Hoje ({hoje.isoformat()}): {resumo.candidatos} com lembretes ligados, "
         f"{resumo.nao_convidados} fora da lista de convidados, "
@@ -204,6 +216,51 @@ def testar_envio(
     return 0
 
 
+class EstadoTeste(StrEnum):
+    ENVIADO = "enviado"
+    SEM_CONFIGURACAO = "sem_configuracao"
+    FALHOU = "falhou"
+
+
+def enviar_teste(
+    config: Configuracao,
+    utilizador_id: int,
+    sub: str,
+    email: str,
+    agora: datetime,
+    *,
+    enviar: Enviar | None = None,
+) -> tuple[EstadoTeste, str]:
+    """O lembrete de exemplo para a própria conta (página Gestão), sem regras nem gravação.
+
+    Devolve o estado e o detalhe: as variáveis em falta ou o tipo de erro do Brevo.
+    """
+    faltas = faltas_para_enviar(config)
+    if faltas:
+        return EstadoTeste.SEM_CONFIGURACAO, ", ".join(faltas)
+    assert config.brevo_api_key is not None and config.vigoria_segredo_lembretes is not None
+    mensagem = email_lembrete(
+        email,
+        1,
+        config.app_url,
+        gerar_token(utilizador_id, sub, config.vigoria_segredo_lembretes, agora),
+        um_clique=_um_clique(config),
+    )
+    enviar = enviar or brevo.enviar  # lido aqui: os testes da página substituem-no
+    try:
+        enviar(
+            mensagem,
+            chave=config.brevo_api_key,
+            remetente=config.email_remetente,
+            nome_remetente=config.email_nome_remetente,
+        )
+    except brevo.ErroEnvio as erro:
+        registo.warning("teste da gestão: utilizador %s, falhou (%s)", utilizador_id, erro.tipo)
+        return EstadoTeste.FALHOU, str(erro.tipo)
+    registo.info("teste da gestão: utilizador %s, enviado", utilizador_id)
+    return EstadoTeste.ENVIADO, ""
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m vigoria.tarefas.lembretes",
@@ -230,7 +287,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     config = obter_configuracao()
-    faltas = _faltas(config)
+    faltas = faltas_para_enviar(config)
     if faltas and not args.simular:
         print(f"Faltam variáveis para enviar: {', '.join(faltas)}.", file=sys.stderr)
         return 2

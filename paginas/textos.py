@@ -908,6 +908,11 @@ GESTAO_ROTULOS = {
     "plano_gerado": "Planos gerados (acumulado)",
     "pdf_descarregado": "Descargas do plano em PDF",
     "dados_descarregados": "Descargas dos dados (JSON)",
+    "lembretes_ligados": "Pessoas com lembretes ligados",
+    "envio_diario": "Último envio automático",
+    "lembrete_enviado": "Lembretes enviados",
+    "lembrete_falhado": "Lembretes que falharam",
+    "lembretes_cancelados": "Lembretes cancelados pelo email",
 }
 GESTAO_PERIODOS = "Últimos 7 dias: {d7} · últimos 30 dias: {d30}"
 GESTAO_SEM_PERIODO = "Número de hoje, sem histórico por dia."
@@ -923,3 +928,35 @@ GESTAO_CSV = "Descarregar a lista (CSV)"
 GESTAO_CSV_FICHEIRO = "vigoria-contas-{data}.csv"
 GESTAO_SEM_CONTAS = "Ainda não há contas."
 GESTAO_ERRO = "Não foi possível ler os números agora. Tente de novo daqui a pouco."
+# Lembretes (26/11/2026)
+GESTAO_LEMBRETES = "Lembretes"
+GESTAO_LIGADOS_NOTA = (
+    "Com o acompanhamento e os lembretes ligados, e um plano. Número de hoje; com acesso "
+    "por convite, só os convidados os recebem."
+)
+GESTAO_ENVIO_NOTA = (
+    "Dia em que o envio diário (serviço cron do Railway, por volta das 9h) correu pela "
+    "última vez. Se ficar para trás, o serviço deixou de correr."
+)
+GESTAO_ENVIO_NUNCA = "Ainda não"
+GESTAO_FALHADO_NOTA = "O Brevo recusou o envio. " + GESTAO_PERIODOS
+GESTAO_CANCELADO_NOTA = "Pela ligação do email ou «Anular subscrição». " + GESTAO_PERIODOS
+GESTAO_TESTES = "Testar os lembretes"
+GESTAO_TESTES_NOTA = (
+    "O lembrete de teste vai só para o email desta conta ({email}), sem seguir as regras do "
+    "envio diário e sem ficar gravado. A simulação mostra o que o envio diário faria hoje, "
+    "sem enviar nada (só com números de conta, sem emails)."
+)
+GESTAO_TESTE_ENVIAR = "Enviar-me um lembrete de teste"
+GESTAO_TESTE_ENVIADO = (
+    "Lembrete de teste enviado para {email}. Pode demorar um ou dois minutos a chegar; "
+    "se não o encontrar, veja também a pasta de spam."
+)
+GESTAO_TESTE_SEM_CONFIGURACAO = (
+    "Não foi possível enviar: faltam estas variáveis no serviço web do Railway: {detalhe}."
+)
+GESTAO_TESTE_FALHOU = (
+    "O Brevo recusou o envio ({detalhe}). Veja os registos do serviço web no Railway."
+)
+GESTAO_SIMULAR = "Simular o envio de hoje"
+GESTAO_SIMULAR_TITULO = "O envio de hoje faria isto (nada foi enviado):"

@@ -356,12 +356,17 @@ def sub_do_utilizador(s: Session, utilizador_id: int) -> str | None:
     return s.scalar(select(Utilizador.sub).where(Utilizador.id == utilizador_id))
 
 
-def desligar_lembretes(s: Session, utilizador_id: int) -> None:
-    """Deixar de receber lembretes (ligação do email); o acompanhamento continua ligado."""
+def desligar_lembretes(s: Session, utilizador_id: int) -> bool:
+    """Deixar de receber lembretes (ligação do email); o acompanhamento continua ligado.
+
+    True se estavam ligados (passaram agora a desligados).
+    """
     utilizador = s.get(Utilizador, utilizador_id)
-    if utilizador is not None:
-        utilizador.lembretes_email = False
-        s.flush()
+    if utilizador is None or not utilizador.lembretes_email:
+        return False
+    utilizador.lembretes_email = False
+    s.flush()
+    return True
 
 
 def _para_registo(linha: RegistoProgresso) -> RegistoDaConta:

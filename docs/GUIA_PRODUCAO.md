@@ -17,7 +17,7 @@ Passos que o José faz à mão para pôr a Vigoria em produção: Railway (EU We
 4. Railway: serviço web
 5. Domínio app.vigoria.pt (CNAME no cPanel)
 6. Só dois ambientes (nada a fazer)
-7. Railway: serviço cron dos lembretes
+7. Railway: serviço cron dos lembretes, e como testar os lembretes
 8. Logótipo no Auth0
 9. Abrir o beta fechado (e, mais tarde, passar a beta aberto)
 10. Testes manuais antes de convidar pessoas
@@ -58,10 +58,10 @@ A reserva só entra quando o Gemini falha de vez: indisponível depois das repet
 1. Em console.groq.com, usa a organização da Vigoria (ou a tua) e cria a chave `vigoria-producao` (*API Keys → Create API Key*). Copia-a só para o Railway (`GROQ_API_KEY`).
 2. **Zero Data Retention:** ativa-o **antes de entrarem dados reais**, em *Settings → Data Controls* (ou equivalente). Confirma na página que os pedidos não ficam guardados nem são usados para treino. Se o plano gratuito não permitir ativá-lo, diz-me antes de continuar: nesse caso, ou passas ao Developer, ou ficamos sem reserva até lá.
 3. **Plano:** fica no gratuito enquanto a reserva for pouco usada. No gratuito, o limite é de 8000 tokens por minuto, e cada chamada gastou cerca de 7000 no teste de 12/11: na prática, uma chamada por minuto. Passa ao **Developer** (pago por utilização, sem mensalidade) **só se a reserva for usada com frequência**. Para saber se é, procura nos registos do Railway as linhas «a usar a reserva groq». Nesse caso, define logo um teto de **5 $ por mês** em *Settings → Billing → Spend limit*, com alertas aos **50 %, 75 % e 90 %**. Quando o teto é atingido, a Groq bloqueia a conta com o erro `blocked_api_access`, também com cerca de 10 a 15 minutos de atraso.
-4. **Esforço de raciocínio (opcional):** `GROQ_REASONING_EFFORT=low` reduz os tokens de saída do gpt-oss. Fica vazio até a medição com uma persona mostrar que a qualidade se mantém (ver «Medir o reasoning_effort», no fim do passo 2).
+4. **Esforço de raciocínio (opcional):** `GROQ_REASONING_EFFORT=low` reduz os tokens de saída do gpt-oss. Fica vazio até a medição com uma persona mostrar que a qualidade se mantém (passo 2.5).
 5. **A CONFIRMAR (revisão jurídica):** o acordo de tratamento de dados (DPA) da Groq e a base da transferência para os EUA (cláusulas-tipo ou EU-US Data Privacy Framework).
 
-### Quando o teto de gasto é atingido
+### 2.3 Quando o teto de gasto é atingido
 
 A app trata o erro como serviço temporariamente indisponível e não faz novas tentativas nem usa a reserva. A Groq aplica o teto à organização inteira, por isso a reserva também estaria bloqueada. Quem está a gerar um plano vê «O serviço que prepara os planos não está disponível neste momento…», e as respostas ficam guardadas. Nos registos do Railway aparece:
 
@@ -71,7 +71,7 @@ limite de gasto mensal atingido (groq, openai/gpt-oss-120b): subir o teto na con
 
 Para resolver: sobe o teto na consola ou espera pelo mês seguinte.
 
-### Comparação de qualidade (feita a 12/11/2026)
+### 2.4 Comparação de qualidade (feita a 12/11/2026)
 
 O `scripts/comparar_fornecedores.py` gera 10 planos (5 personas fictícias × Gemini e Groq 120b) e compara-os: falhas da verificação, menções a meses, palavras desconhecidas, tempo e tokens.
 
@@ -83,7 +83,7 @@ python scripts/comparar_fornecedores.py --modelo-groq openai/gpt-oss-120b --paus
 
 Demora cerca de 6 a 8 minutos. Se aparecer «nova tentativa daqui a … s», é uma espera normal. Com Ctrl+C, guarda as personas já completas.
 
-### Medir o reasoning_effort do Groq (uma persona)
+### 2.5 Medir o reasoning_effort do Groq (uma persona)
 
 Chama a LLM real duas vezes: corre-o só tu. No PowerShell, na pasta do projeto, com o `.venv` ativo:
 
@@ -103,7 +103,7 @@ A tabela aparece no ecrã e fica em `saidas/comparacao/`. Mostra-me o resumo e e
 
 O plano gratuito do Auth0 só permite **um tenant** (o segundo custa 35 $/mês). Fica o tenant atual, na região UE, com a aplicação `Vigoria` e a aplicação M2M que já existem. Acrescentam-se os endereços de app.vigoria.pt e o Railway usa **as mesmas credenciais**.
 
-| Aplicação | Para quê | Endereços, depois do passo 6 |
+| Aplicação | Para quê | Endereços, depois do passo 3.1 |
 |---|---|---|
 | `Vigoria` (*Regular Web Application*) | entrar na app | `http://localhost:8501`, `http://localhost:8080` e `https://app.vigoria.pt` |
 | a M2M atual (secção 8 do `GUIA_AUTH0.md`) | apagar a conta de entrada quando a pessoa apaga a conta | — |
@@ -183,10 +183,13 @@ Os emails de verificação e de recuperação da palavra-passe saem de `geral@vi
 | `VIGORIA_PROVEDOR_RESERVA` | `groq` |
 | `GROQ_API_KEY` | secreto (passo 2.2) |
 | `GROQ_MODEL` | `openai/gpt-oss-120b` |
-| `VIGORIA_ACESSO` | `convidados` (só entram os emails da linha seguinte; ver o passo 9) |
+| `VIGORIA_ACESSO` | `convidados` (só entram os emails da linha seguinte; passo 9) |
 | `VIGORIA_EMAILS_PERMITIDOS` | os emails do beta, separados por vírgulas |
 | `VIGORIA_PLANOS_POR_DIA` | `3` (opcional: é o valor por omissão; `0` = sem limite) |
-| `VIGORIA_ADMINS` | o teu `sub` do Auth0 (ver «Página Gestão», no passo 9); vazio: ninguém vê a Gestão |
+| `VIGORIA_ADMINS` | o teu `sub` do Auth0 (passo 9.2); vazio: ninguém vê a Gestão |
+| `BREVO_API_KEY` | secreto, igual ao do serviço `lembretes` (passo 7): serve o botão «Enviar-me um lembrete de teste» da Gestão |
+| `EMAIL_REMETENTE` | `geral@vigoria.pt` |
+| `EMAIL_NOME_REMETENTE` | `Vigoria` |
 | `VIGORIA_SEGREDO_LEMBRETES` | secreto **novo** (ver abaixo) |
 | `AUTH_REDIRECT_URI` | `https://app.vigoria.pt/oauth2callback` |
 | `AUTH_COOKIE_SECRET` | secreto **novo** (ver abaixo) |
@@ -237,6 +240,8 @@ Nada a fazer: a app corre só em local e em produção (`AMBIENTE=local` ou `AMB
 
 Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem Caddy, Streamlit, migrações nem `secrets.toml`. Só corre a tarefa e termina.
 
+### 7.1 Criar o serviço
+
 1. No projeto, faz *+ Create → GitHub Repo* → o mesmo repositório. Muda o nome do serviço para `lembretes`.
 2. *Settings*:
    - **Region:** EU West (Amsterdam).
@@ -260,11 +265,29 @@ Este serviço usa a mesma imagem, mas **não** corre o `arrancar.sh`: não tem C
 
    **Valores duplicados:** quando mudares um destes valores no serviço web (por exemplo, um convidado novo em `VIGORIA_EMAILS_PERMITIDOS`), muda-o também aqui e carrega em *Deploy* nos dois serviços.
 
-4. Para testar sem esperar pelo dia seguinte, muda **temporariamente** o *Custom Start Command* e carrega em *Deploy*. Com o *Cron Schedule* preenchido, o deploy não corre a tarefa: usa *Run now* ou deixa o cron vazio durante o teste. Os resultados aparecem em *Deploy Logs*, não em *Build Logs*. Depois de cada teste, volta ao comando normal e ao cron `7 9 * * *`.
+Os emails de produção levam o cabeçalho de cancelamento num clique (RFC 8058). O Gmail mostra «Anular subscrição», e o botão desliga os lembretes sem abrir a app.
+
+### 7.2 Testar os lembretes (pela página Gestão)
+
+É a forma mais simples: não precisas de mexer no Railway. Entra com a tua conta de administração e abre «Conta → Gestão» (passo 9.2). Na secção «Testar os lembretes» há dois botões:
+
+1. **«Enviar-me um lembrete de teste»** — para ver o email a sério. O lembrete de exemplo vai só para o email da conta com que entraste e chega em um ou dois minutos (se não aparecer, vê a pasta de spam). Não segue as regras do envio diário e não fica gravado: podes repeti-lo sempre que quiseres. Precisa de `BREVO_API_KEY`, `EMAIL_REMETENTE` e `EMAIL_NOME_REMETENTE` no serviço web (passo 4); se faltarem, a página diz quais.
+2. **«Simular o envio de hoje»** — para ver o que o envio diário faria hoje, sem enviar nada. Aparece uma linha por lembrete que sairia (só com números de conta e de plano, nunca emails) e um resumo no fim.
+
+Na mesma página, a secção **«Lembretes»** mostra:
+- **Último envio automático:** o dia em que o serviço `lembretes` correu pela última vez. Deve ser hoje (depois das 9h07) ou ontem. Se ficar para trás, o serviço deixou de correr: vê os registos dele no Railway.
+- quantas pessoas têm os lembretes ligados, e quantos lembretes foram enviados, falharam (o Brevo recusou) ou foram cancelados pela ligação do email.
+
+**Porque é que a simulação pode não mostrar ninguém:** um lembrete só sai quando falta o registo de um período no Progresso: o 1.º dois dias depois do fim do período, o 2.º (e último) cinco dias depois. Uma conta com um plano desta semana ainda não tem nenhum período terminado. O lembrete de teste (botão 1) não depende disto.
+
+### 7.3 Testar pelo Railway (alternativa)
+
+Só se a Gestão não estiver disponível.
+
+
+1. No serviço `lembretes`, muda **temporariamente** o *Custom Start Command* e carrega em *Deploy*. Com o *Cron Schedule* preenchido, o deploy não corre a tarefa: usa *Run now* ou deixa o cron vazio durante o teste. Os resultados aparecem em *Deploy Logs*, não em *Build Logs*. Depois de cada teste, volta ao comando normal e ao cron `7 9 * * *`.
    - `python -m vigoria.tarefas.lembretes --simular`: mostra nos registos quem receberia que lembrete, sem enviar nada.
    - `python -m vigoria.tarefas.lembretes --testar-envio`: envia já um lembrete de exemplo. Se houver mais de uma conta, junta `--utilizador <id>`.
-
-Os emails de produção levam o cabeçalho de cancelamento num clique (RFC 8058). O Gmail mostra «Anular subscrição», e o botão desliga os lembretes sem abrir a app.
 
 ## 8. Logótipo no Auth0
 
@@ -277,23 +300,25 @@ No Auth0, em *Branding → Universal Login → Customization Options*:
 
 ## 9. Abrir o beta fechado
 
+### 9.1 Lista de convidados
+
 1. No serviço web, confirma `VIGORIA_ACESSO=convidados` e que `VIGORIA_EMAILS_PERMITIDOS` tem só os emails convidados. Com a lista vazia, ninguém entra.
 2. Para acrescentar ou retirar um convidado, edita `VIGORIA_EMAILS_PERMITIDOS` **nos dois serviços** (web e `lembretes`) e carrega em *Deploy* em cada um para aplicar. O email tem de ser o da conta com que a pessoa entra (o do Google, se entrar com Google).
 3. Quem não está na lista vê «A Vigoria está em fase de testes, apenas por convite. Se quiser participar, escreva para geral@vigoria.pt.» e não fica com nenhum registo na base de dados.
 4. Confirma a lista «A CONFIRMAR», abaixo.
+5. Faz os testes manuais (passo 10).
 
-### Página Gestão (números e lista de contas)
+### 9.2 Página Gestão (números, lembretes e lista de contas)
 
-Só as contas em `VIGORIA_ADMINS` (serviço web) veem, no menu «Conta», a página **Gestão**, com os totais (contas, pessoas com plano, planos gerados, descargas) e a lista de emails (com CSV). Essas contas também não têm o limite diário de planos. Para os outros, a página não existe.
+Só as contas em `VIGORIA_ADMINS` (serviço web) veem, no menu «Conta», a página **Gestão**, com os totais (contas, pessoas com plano, planos gerados, descargas), os números dos lembretes e os botões para os testar (passo 7.2), e a lista de emails (com CSV). Essas contas também não têm o limite diário de planos. Para os outros, a página não existe.
 
-1. Descobre o teu `sub`: no Auth0 (tenant de produção), *User Management → Users*, abre a tua conta e copia o *user_id* (por exemplo, `google-oauth2|1234567890`). Se entras com Google e com email, são duas contas, cada uma com o seu `sub`.
+1. Descobre o teu `sub`: no Auth0 (o tenant é o mesmo de local, passo 3), *User Management → Users*, abre a tua conta e copia o *user_id* (por exemplo, `google-oauth2|1234567890`). Se entras com Google e com email, são duas contas, cada uma com o seu `sub`.
 2. No Railway, serviço web, *Variables*: `VIGORIA_ADMINS` = esse `sub` (vários, separados por vírgulas). Carrega em *Deploy*.
 3. Na app, entra com essa conta: «Conta → Gestão». Também funciona em `https://app.vigoria.pt/gestao`.
 
-Em local, para ver a página com o utilizador fictício, põe `VIGORIA_ADMINS=local|desenvolvimento` no teu `.env`. Os números de local são os do SQLite do PC, não os de produção.
-5. Faz os testes manuais (passo 10).
+Em local, o `sub` é o mesmo (um só tenant do Auth0); com o utilizador fictício, é `local|desenvolvimento`. Põe-no em `VIGORIA_ADMINS` no teu `.env` e reinicia o Streamlit. Os números de local são os do SQLite do PC, não os de produção.
 
-### Passar a beta aberto
+### 9.3 Passar a beta aberto
 
 Só quando **tudo** isto estiver fechado:
 
@@ -314,7 +339,7 @@ Para voltar atrás, põe de novo `convidados`. Quem não estiver na lista deixa 
 
 Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falhar (o quê, em que aparelho) e mostra-me.
 
-### 9.1 iPhone (Safari)
+### 10.1 iPhone (Safari)
 
 1. Abre https://app.vigoria.pt no Safari, entra e confirma que a página inicial aparece em português de Portugal.
 2. *Partilhar → Adicionar ao ecrã principal*. O ícone deve ser o da Vigoria, com fundo petróleo e sem cantos pretos, e o nome «Vigoria».
@@ -325,26 +350,27 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 7. Descarrega o PDF e abre-o: nenhum título sozinho no fundo de uma página, e no fim «Versão do plano: …».
 8. Pede mais planos até ao limite de 3 no mesmo dia. O 4.º deve mostrar «Hoje já chegou ao máximo de planos por dia (3)…».
 
-### 9.2 Android (Chrome)
+### 10.2 Android (Chrome)
 
 1. Abre https://app.vigoria.pt no Chrome. Deve aparecer a sugestão «Instalar app», ou então ⋮ → *Adicionar ao ecrã principal* → *Instalar*.
 2. Abre a app instalada: ecrã inteiro, com o ícone e as cores da Vigoria.
 3. Entra com Google e confirma que voltas à app.
 4. Gera um plano e descarrega o PDF.
 
-### 9.3 Lembretes no Gmail
+### 10.3 Lembretes no Gmail
 
-1. Em «A minha conta», confirma que os lembretes estão ligados. Faz o envio de teste do serviço cron (passo 7.4, com `--testar-envio`) ou espera pelo envio das 9h07.
+1. Na Gestão, carrega em «Enviar-me um lembrete de teste» (passo 7.2) e espera que o email chegue ao Gmail.
 2. No **Gmail no telemóvel**, abre o email e toca na ligação para a app. Abre no navegador interno do Gmail: confirma que a página carrega e que consegues entrar. Se o login falhar aí, anota-o; o Google bloqueia por vezes o login com Google dentro de navegadores internos.
 3. Confirma que o email **não** tem dados de saúde: nem peso, nem cintura, nem condições.
 
-### 9.4 Cancelamento num clique
+### 10.4 Cancelamento num clique
 
-1. No Gmail no computador, abre o lembrete. Ao lado do remetente deve aparecer **«Anular subscrição»**. O Gmail pode demorar alguns envios a mostrá-lo a um remetente novo.
+1. Em «A minha conta», confirma que os lembretes estão ligados. No Gmail no computador, abre o lembrete de teste (passo 10.3). Ao lado do remetente deve aparecer **«Anular subscrição»**. O Gmail pode demorar alguns envios a mostrá-lo a um remetente novo.
 2. Carrega em «Anular subscrição» e confirma.
 3. Em https://app.vigoria.pt, «A minha conta»: os lembretes têm de estar **desligados**.
 4. Volta a ligá-los. Depois, no email, abre a ligação «Deixar de receber lembretes»: deve aparecer só a pergunta e o botão; os lembretes só desligam ao carregar no botão.
 5. Nos registos do Railway, procura as linhas `cancelar: POST, utilizador …, valido`. Não podem ter o email nem o token.
+6. Na Gestão, o cartão «Lembretes cancelados pelo email» subiu 1 (só conta se os lembretes estavam ligados).
 
 ---
 
@@ -361,7 +387,7 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 | Política de privacidade e «Onde ficam os meus dados?» (Google principal, Groq reserva) | `paginas/textos_privacidade.py` e `conteudo/ajuda.yaml` | por confirmar (revisão jurídica) |
 | Segredos novos em produção (`AUTH_COOKIE_SECRET`, `VIGORIA_SEGREDO_LEMBRETES`) | Railway | por fazer |
 | Endereços de app.vigoria.pt na aplicação `Vigoria` do Auth0 | passo 3.1 | por fazer |
-| `VIGORIA_ACESSO=convidados` e lista de convidados preenchida | Railway, passo 9 | por fazer |
+| `VIGORIA_ACESSO=convidados` e lista de convidados preenchida | Railway, passo 9.1 | por fazer |
 | Bloqueio de IPs do Brevo desligado | Brevo | por fazer |
 
 ## Problemas comuns
@@ -373,9 +399,11 @@ Faz estes testes com uma conta tua, em https://app.vigoria.pt. Anota o que falha
 | Registos: `groq: HTTP 400 (code=json_validate_failed, …)` | O modelo do Groq gerou um JSON fora do schema. A app repete sozinha; só é preocupante se acontecer muitas vezes seguidas. |
 | «A entrada com conta ainda não está configurada» | Não devia acontecer em produção, porque o arranque falha antes. Se acontecer, envia-me os registos do arranque. |
 | Login volta com erro «Callback URL mismatch» | `AUTH_REDIRECT_URI` diferente das *Allowed Callback URLs* da aplicação `Vigoria` no Auth0, ou app.vigoria.pt ainda não foi acrescentado (passo 3.1). |
-| Toda a gente vê «apenas por convite» e, nos registos, `VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia` | Lista de convidados vazia ou por definir no serviço web (passo 9). |
+| Toda a gente vê «apenas por convite» e, nos registos, `VIGORIA_ACESSO=convidados com VIGORIA_EMAILS_PERMITIDOS vazia` | Lista de convidados vazia ou por definir no serviço web (passo 9.1). |
 | Uma pessoa convidada vê «apenas por convite» | O email na lista é diferente do da conta com que entrou (por exemplo, entrou com outro Gmail). |
 | O login com Google mostra um aviso de chaves de desenvolvimento | Falta o cliente OAuth próprio (passo 3.2). |
 | «Há muitas pessoas a preparar o plano» | Mais de 3 minutos na fila: várias gerações seguidas. Nos registos, procura `fila:` e `429 por minuto`. |
+| Gestão: «faltam estas variáveis no serviço web» ao enviar o lembrete de teste | `BREVO_API_KEY`, `EMAIL_REMETENTE` ou `EMAIL_NOME_REMETENTE` em falta no serviço web (passo 4). |
+| Gestão: «Último envio automático» ficou para trás | O serviço `lembretes` não correu: vê o *Cron Schedule* (`7 9 * * *`) e os registos dele no Railway (passo 7.1). |
 | Planos falham sempre com «muitos pedidos» | Groq no plano gratuito (limite de tokens por minuto). Ver o passo 2. |
-| «O serviço que prepara os planos não está disponível» e, nos registos, `limite de gasto mensal atingido` | Teto de 5 $ atingido. Ver «Quando o teto de gasto é atingido», no passo 2. |
+| «O serviço que prepara os planos não está disponível» e, nos registos, `limite de gasto mensal atingido` | Teto de 5 $ atingido. Ver o passo 2.3. |

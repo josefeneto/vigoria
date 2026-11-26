@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.config import Configuracao
+from vigoria.dados import gestao
 from vigoria.dados import repositorios as r
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.tabelas import (
@@ -345,11 +346,11 @@ def test_segredo_curto_e_recusado() -> None:
 
 
 def test_fora_do_local_exige_o_endereco_publico() -> None:
-    assert lembretes._faltas(_config(ambiente="producao")) == []
-    assert lembretes._faltas(_config(ambiente="producao", app_url="")) == [
+    assert lembretes.faltas_para_enviar(_config(ambiente="producao")) == []
+    assert lembretes.faltas_para_enviar(_config(ambiente="producao", app_url="")) == [
         "APP_URL (endereço público https da app)"
     ]
-    assert lembretes._faltas(_config(app_url="http://localhost:8501")) == []
+    assert lembretes.faltas_para_enviar(_config(app_url="http://localhost:8501")) == []
 
 
 # ---------------------------------------------------------------- Envio de teste
@@ -437,6 +438,61 @@ def test_teste_falhado_da_codigo_1(fabrica: sessionmaker[Session]) -> None:
         _pessoa(s, 1)
     codigo, _, linhas = _testar(fabrica, envio=_Brevo(TipoErroEnvio.AUTENTICACAO))
     assert codigo == 1 and "falhou (autenticacao)" in linhas[0]
+
+
+# ---------------------------------------------------------------- Gestão (26/11/2026)
+
+
+def _numeros(fabrica: sessionmaker[Session], hoje: date) -> gestao.Resumo:
+    with fabrica.begin() as s:
+        return gestao.resumo(s, hoje)
+
+
+def test_envio_conta_lembretes_e_a_execucao(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        _pessoa(s, 1)
+        _pessoa(s, 2, lembretes_email=False)
+    antes = _numeros(fabrica, DIA_DO_PRIMEIRO)
+    assert antes.lembretes_ligados == 1 and antes.ultimo_envio_diario is None
+    _correr(fabrica, DIA_DO_PRIMEIRO, simular=True)  # simular não conta nada
+    assert _numeros(fabrica, DIA_DO_PRIMEIRO).ultimo_envio_diario is None
+    _correr(fabrica, DIA_DO_PRIMEIRO)
+    depois = _numeros(fabrica, DIA_DO_PRIMEIRO)
+    assert depois.contagens[gestao.TipoContagem.LEMBRETE_ENVIADO].total == 1
+    assert depois.contagens[gestao.TipoContagem.LEMBRETE_FALHADO].total == 0
+    assert depois.ultimo_envio_diario == DIA_DO_PRIMEIRO
+
+
+def test_falha_conta_como_falhado_e_nao_como_enviado(fabrica: sessionmaker[Session]) -> None:
+    with fabrica.begin() as s:
+        _pessoa(s, 1)
+    _correr(fabrica, DIA_DO_PRIMEIRO, envio=_Brevo(TipoErroEnvio.INDISPONIVEL))
+    numeros = _numeros(fabrica, DIA_DO_PRIMEIRO).contagens
+    assert numeros[gestao.TipoContagem.LEMBRETE_FALHADO].total == 1
+    assert numeros[gestao.TipoContagem.LEMBRETE_ENVIADO].total == 0
+
+
+def test_teste_da_gestao_so_para_o_email_dado() -> None:
+    envio = _Brevo()
+    agora = datetime(2026, 11, 26, 10, tzinfo=UTC)
+    estado, detalhe = lembretes.enviar_teste(
+        _config(), 7, "auth0|7", "admin@exemplo.pt", agora, enviar=envio
+    )
+    assert (estado, detalhe) == (lembretes.EstadoTeste.ENVIADO, "")
+    (email,) = envio.emails
+    assert email.para == "admin@exemplo.pt"
+
+
+def test_teste_da_gestao_sem_configuracao_ou_com_falha() -> None:
+    agora = datetime(2026, 11, 26, 10, tzinfo=UTC)
+    envio = _Brevo()
+    sem_chave = _config(brevo_api_key="")
+    estado, detalhe = lembretes.enviar_teste(sem_chave, 7, "auth0|7", "a@b.pt", agora, enviar=envio)
+    assert estado is lembretes.EstadoTeste.SEM_CONFIGURACAO and "BREVO_API_KEY" in detalhe
+    assert envio.emails == []
+    falha = _Brevo(TipoErroEnvio.AUTENTICACAO)
+    estado, detalhe = lembretes.enviar_teste(_config(), 7, "auth0|7", "a@b.pt", agora, enviar=falha)
+    assert (estado, detalhe) == (lembretes.EstadoTeste.FALHOU, "autenticacao")
 
 
 def test_utilizador_so_com_testar_envio(ambiente: None) -> None:

@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from vigoria.contas.entrada import Identidade
+from vigoria.dados import gestao
 from vigoria.dados import repositorios as r
 from vigoria.dados.bd import criar_motor, fabrica_sessoes, migrar
 from vigoria.dados.tabelas import (
@@ -595,6 +596,11 @@ def test_cancelar_lembretes_pela_ligacao(fabrica: sessionmaker[Session]) -> None
     with fabrica.begin() as s:
         assert r.obter_preferencias(s, a) == r.Preferencias(lembretes_email=False)
         assert r.obter_preferencias(s, b).lembretes_email is True  # B não muda
+    # Conta na Gestão uma só vez: um segundo clique (já desligados) não soma (26/11/2026).
+    with fabrica.begin() as s:
+        assert cancelar_lembretes(s, token_a, SEGREDO, agora) is EstadoToken.VALIDO
+        numeros = gestao.resumo(s, agora.date()).contagens
+        assert numeros[gestao.TipoContagem.LEMBRETES_CANCELADOS].total == 1
 
 
 def test_lembretes_na_exportacao_e_apagados_com_a_conta_e_o_plano(
