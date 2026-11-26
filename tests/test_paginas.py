@@ -210,6 +210,9 @@ def test_danca_no_treino_de_cada_fase_e_nota_no_registo() -> None:
     at.switch_page("paginas/progresso.py").run()
     assert not at.exception
     assert t.REGISTO_CARDIO_DANCA in [c.value for c in at.caption]
+    # Sem a dica do Enter, em ingles, no formulario do registo (26/11/2026).
+    assert all(not f.proto.form.enter_to_submit for f in at.get("form"))
+    assert at.get("form")
 
 
 def test_sem_danca_nao_ha_cartao_nem_nota_no_registo() -> None:

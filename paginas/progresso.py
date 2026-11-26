@@ -183,7 +183,8 @@ def _formulario(
     a_cada_4 = frequencia_efetiva(frequencia, semana) is FrequenciaRegisto.A_CADA_4_SEMANAS
     base = f"registo_{registo.id}" if registo else f"novo_{st.session_state.get(GERACAO, 0)}"
     rotulos = t.ROTULOS_REGISTO
-    with st.form(base):
+    # Sem «Press Enter to submit form» (dica do Streamlit, em inglês): guarda-se no botão.
+    with st.form(base, enter_to_submit=False):
         if em_manutencao(semana):
             st.caption(t.REGISTO_NOTA_MANUTENCAO)
         dia = st.date_input(

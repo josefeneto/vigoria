@@ -145,6 +145,26 @@ def _css() -> str:
     return CSS.read_text(encoding="utf-8")
 
 
+# Sem sugestões do navegador nas caixas (26/11/2026): o Chrome mostrava, por cima das caixas
+# de números do Progresso, o que a pessoa escreveu noutras páginas (por exemplo
+# «GOOGLE_API_KEY»). O Streamlit não deixa pôr autocomplete="off" nas caixas de números;
+# este código põe-no em todas as caixas, também nas que aparecem depois.
+SEM_SUGESTOES = """<script>
+(() => {
+  if (window.vigoriaSemSugestoes) { return; }
+  window.vigoriaSemSugestoes = true;
+  const desligar = () => document
+    .querySelectorAll('input:not([type="checkbox"]):not([type="radio"]):not([autocomplete="off"])')
+    .forEach((caixa) => caixa.setAttribute("autocomplete", "off"));
+  desligar();
+  new MutationObserver(desligar).observe(document.body, { childList: true, subtree: true });
+})();
+</script>"""
+
+
 def aplicar() -> None:
-    """Aplica o CSS da Vigoria (uma vez por execução, em app.py)."""
-    st.html(f"<style>:root{{{_variaveis()}}}\n{_css()}</style>")
+    """Aplica o CSS da Vigoria e tira as sugestões do navegador (uma vez por execução)."""
+    st.html(
+        f"<style>:root{{{_variaveis()}}}\n{_css()}</style>{SEM_SUGESTOES}",
+        unsafe_allow_javascript=True,
+    )

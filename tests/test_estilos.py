@@ -265,3 +265,9 @@ def test_favicon_embutido_e_aceite_tal_como_esta_pelo_streamlit() -> None:
     assert base64.b64decode(uri.split(",", 1)[1]) == estilos.FAVICON_PNG.read_bytes()
     assert _get_favicon_string(uri) == uri  # passa sem ir para o /media/
     assert "estilos.favicon()" in (RAIZ / "app.py").read_text(encoding="utf-8")
+
+
+def test_sem_sugestoes_do_navegador_nas_caixas() -> None:
+    """O Chrome sugeria texto antigo por cima das caixas (26/11/2026): autocomplete="off"."""
+    assert 'setAttribute("autocomplete", "off")' in estilos.SEM_SUGESTOES
+    assert "MutationObserver" in estilos.SEM_SUGESTOES  # também nas caixas que surgem depois
