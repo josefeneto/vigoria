@@ -8,6 +8,8 @@ página. Um só contentor serve os dois tamanhos (estilos.css, pelas chaves):
 Sem o CSS, as ligações ficam numa fila no topo da página e continuam a funcionar.
 
 A página atual marca-se aqui (chave nav_ativo_*), não por CSS: o st.navigation devolve-a.
+O menu «Conta» fecha-se ao mudar de página (26/11/2026): antes ficava aberto por cima da
+página escolhida, sobretudo no telemóvel.
 """
 
 from collections.abc import Mapping
@@ -30,6 +32,8 @@ ICONES = {
 }
 PRINCIPAIS = ("inicio", "plano", "progresso")  # a Ajuda está no menu «Conta»
 NO_MENU_CONTA = ("conta", "gestao", "ajuda", "privacidade", "sair")  # gestão: só administração
+MENU_CONTA = "nav_conta_menu"  # estado do st.popover (aberto ou fechado)
+ULTIMA_PAGINA = "nav_ultima_pagina"
 
 
 def _chave(nome: str, ativa: bool) -> str:
@@ -45,6 +49,9 @@ def desenhar(atual: StreamlitPage, paginas: Mapping[str, StreamlitPage] | None) 
                 comum.pedir_login()
             return
         ativa = next((n for n, p in paginas.items() if p.url_path == atual.url_path), None)
+        if st.session_state.get(ULTIMA_PAGINA) != atual.url_path:
+            st.session_state[MENU_CONTA] = False  # mudou de página: fecha o menu «Conta»
+        st.session_state[ULTIMA_PAGINA] = atual.url_path
         with st.container(key="barra_nav", horizontal=True, vertical_alignment="center", gap=None):
             for nome in PRINCIPAIS:
                 with st.container(key=_chave(nome, nome == ativa)):
@@ -52,7 +59,10 @@ def desenhar(atual: StreamlitPage, paginas: Mapping[str, StreamlitPage] | None) 
             conta_ativa = ativa in NO_MENU_CONTA
             with (
                 st.container(key=_chave("conta", conta_ativa)),
-                st.popover(t.NAV["conta"], icon=ICONES["conta"], key="nav_conta_menu"),
+                # on_change: o Streamlit só deixa fechar o menu por código se seguir o estado.
+                st.popover(
+                    t.NAV["conta"], icon=ICONES["conta"], key=MENU_CONTA, on_change="rerun"
+                ),
             ):
                 for nome in (n for n in NO_MENU_CONTA if n in paginas):
                     st.page_link(

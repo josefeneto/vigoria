@@ -219,3 +219,16 @@ def test_sem_sessao_os_enderecos_com_sessao_existem(sem_sessao: None) -> None:
     assert 'PAGINAS_COM_SESSAO = ("questionario", "plano", "progresso", "conta")' in codigo
     at = AppTest.from_file(APP, default_timeout=30).run()
     assert not at.exception  # registar as páginas sem sessão não parte o arranque
+
+
+def test_menu_conta_fecha_ao_mudar_de_pagina(com_sessao: None) -> None:
+    """No telemóvel, o menu «Conta» ficava aberto por cima da página escolhida (26/11/2026)."""
+    from paginas import navegacao
+
+    at = AppTest.from_file(APP, default_timeout=30).run()
+    at.session_state[navegacao.MENU_CONTA] = True  # a pessoa abriu o menu
+    at.run()
+    assert at.session_state[navegacao.MENU_CONTA] is True  # na mesma página, fica aberto
+    at.switch_page("paginas/ajuda.py").run()
+    assert not at.exception
+    assert at.session_state[navegacao.MENU_CONTA] is False
