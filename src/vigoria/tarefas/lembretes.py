@@ -47,6 +47,7 @@ Enviar = Callable[..., str]  # a assinatura de brevo.enviar
 
 class Resumo(BaseModel):
     candidatos: int = 0
+    desligados: int = 0  # contas com plano, mas acompanhamento ou lembretes desligados
     nao_convidados: int = 0
     sem_lembrete: int = 0
     simulados: int = 0
@@ -92,6 +93,7 @@ def executar(
         escrever(f"{AVISO_LISTA_VAZIA}: ninguém recebe lembretes.")
     with fabrica.begin() as s:
         destinatarios = r.destinatarios_de_lembretes(s)
+        resumo.desligados = r.com_plano_sem_lembretes(s)
     for d in destinatarios:
         resumo.candidatos += 1
         if not email_convidado(d.email, permitidos, acesso):
@@ -151,6 +153,7 @@ def executar(
             contar(s, TipoContagem.ENVIO_DIARIO, agora)
     escrever(
         f"Hoje ({hoje.isoformat()}): {resumo.candidatos} com lembretes ligados, "
+        f"{resumo.desligados} com lembretes desligados, "
         f"{resumo.nao_convidados} fora da lista de convidados, "
         f"{resumo.sem_lembrete} sem lembrete devido, {resumo.simulados} simulados, "
         f"{resumo.enviados} enviados, {resumo.ja_enviados} já enviados, "

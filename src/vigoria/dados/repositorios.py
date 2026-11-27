@@ -531,6 +531,19 @@ def destinatarios_de_lembretes(s: Session) -> list[Destinatario]:
     ]
 
 
+def com_plano_sem_lembretes(s: Session) -> int:
+    """Quantas contas com plano têm o acompanhamento ou os lembretes desligados (só o
+    número, para o resumo da tarefa diária; 27/11/2026)."""
+    return int(
+        s.scalar(
+            select(func.count(func.distinct(Utilizador.id)))
+            .join(PlanoGuardado, PlanoGuardado.utilizador_id == Utilizador.id)
+            .where(~(Utilizador.acompanhamento_ativo & Utilizador.lembretes_email))
+        )
+        or 0
+    )
+
+
 def semanas_com_registo(s: Session, utilizador_id: int, plano_id: int) -> list[int]:
     """Só as semanas, nunca os valores registados."""
     return _semanas_do_plano(s, utilizador_id, plano_id)

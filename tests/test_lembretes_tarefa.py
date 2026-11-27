@@ -162,9 +162,12 @@ def test_nao_recebe_com_acompanhamento_ou_lembretes_desligados(
     with fabrica.begin() as s:
         _pessoa(s, 1, ativo=False)
         _pessoa(s, 2, lembretes_email=False)
-    resumo, envio, _ = _correr(fabrica, DIA_DO_PRIMEIRO)
+    resumo, envio, linhas = _correr(fabrica, DIA_DO_PRIMEIRO)
     assert resumo.candidatos == 0
     assert envio.emails == []
+    # O resumo diz quantas contas com plano ficaram de fora por isso (27/11/2026).
+    assert resumo.desligados == 2
+    assert "0 com lembretes ligados, 2 com lembretes desligados" in linhas[-1]
 
 
 def test_nao_recebe_sem_plano(fabrica: sessionmaker[Session]) -> None:
@@ -172,6 +175,7 @@ def test_nao_recebe_sem_plano(fabrica: sessionmaker[Session]) -> None:
         s.add(Utilizador(sub="auth0|9", fornecedor="auth0", email="semplano@exemplo.pt"))
     resumo, envio, _ = _correr(fabrica, DIA_DO_PRIMEIRO)
     assert resumo.candidatos == 0 and envio.emails == []
+    assert resumo.desligados == 0  # sem plano não conta como desligado
 
 
 def test_nao_recebe_com_o_registo_feito(fabrica: sessionmaker[Session]) -> None:
