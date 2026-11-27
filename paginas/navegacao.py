@@ -34,6 +34,9 @@ PRINCIPAIS = ("inicio", "plano", "progresso")  # a Ajuda está no menu «Conta»
 NO_MENU_CONTA = ("conta", "gestao", "ajuda", "privacidade", "sair")  # gestão: só administração
 MENU_CONTA = "nav_conta_menu"  # estado do st.popover (aberto ou fechado)
 ULTIMA_PAGINA = "nav_ultima_pagina"
+# Chaves com este prefixo são resultados que só valem enquanto se está na página (por
+# exemplo, a simulação da Gestão): apagam-se ao mudar de página (27/11/2026).
+TEMPORARIO = "temporario_"
 
 
 def _chave(nome: str, ativa: bool) -> str:
@@ -51,6 +54,8 @@ def desenhar(atual: StreamlitPage, paginas: Mapping[str, StreamlitPage] | None) 
         ativa = next((n for n, p in paginas.items() if p.url_path == atual.url_path), None)
         if st.session_state.get(ULTIMA_PAGINA) != atual.url_path:
             st.session_state[MENU_CONTA] = False  # mudou de página: fecha o menu «Conta»
+            for chave in [c for c in st.session_state if str(c).startswith(TEMPORARIO)]:
+                del st.session_state[chave]
         st.session_state[ULTIMA_PAGINA] = atual.url_path
         with st.container(key="barra_nav", horizontal=True, vertical_alignment="center", gap=None):
             for nome in PRINCIPAIS:

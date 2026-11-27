@@ -14,14 +14,16 @@ import streamlit as st
 
 from paginas import comum, sessao
 from paginas import textos as t
+from paginas.navegacao import TEMPORARIO
 from vigoria.config import obter_configuracao
 from vigoria.dados import gestao
 from vigoria.tarefas import lembretes
 
 registo = logging.getLogger(__name__)
 
-TESTE = "gestao_teste_lembrete"  # (estado, detalhe) do último envio de teste
-SIMULACAO = "gestao_simulacao"  # linhas da última simulação
+# Temporários: ao voltar à Gestão vinda de outra página, já não aparecem (navegacao.py).
+TESTE = f"{TEMPORARIO}gestao_teste_lembrete"  # (estado, detalhe) do último envio de teste
+SIMULACAO = f"{TEMPORARIO}gestao_simulacao"  # linhas da última simulação
 MENSAGENS_TESTE = {
     lembretes.EstadoTeste.ENVIADO: (st.success, t.GESTAO_TESTE_ENVIADO),
     lembretes.EstadoTeste.SEM_CONFIGURACAO: (st.warning, t.GESTAO_TESTE_SEM_CONFIGURACAO),

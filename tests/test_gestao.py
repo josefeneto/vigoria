@@ -294,6 +294,11 @@ def test_admin_testa_os_lembretes_sem_envio_real(app: pytest.MonkeyPatch) -> Non
     assert t.GESTAO_SIMULAR_TITULO in [m.value for m in at.markdown]
     (codigo,) = at.code
     assert "com lembretes ligados" in codigo.value and "@" not in codigo.value
+    # Ao sair e voltar à Gestão, a simulação e o aviso do teste já não aparecem.
+    at.switch_page("paginas/ajuda.py").run()
+    at.switch_page("paginas/gestao.py").run()
+    assert not at.exception
+    assert not at.code and not at.warning
 
 
 def _no_passo_7() -> AppTest:
