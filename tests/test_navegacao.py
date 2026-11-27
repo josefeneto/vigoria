@@ -80,7 +80,7 @@ def test_com_sessao_barra_com_o_menu_conta(menu: list[Any], com_sessao: None) ->
     # Barra: Início, Plano e Progresso; «Conta» abre A minha conta, Ajuda, Privacidade e
     # Terminar sessão.
     assert _ligacoes(at, "barra_nav") == [*BARRA, *MENU_CONTA]
-    assert _ligacoes(at, "nav_conta_menu") == MENU_CONTA
+    assert _ligacoes(at, "nav_conta_menu_inicio") == MENU_CONTA
     assert "Questionário" not in _ligacoes(at, "barra_nav")
 
 
@@ -225,10 +225,15 @@ def test_menu_conta_fecha_ao_mudar_de_pagina(com_sessao: None) -> None:
     """No telemóvel, o menu «Conta» ficava aberto por cima da página escolhida (26/11/2026)."""
     from paginas import navegacao
 
+    # Cada página tem a sua chave (27/11/2026): o estado «aberto» que o navegador guardou
+    # na página anterior já não reabre o menu no clique seguinte.
+    inicio, ajuda = navegacao.menu_conta(""), navegacao.menu_conta("ajuda")
     at = AppTest.from_file(APP, default_timeout=30).run()
-    at.session_state[navegacao.MENU_CONTA] = True  # a pessoa abriu o menu
+    at.session_state[inicio] = True  # a pessoa abriu o menu
     at.run()
-    assert at.session_state[navegacao.MENU_CONTA] is True  # na mesma página, fica aberto
+    assert at.session_state[inicio] is True  # na mesma página, fica aberto
     at.switch_page("paginas/ajuda.py").run()
     assert not at.exception
-    assert at.session_state[navegacao.MENU_CONTA] is False
+    assert at.session_state[ajuda] is False
+    at.run()  # outro clique na Ajuda: continua fechado
+    assert at.session_state[ajuda] is False
